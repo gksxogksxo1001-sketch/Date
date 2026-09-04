@@ -159,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       window.Kakao.Auth.login({
         scope: 'profile_nickname,profile_image',
+        throughTalk: false,
         success: (authObj) => {
           window.Kakao.API.request({
             url: '/v2/user/me',
