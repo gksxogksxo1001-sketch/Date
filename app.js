@@ -1,8 +1,10 @@
 // ====================================================
 // KAKAO TALK API KEY CONFIGURATION
-// 카카오 개발자 센터에서 발급받은 JavaScript 키 등록 완료
+// JavaScript 키 (공유/SDK용) & REST API 키 (로그인/OAuth용)
 // ====================================================
-const KAKAO_APP_KEY = 'd26b232de6dfcbfa561ff1fd2c6afd54';
+const KAKAO_JS_KEY = 'd26b232de6dfcbfa561ff1fd2c6afd54';
+const KAKAO_REST_KEY = 'f943d3d735eddc5934ec0b5363a38532';
+const KAKAO_APP_KEY = KAKAO_JS_KEY;
 
 let courseData = [];
 let currentStoryIndex = 0;
@@ -150,38 +152,14 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     login() {
-      if (!window.Kakao) {
-        showToast('카카오 SDK를 불러오는 중입니다.', true);
-        return;
-      }
-      if (!window.Kakao.isInitialized()) {
-        try {
-          window.Kakao.init(KAKAO_APP_KEY);
-        } catch (e) {
-          console.error('Kakao init error:', e);
-        }
-      }
-
       let redirectUri = 'https://gksxogksxo1001-sketch.github.io/Date/';
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         redirectUri = window.location.origin + window.location.pathname;
       }
 
-      if (window.Kakao.Auth && typeof window.Kakao.Auth.authorize === 'function') {
-        window.Kakao.Auth.authorize({
-          redirectUri: redirectUri,
-          scope: 'profile_nickname,profile_image'
-        });
-      } else if (window.Kakao.Auth && typeof window.Kakao.Auth.login === 'function') {
-        window.Kakao.Auth.login({
-          scope: 'profile_nickname,profile_image',
-          success: () => this.fetchUserProfile(),
-          fail: (err) => {
-            console.error('Kakao login error:', err);
-            showToast('카카오 로그인에 실패하였습니다.', true);
-          }
-        });
-      }
+      // Kakao OAuth 2.0 Direct Authorize URL with REST Key
+      const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_KEY}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=profile_nickname,profile_image`;
+      window.location.href = kakaoAuthUrl;
     },
 
     async checkAuthCode() {
@@ -195,24 +173,26 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
-        showToast('카카오 로그인 처리 중입니다... 🌿');
-        const response = await fetch('https://kauth.kakao.com/oauth/token', {
+        showToast('카카오 로그인 인증 중입니다... 🌿');
+        const tokenRes = await fetch('https://kauth.kakao.com/oauth/token', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
           },
           body: new URLSearchParams({
             grant_type: 'authorization_code',
-            client_id: KAKAO_APP_KEY,
+            client_id: KAKAO_REST_KEY,
             redirect_uri: redirectUri,
             code: code
           })
         });
 
-        const tokenData = await response.json();
+        const tokenData = await tokenRes.json();
         if (tokenData.access_token) {
           if (window.Kakao && window.Kakao.Auth) {
-            window.Kakao.Auth.setAccessToken(tokenData.access_token);
+            try {
+              window.Kakao.Auth.setAccessToken(tokenData.access_token);
+            } catch (e) {}
           }
           await this.fetchUserProfile(tokenData.access_token);
         } else {
@@ -228,27 +208,27 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     async fetchUserProfile(accessToken) {
-      if (window.Kakao && window.Kakao.API) {
-        window.Kakao.API.request({
-          url: '/v2/user/me',
-          success: (res) => {
-            const kakaoAccount = res.kakao_account || {};
-            const profile = kakaoAccount.profile || {};
-            const user = {
-              id: 'kakao_' + res.id,
-              nickname: profile.nickname || '카카오 회원',
-              profileImage: profile.profile_image_url || profile.thumbnail_image_url || 'assets/favicon.png',
-              email: kakaoAccount.email || '',
-              loginTime: Date.now()
-            };
-            this.saveSession(user);
-            showToast(`💖 ${user.nickname}님, 환영합니다!`);
-          },
-          fail: (error) => {
-            console.error('Kakao profile request error:', error);
-            showToast('카카오 프로필 정보를 가져오지 못했습니다.', true);
+      try {
+        const userRes = await fetch('https://kapi.kakao.com/v2/user/me', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
           }
         });
+        const res = await userRes.json();
+        const profile = (res.kakao_account && res.kakao_account.profile) || {};
+        const user = {
+          id: 'kakao_' + res.id,
+          nickname: profile.nickname || '카카오 회원',
+          profileImage: profile.profile_image_url || profile.thumbnail_image_url || 'assets/favicon.png',
+          email: (res.kakao_account && res.kakao_account.email) || '',
+          loginTime: Date.now()
+        };
+        this.saveSession(user);
+        showToast(`💖 ${user.nickname}님, 환영합니다!`);
+      } catch (error) {
+        console.error('Kakao profile request error:', error);
+        showToast('카카오 프로필 정보를 가져오지 못했습니다.', true);
       }
     },
 
