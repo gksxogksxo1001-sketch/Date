@@ -670,24 +670,216 @@ document.addEventListener('DOMContentLoaded', () => {
   if (heroCTA) heroCTA.addEventListener('click', switchToCreateMode);
   if (bottomCTA) bottomCTA.addEventListener('click', switchToCreateMode);
 
-  // Default DatePicker to tomorrow
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  document.getElementById('date').valueAsDate = tomorrow;
+  // ====================================================
+  // 1. PREMIUM CUSTOM CALENDAR PICKER
+  // ====================================================
+  let calCurrentYear = new Date().getFullYear();
+  let calCurrentMonth = new Date().getMonth(); // 0 ~ 11
+  let calSelectedDate = null;
 
-  // 1. Custom Dropdown Toggle Handler
-  dropdownSelected.addEventListener('click', (e) => {
-    e.stopPropagation();
-    customDropdown.classList.toggle('open');
-    dropdownMenu.classList.toggle('hidden');
-  });
+  function initCustomCalendar() {
+    const trigger = document.getElementById('datepickerTrigger');
+    const popup = document.getElementById('customCalendarPopup');
+    const dateDisplay = document.getElementById('dateDisplay');
+    const hiddenDate = document.getElementById('date');
+    const prevBtn = document.getElementById('calPrevMonthBtn');
+    const nextBtn = document.getElementById('calNextMonthBtn');
+    const monthText = document.getElementById('calMonthText');
+    const daysGrid = document.getElementById('calDaysGrid');
+    const quickToday = document.getElementById('calQuickToday');
+    const quickTomorrow = document.getElementById('calQuickTomorrow');
+    const quickWeekend = document.getElementById('calQuickWeekend');
+    const wrapper = document.getElementById('customDatePickerWrapper');
 
-  document.addEventListener('click', (e) => {
-    if (!customDropdown.contains(e.target)) {
-      customDropdown.classList.remove('open');
-      dropdownMenu.classList.add('hidden');
+    if (!trigger || !popup || !hiddenDate) return;
+
+    function toDateString(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
     }
-  });
+
+    const KOR_DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+    function toDisplayString(d) {
+      const y = d.getFullYear();
+      const m = d.getMonth() + 1;
+      const day = d.getDate();
+      const dow = KOR_DAYS[d.getDay()];
+      return `${y}년 ${m}월 ${day}일 (${dow}) 💖`;
+    }
+
+    window.setSelectedCalendarDate = function(dateObj) {
+      calSelectedDate = new Date(dateObj);
+      calCurrentYear = calSelectedDate.getFullYear();
+      calCurrentMonth = calSelectedDate.getMonth();
+      
+      hiddenDate.value = toDateString(calSelectedDate);
+      if (dateDisplay) {
+        dateDisplay.value = toDisplayString(calSelectedDate);
+      }
+      renderCalendarDays();
+    };
+
+    function renderCalendarDays() {
+      if (!monthText || !daysGrid) return;
+      monthText.textContent = `${calCurrentYear}년 ${calCurrentMonth + 1}월`;
+      daysGrid.innerHTML = '';
+
+      const firstDayIndex = new Date(calCurrentYear, calCurrentMonth, 1).getDay();
+      const totalDaysInMonth = new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate();
+      const prevMonthDays = new Date(calCurrentYear, calCurrentMonth, 0).getDate();
+
+      const today = new Date();
+      const todayStr = toDateString(today);
+      const selectedStr = calSelectedDate ? toDateString(calSelectedDate) : '';
+
+      // Previous Month buffer days
+      for (let i = firstDayIndex - 1; i >= 0; i--) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-day-cell other-month';
+        cell.textContent = prevMonthDays - i;
+        daysGrid.appendChild(cell);
+      }
+
+      // Current Month days
+      for (let day = 1; day <= totalDaysInMonth; day++) {
+        const cellDate = new Date(calCurrentYear, calCurrentMonth, day);
+        const cellDateStr = toDateString(cellDate);
+        const dow = cellDate.getDay();
+
+        const cell = document.createElement('div');
+        cell.className = 'cal-day-cell';
+        cell.textContent = day;
+
+        if (dow === 0) cell.classList.add('is-sun');
+        if (dow === 6) cell.classList.add('is-sat');
+        if (cellDateStr === todayStr) cell.classList.add('is-today');
+        if (cellDateStr === selectedStr) cell.classList.add('is-selected');
+
+        cell.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setSelectedCalendarDate(cellDate);
+          closeCalendar();
+        });
+
+        daysGrid.appendChild(cell);
+      }
+
+      // Next Month buffer days to complete grid rows
+      const totalRendered = firstDayIndex + totalDaysInMonth;
+      const remaining = (7 - (totalRendered % 7)) % 7;
+      for (let day = 1; day <= remaining; day++) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-day-cell other-month';
+        cell.textContent = day;
+        daysGrid.appendChild(cell);
+      }
+    }
+
+    function openCalendar() {
+      popup.classList.remove('hidden');
+      trigger.classList.add('open');
+      renderCalendarDays();
+    }
+
+    function closeCalendar() {
+      popup.classList.add('hidden');
+      trigger.classList.remove('open');
+    }
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (popup.classList.contains('hidden')) {
+        openCalendar();
+      } else {
+        closeCalendar();
+      }
+    });
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        calCurrentMonth--;
+        if (calCurrentMonth < 0) {
+          calCurrentMonth = 11;
+          calCurrentYear--;
+        }
+        renderCalendarDays();
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        calCurrentMonth++;
+        if (calCurrentMonth > 11) {
+          calCurrentMonth = 0;
+          calCurrentYear++;
+        }
+        renderCalendarDays();
+      });
+    }
+
+    if (quickToday) {
+      quickToday.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setSelectedCalendarDate(new Date());
+        closeCalendar();
+      });
+    }
+
+    if (quickTomorrow) {
+      quickTomorrow.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const tom = new Date();
+        tom.setDate(tom.getDate() + 1);
+        setSelectedCalendarDate(tom);
+        closeCalendar();
+      });
+    }
+
+    if (quickWeekend) {
+      quickWeekend.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const d = new Date();
+        const diff = (6 - d.getDay() + 7) % 7 || 7;
+        d.setDate(d.getDate() + diff);
+        setSelectedCalendarDate(d);
+        closeCalendar();
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (wrapper && !wrapper.contains(e.target)) {
+        closeCalendar();
+      }
+    });
+
+    // Default to tomorrow
+    const defTomorrow = new Date();
+    defTomorrow.setDate(defTomorrow.getDate() + 1);
+    setSelectedCalendarDate(defTomorrow);
+  }
+
+  // Initialize Custom Calendar
+  initCustomCalendar();
+
+  // Feedback Modal Dropdown Toggle Handler
+  if (dropdownSelected && customDropdown && dropdownMenu) {
+    dropdownSelected.addEventListener('click', (e) => {
+      e.stopPropagation();
+      customDropdown.classList.toggle('open');
+      dropdownMenu.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!customDropdown.contains(e.target)) {
+        customDropdown.classList.remove('open');
+        dropdownMenu.classList.add('hidden');
+      }
+    });
+  }
 
   // 2. Theme Picker Handler
   themePicker.addEventListener('click', (e) => {
@@ -702,7 +894,50 @@ document.addEventListener('DOMContentLoaded', () => {
     appBody.className = `theme-${themeVal}`;
   });
 
-  // 3. INITIAL CLEAN EMPTY COURSES (NO HARDCODED VALUES)
+  // ====================================================
+  // 3. COURSE TYPE DEFINITIONS & CUSTOM DROPDOWN COMPONENT
+  // ====================================================
+  const COURSE_TYPE_OPTIONS = [
+    { value: '🍽️ 맛집/식사', label: '🍽️ 맛있는 식사 · 다이닝' },
+    { value: '☕ 카페/디저트', label: '☕ 감성 카페 & 디저트' },
+    { value: '🎨 전시/놀거리/문화', label: '🎨 전시회 · 문화 & 놀거리' },
+    { value: '✨ 산책/야경', label: '🌙 로맨틱 야경 & 산책' },
+    { value: '🍷 술집/와인바', label: '🍷 와인바 · 칵테일 & 펍' },
+    { value: '🎡 액티비티/체험', label: '🎡 이색 체험 & 액티비티' },
+    { value: '📍 기타 장소', label: '📍 나만의 특별한 장소' }
+  ];
+
+  function getMatchedCourseOption(val) {
+    if (!val) return COURSE_TYPE_OPTIONS[0];
+    const found = COURSE_TYPE_OPTIONS.find(opt => 
+      opt.value === val || 
+      opt.label === val || 
+      (val.includes('맛집') && opt.value.includes('맛집')) || 
+      (val.includes('카페') && opt.value.includes('카페')) || 
+      (val.includes('놀거리') && opt.value.includes('놀거리')) || 
+      (val.includes('전시') && opt.value.includes('전시')) || 
+      (val.includes('문화') && opt.value.includes('전시')) || 
+      (val.includes('산책') && opt.value.includes('산책')) || 
+      (val.includes('야경') && opt.value.includes('산책')) || 
+      (val.includes('술집') && opt.value.includes('술집')) || 
+      (val.includes('와인') && opt.value.includes('술집')) || 
+      (val.includes('액티비티') && opt.value.includes('액티비티'))
+    );
+    return found || COURSE_TYPE_OPTIONS[0];
+  }
+
+  // Global click to close any open course dropdowns
+  document.addEventListener('click', (e) => {
+    document.querySelectorAll('.course-type-dropdown').forEach(dd => {
+      if (!dd.contains(e.target)) {
+        dd.classList.remove('open');
+        const menu = dd.querySelector('.custom-dropdown-menu');
+        if (menu) menu.classList.add('hidden');
+      }
+    });
+  });
+
+  // INITIAL CLEAN EMPTY COURSE
   addCourseItem('🍽️ 맛집/식사', '18:00', '', '', '', '', []);
 
   // Add Course Logic
@@ -718,6 +953,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const index = items.length;
     coursePhotosMap[index] = [...photosVal];
 
+    const matchedOption = getMatchedCourseOption(typeVal);
+
     const card = document.createElement('div');
     card.className = 'course-item-card';
     card.setAttribute('data-index', index);
@@ -732,14 +969,28 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="form-row dual-row">
         <div class="form-group">
           <label>코스 유형</label>
-          <select class="course-type custom-select">
-            <option value="🍽️ 맛집/식사" ${typeVal.includes('맛집') ? 'selected' : ''}>🍽️ 맛집/식사</option>
-            <option value="☕ 카페/디저트" ${typeVal.includes('카페') ? 'selected' : ''}>☕ 카페/디저트</option>
-            <option value="전시/놀거리/문화" ${typeVal.includes('놀거리') ? 'selected' : ''}>전시/놀거리/문화</option>
-            <option value="✨ 산책/야경" ${typeVal.includes('산책') ? 'selected' : ''}>✨ 산책/야경</option>
-            <option value="🍷 술집/와인바" ${typeVal.includes('술집') ? 'selected' : ''}>🍷 술집/와인바</option>
-            <option value="📍 기타 장소">📍 기타 장소</option>
-          </select>
+          <div class="custom-dropdown-container course-type-dropdown">
+            <div class="custom-dropdown-selected" tabindex="0">
+              <span class="dropdown-selected-label">
+                <span class="selected-text">${matchedOption.label}</span>
+              </span>
+              <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+            </div>
+            <div class="custom-dropdown-menu hidden">
+              ${COURSE_TYPE_OPTIONS.map(opt => `
+                <div class="dropdown-option-item ${opt.value === matchedOption.value ? 'selected' : ''}" data-value="${opt.value}" data-label="${opt.label}">
+                  <span class="option-text">${opt.label}</span>
+                  <i class="fa-solid fa-check option-check"></i>
+                </div>
+              `).join('')}
+            </div>
+            <!-- Hidden native select for 100% backwards compatibility -->
+            <select class="course-type" style="display:none;" tabindex="-1">
+              ${COURSE_TYPE_OPTIONS.map(opt => `
+                <option value="${opt.value}" ${opt.value === matchedOption.value ? 'selected' : ''}>${opt.label}</option>
+              `).join('')}
+            </select>
+          </div>
         </div>
         <div class="form-group">
           <label>약속 시간</label>
@@ -776,6 +1027,46 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
     `;
+
+    // Bind custom dropdown inside this card
+    const ddContainer = card.querySelector('.course-type-dropdown');
+    const ddSelected = ddContainer.querySelector('.custom-dropdown-selected');
+    const ddMenu = ddContainer.querySelector('.custom-dropdown-menu');
+    const ddLabel = ddContainer.querySelector('.selected-text');
+    const nativeSelect = ddContainer.querySelector('.course-type');
+    const optionItems = ddContainer.querySelectorAll('.dropdown-option-item');
+
+    ddSelected.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Close other course dropdowns
+      document.querySelectorAll('.course-type-dropdown').forEach(other => {
+        if (other !== ddContainer) {
+          other.classList.remove('open');
+          const otherMenu = other.querySelector('.custom-dropdown-menu');
+          if (otherMenu) otherMenu.classList.add('hidden');
+        }
+      });
+      ddContainer.classList.toggle('open');
+      ddMenu.classList.toggle('hidden');
+    });
+
+    optionItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const chosenVal = item.getAttribute('data-value');
+        const chosenLabel = item.getAttribute('data-label');
+
+        ddLabel.textContent = chosenLabel;
+        nativeSelect.value = chosenVal;
+        nativeSelect.dispatchEvent(new Event('change'));
+
+        optionItems.forEach(it => it.classList.remove('selected'));
+        item.classList.add('selected');
+
+        ddContainer.classList.remove('open');
+        ddMenu.classList.add('hidden');
+      });
+    });
 
     courseList.appendChild(card);
     renderThumbs(index);
