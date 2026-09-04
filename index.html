@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DatePlanner - 데이트 코스 신청기</title>
+  <meta name="description" content="회원가입 없이 내 갤러리 사진을 올리고 데이트 코스를 작성하여 전달하는 감성 초대장">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Canvas Confetti & html2canvas -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body id="appBody" class="theme-cozy">
+
+  <main class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo">
+        <i class="fa-solid fa-compass logo-icon"></i>
+        <span>DatePlanner</span>
+      </div>
+      <p class="tagline">회원가입 없이 만드는 세련된 데이트 코스 초대장 🌿</p>
+    </header>
+
+    <!-- SECTION 1: CREATE COURSE ROOM FORM (방 만들기 모드) -->
+    <section id="createMode" class="card-container main-card">
+      
+      <div class="card-header">
+        <h2><i class="fa-solid fa-pen-sparkles"></i> 데이트 신청 방 만들기</h2>
+        <p>코스를 작성하시면 상대방에게 <strong>카드뉴스/스토리 스타일</strong>로 멋지게 전달됩니다.</p>
+      </div>
+
+      <form id="invitationForm" onsubmit="event.preventDefault();">
+        
+        <!-- THEME SELECTION WITH HOVER PREVIEW -->
+        <div class="form-group margin-bottom-lg">
+          <label class="label-large"><i class="fa-solid fa-palette"></i> 초대장 디자인 테마 선택 (마우스를 올리면 미리보기)</label>
+          <div class="theme-picker-grid" id="themePicker">
+            
+            <div class="theme-card active" data-theme="cozy">
+              <div class="theme-color-preview cozy-bg"></div>
+              <div class="theme-card-info">
+                <strong>🌿 Warm Cozy</strong>
+                <span>따뜻한 세이지 & 베이지</span>
+              </div>
+              <div class="theme-hover-tooltip">
+                <div class="tooltip-header cozy-t-header">🌿 Warm Cozy 테마</div>
+                <div class="tooltip-body">포근하고 감성적인 파스텔 톤</div>
+              </div>
+            </div>
+
+            <div class="theme-card" data-theme="rose">
+              <div class="theme-color-preview rose-bg"></div>
+              <div class="theme-card-info">
+                <strong>💖 Romantic Rose</strong>
+                <span>사랑스러운 딥 로즈</span>
+              </div>
+              <div class="theme-hover-tooltip">
+                <div class="tooltip-header rose-t-header">💖 Romantic Rose 테마</div>
+                <div class="tooltip-body">로맨틱하고 설레는 핑크 톤</div>
+              </div>
+            </div>
+
+            <div class="theme-card" data-theme="midnight">
+              <div class="theme-color-preview midnight-bg"></div>
+              <div class="theme-card-info">
+                <strong>🌙 Midnight Navy</strong>
+                <span>감각적인 시티 네이비</span>
+              </div>
+              <div class="theme-hover-tooltip">
+                <div class="tooltip-header midnight-t-header">🌙 Midnight Navy 테마</div>
+                <div class="tooltip-body">모던하고 세련된 야경 톤</div>
+              </div>
+            </div>
+
+          </div>
+          <input type="hidden" id="selectedTheme" value="cozy">
+        </div>
+
+        <!-- Sender & Receiver -->
+        <div class="form-row dual-row">
+          <div class="form-group">
+            <label for="senderName"><i class="fa-regular fa-user"></i> 신청자 (내 이름)</label>
+            <input type="text" id="senderName" placeholder="예: 민우" required>
+          </div>
+          <div class="form-group">
+            <label for="receiverName"><i class="fa-regular fa-heart"></i> 받는 사람 (상대방)</label>
+            <input type="text" id="receiverName" placeholder="예: 수진이" required>
+          </div>
+        </div>
+
+        <!-- Date & Main Area -->
+        <div class="form-row dual-row">
+          <div class="form-group">
+            <label for="date"><i class="fa-regular fa-calendar-check"></i> 만날 날짜</label>
+            <input type="date" id="date" required>
+          </div>
+          <div class="form-group">
+            <label for="mainArea"><i class="fa-solid fa-location-dot"></i> 대표 지역/동네</label>
+            <input type="text" id="mainArea" placeholder="예: 성수동 / 연남동" required>
+          </div>
+        </div>
+
+        <!-- DYNAMIC DATE COURSES -->
+        <div class="section-divider">
+          <span><i class="fa-solid fa-layer-group"></i> 데이트 코스 구성 및 갤러리 사진 (최대 3장)</span>
+        </div>
+
+        <div id="courseList" class="course-list-container">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Add Course Button -->
+        <button type="button" id="addCourseBtn" class="btn-add-course">
+          <i class="fa-solid fa-plus"></i> 코스 단계 추가하기 (2차, 3차, 4차...)
+        </button>
+
+        <!-- Budget Selection -->
+        <div class="form-group margin-top-lg">
+          <label><i class="fa-solid fa-wallet"></i> 예상 총 예산 범위</label>
+          <div class="budget-chips" id="budgetChips">
+            <button type="button" class="chip active" data-value="5만원 이하">5만원 이하 ☕</button>
+            <button type="button" class="chip" data-value="5~10만원">5~10만원 🍽️</button>
+            <button type="button" class="chip" data-value="10~15만원">10~15만원 ✨</button>
+            <button type="button" class="chip" data-value="15~20만원">15~20만원 🍾</button>
+            <button type="button" class="chip" data-value="부담 없이 정하기">부담 없이 정하기 🌿</button>
+          </div>
+          <input type="hidden" id="selectedBudget" value="5만원 이하">
+        </div>
+
+        <!-- Expanded Message Box -->
+        <div class="form-group margin-top-lg">
+          <label for="message" class="label-large"><i class="fa-regular fa-comment-dots"></i> 한 줄 메시지 (상대방에게 전하는 초청 메시지)</label>
+          <textarea id="message" rows="5" class="textarea-large" placeholder="상대방에게 전하고 싶은 마음을 작성해 보세요." required></textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="button" id="createBtn" class="btn-primary btn-block btn-hero">
+          <i class="fa-solid fa-paper-plane"></i> 스토리형 데이트 코스 방 생성하기
+        </button>
+      </form>
+    </section>
+
+    <!-- SECTION 2: VIEW STORY CARD SLIDER (상대방 카드뉴스/스토리 뷰) -->
+    <section id="viewMode" class="card-container main-card hidden">
+      
+      <!-- Story Top Progress Bar -->
+      <div id="storyProgress" class="story-progress-bar">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Story Pager Content Container -->
+      <div id="storyPageWrapper" class="story-page-wrapper">
+        <!-- Current Active Page Rendered Here -->
+      </div>
+
+      <!-- Story Navigation Controls -->
+      <div class="story-controls">
+        <button type="button" id="prevStoryBtn" class="btn-story-nav">
+          <i class="fa-solid fa-chevron-left"></i> 이전 코스
+        </button>
+        <span id="pageIndicator" class="page-indicator">1 / 4</span>
+        <button type="button" id="nextStoryBtn" class="btn-story-nav">
+          다음 코스 <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+
+      <!-- Story Bottom Action Buttons -->
+      <div class="cta-container margin-top-md">
+        <button type="button" id="acceptBtn" class="btn-accept btn-block">
+          <i class="fa-regular fa-face-smile-beam"></i> 데이트 코스 완벽해! 수락하기 🌿
+        </button>
+        <button type="button" id="downloadCardBtn" class="btn-secondary btn-block btn-download">
+          <i class="fa-solid fa-camera"></i> 📷 스토리 카드 이미지로 저장하기
+        </button>
+        <button type="button" id="feedbackBtn" class="btn-secondary btn-block">
+          <i class="fa-regular fa-comment-dots"></i> 살짝 코스 조정 요청하기
+        </button>
+        <button type="button" id="makeNewBtn" class="btn-link-subtle btn-block">
+          <i class="fa-solid fa-plus"></i> 나도 데이트 코스 신청 방 만들기
+        </button>
+      </div>
+    </section>
+
+    <!-- MODAL: SHARE INVITATION LINK -->
+    <div id="shareModal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-icon"><i class="fa-solid fa-link"></i></div>
+        <h3>스토리형 초대장 생성 완료! 🎉</h3>
+        <p>아래 링크를 카톡이나 메시지로 보내면 상대방이 카드뉴스처럼 넘겨볼 수 있습니다!</p>
+
+        <div class="share-input-group">
+          <input type="text" id="shareUrlInput" readonly>
+          <button type="button" id="copyBtn" class="btn-copy">
+            <i class="fa-regular fa-copy"></i> 복사
+          </button>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="previewBtn" class="btn-primary">
+            <i class="fa-solid fa-eye"></i> 스토리 초대장 미리보기
+          </button>
+          <button type="button" id="closeModalBtn" class="btn-secondary">닫기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: COURSE FEEDBACK / ADJUSTMENT REQUEST (WITH CUSTOM UI DROPDOWN) -->
+    <div id="feedbackModal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-icon" style="background: #FFF3E0; color: #F57C00;"><i class="fa-regular fa-comment-dots"></i></div>
+        <h3>코스 살짝 조정 요청하기 💬</h3>
+        <p>남친에게 변경하고 싶은 내용이나 피드백을 전달해 보세요!</p>
+
+        <!-- BEAUTIFUL CUSTOM DROPDOWN COMPONENT -->
+        <div class="form-group text-left">
+          <label>조정하고 싶은 코스 선택</label>
+          <div class="custom-dropdown-container" id="customDropdown">
+            <div class="custom-dropdown-selected" id="dropdownSelected">
+              <span id="selectedCourseText">1차 코스 선택</span>
+              <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+            </div>
+            <div class="custom-dropdown-menu hidden" id="dropdownMenu">
+              <!-- Dynamically populated options -->
+            </div>
+          </div>
+          <input type="hidden" id="adjustCourseValue" value="">
+        </div>
+
+        <div class="form-group text-left">
+          <label>어떻게 바꾸고 싶으신가요?</label>
+          <textarea id="adjustMessage" rows="3" placeholder="예: 2차 카페 대신 시원한 맥주 한 잔 하거나 영화 보러 갈까? 🍿"></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="sendFeedbackKakaoBtn" class="btn-primary">
+            <i class="fa-solid fa-paper-plane"></i> 카톡/메시지로 요청 전송하기
+          </button>
+          <button type="button" id="closeFeedbackModalBtn" class="btn-secondary">취소</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="toast hidden">
+      <i class="fa-solid fa-check"></i> <span id="toastMsg">링크가 복사되었습니다!</span>
+    </div>
+
+    <!-- ACCEPT OVERLAY -->
+    <div id="acceptOverlay" class="accept-overlay hidden">
+      <div class="accept-card">
+        <div class="big-icon"><i class="fa-solid fa-heart-circle-check"></i></div>
+        <h2 id="acceptModalTitle">🎉 데이트 약속을 수락하셨습니다! 🌿</h2>
+        <p id="acceptModalDesc">신청자와의 설레는 데이트 약속이 확정되었습니다! 약속 시간과 코스 장소를 캡처하여 간직해 보세요 💖</p>
+        <div class="modal-actions-column margin-top-md">
+          <button type="button" id="downloadModalCardBtn" class="btn-primary btn-hero">
+            <i class="fa-solid fa-camera"></i> 📷 데이트 카드 이미지 저장하기
+          </button>
+          <button type="button" id="closeAcceptBtn" class="btn-secondary">확인</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

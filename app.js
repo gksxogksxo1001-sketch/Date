@@ -1,0 +1,810 @@
+/**
+ * DATE PLANNER - CUSTOM FLOATING DROPDOWN COMPONENT ENGINE
+ */
+
+let courseData = [];
+let currentStoryIndex = 0;
+let recipientData = null;
+const coursePhotosMap = {}; // Stores photo DataURLs per course index
+
+document.addEventListener('DOMContentLoaded', () => {
+  // DOM Elements
+  const appBody = document.getElementById('appBody');
+  const createMode = document.getElementById('createMode');
+  const viewMode = document.getElementById('viewMode');
+  const courseList = document.getElementById('courseList');
+  const addCourseBtn = document.getElementById('addCourseBtn');
+  const budgetChips = document.getElementById('budgetChips');
+  const selectedBudget = document.getElementById('selectedBudget');
+  const createBtn = document.getElementById('createBtn');
+  const themePicker = document.getElementById('themePicker');
+  const selectedTheme = document.getElementById('selectedTheme');
+
+  // Story Pager Elements
+  const storyProgress = document.getElementById('storyProgress');
+  const storyPageWrapper = document.getElementById('storyPageWrapper');
+  const prevStoryBtn = document.getElementById('prevStoryBtn');
+  const nextStoryBtn = document.getElementById('nextStoryBtn');
+  const pageIndicator = document.getElementById('pageIndicator');
+
+  // Modal & Toast
+  const shareModal = document.getElementById('shareModal');
+  const shareUrlInput = document.getElementById('shareUrlInput');
+  const copyBtn = document.getElementById('copyBtn');
+  const previewBtn = document.getElementById('previewBtn');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+  
+  // Custom Dropdown Feedback Elements
+  const feedbackBtn = document.getElementById('feedbackBtn');
+  const feedbackModal = document.getElementById('feedbackModal');
+  const customDropdown = document.getElementById('customDropdown');
+  const dropdownSelected = document.getElementById('dropdownSelected');
+  const selectedCourseText = document.getElementById('selectedCourseText');
+  const dropdownMenu = document.getElementById('dropdownMenu');
+  const adjustCourseValue = document.getElementById('adjustCourseValue');
+  const adjustMessage = document.getElementById('adjustMessage');
+  const sendFeedbackKakaoBtn = document.getElementById('sendFeedbackKakaoBtn');
+  const closeFeedbackModalBtn = document.getElementById('closeFeedbackModalBtn');
+
+  const toast = document.getElementById('toast');
+  const toastMsg = document.getElementById('toastMsg');
+  const acceptBtn = document.getElementById('acceptBtn');
+  const acceptOverlay = document.getElementById('acceptOverlay');
+  const acceptModalTitle = document.getElementById('acceptModalTitle');
+  const acceptModalDesc = document.getElementById('acceptModalDesc');
+  const closeAcceptBtn = document.getElementById('closeAcceptBtn');
+  const downloadCardBtn = document.getElementById('downloadCardBtn');
+  const downloadModalCardBtn = document.getElementById('downloadModalCardBtn');
+
+  let generatedShareUrl = '';
+
+  // Default DatePicker to tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  document.getElementById('date').valueAsDate = tomorrow;
+
+  // 1. Custom Dropdown Toggle Handler
+  dropdownSelected.addEventListener('click', (e) => {
+    e.stopPropagation();
+    customDropdown.classList.toggle('open');
+    dropdownMenu.classList.toggle('hidden');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!customDropdown.contains(e.target)) {
+      customDropdown.classList.remove('open');
+      dropdownMenu.classList.add('hidden');
+    }
+  });
+
+  // 2. Theme Picker Handler
+  themePicker.addEventListener('click', (e) => {
+    const card = e.target.closest('.theme-card');
+    if (!card) return;
+
+    document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+
+    const themeVal = card.getAttribute('data-theme');
+    selectedTheme.value = themeVal;
+    appBody.className = `theme-${themeVal}`;
+  });
+
+  // 3. INITIAL CLEAN EMPTY COURSES (NO HARDCODED VALUES)
+  addCourseItem('🍽️ 맛집/식사', '18:00', '', '', '', '', []);
+
+  // Add Course Logic
+  addCourseBtn.addEventListener('click', () => {
+    addCourseItem();
+  });
+
+  function addCourseItem(
+    typeVal = '🍽️ 맛집/식사', timeVal = '18:00', nameVal = '', urlVal = '', moveVal = '', tipVal = '',
+    photosVal = []
+  ) {
+    const items = courseList.querySelectorAll('.course-item-card');
+    const index = items.length;
+    coursePhotosMap[index] = [...photosVal];
+
+    const card = document.createElement('div');
+    card.className = 'course-item-card';
+    card.setAttribute('data-index', index);
+
+    card.innerHTML = `
+      <div class="course-item-header">
+        <span class="course-badge">${index + 1}차 코스</span>
+        <button type="button" class="btn-remove-course" onclick="removeCourseItem(${index})">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="form-row dual-row">
+        <div class="form-group">
+          <label>코스 유형</label>
+          <select class="course-type custom-select">
+            <option value="🍽️ 맛집/식사" ${typeVal.includes('맛집') ? 'selected' : ''}>🍽️ 맛집/식사</option>
+            <option value="☕ 카페/디저트" ${typeVal.includes('카페') ? 'selected' : ''}>☕ 카페/디저트</option>
+            <option value="전시/놀거리/문화" ${typeVal.includes('놀거리') ? 'selected' : ''}>전시/놀거리/문화</option>
+            <option value="✨ 산책/야경" ${typeVal.includes('산책') ? 'selected' : ''}>✨ 산책/야경</option>
+            <option value="🍷 술집/와인바" ${typeVal.includes('술집') ? 'selected' : ''}>🍷 술집/와인바</option>
+            <option value="📍 기타 장소">📍 기타 장소</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>약속 시간</label>
+          <input type="time" class="course-time" value="${timeVal}" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>장소/가게 이름</label>
+        <input type="text" class="course-name" value="${nameVal}" placeholder="예: 가게 이름 또는 장소 입력" required>
+      </div>
+      <div class="form-row dual-row">
+        <div class="form-group">
+          <label>이동 팁 (선택)</label>
+          <input type="text" class="course-move" value="${moveVal}" placeholder="예: 도보 3분 / 차로 10분">
+        </div>
+        <div class="form-group">
+          <label>센스 메모 (선택)</label>
+          <input type="text" class="course-tip" value="${tipVal}" placeholder="예: 창가 자리 예약 완료!">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>가게/지도 링크 (선택)</label>
+        <input type="url" class="course-url" value="${urlVal}" placeholder="예: 네이버지도 / 카카오맵 링크">
+      </div>
+
+      <!-- LOCAL GALLERY FILE UPLOAD SECTION -->
+      <div class="photo-upload-section">
+        <label class="photo-upload-label" for="fileInput_${index}">
+          <i class="fa-solid fa-camera"></i> 내 갤러리에서 사진 첨부하기 (최대 3장)
+        </label>
+        <input type="file" id="fileInput_${index}" class="photo-upload-input" accept="image/*" multiple onchange="handleGalleryUpload(event, ${index})">
+        <div class="upload-thumbs-grid" id="thumbsGrid_${index}">
+          <!-- Thumbs rendered here -->
+        </div>
+      </div>
+    `;
+
+    courseList.appendChild(card);
+    renderThumbs(index);
+    updateRemoveButtons();
+  }
+
+  // Handle Local Gallery Image File Upload with Image Compression
+  window.handleGalleryUpload = function(event, index) {
+    const files = Array.from(event.target.files);
+    if (!files || files.length === 0) return;
+
+    if (!coursePhotosMap[index]) coursePhotosMap[index] = [];
+    
+    files.slice(0, 3 - coursePhotosMap[index].length).forEach(file => {
+      compressAndReadImage(file, (dataUrl) => {
+        if (coursePhotosMap[index].length < 3) {
+          coursePhotosMap[index].push(dataUrl);
+          renderThumbs(index);
+        }
+      });
+    });
+  };
+
+  // Compress Image to lightweight DataURL
+  function compressAndReadImage(file, callback) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxDim = 600;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        callback(compressedDataUrl);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function renderThumbs(index) {
+    const grid = document.getElementById(`thumbsGrid_${index}`);
+    if (!grid) return;
+
+    grid.innerHTML = '';
+    const photos = coursePhotosMap[index] || [];
+    photos.forEach((src, pIdx) => {
+      const thumb = document.createElement('div');
+      thumb.className = 'thumb-item';
+      thumb.innerHTML = `
+        <img src="${src}" alt="갤러리 사진">
+        <button type="button" class="btn-delete-thumb" onclick="deleteThumb(${index}, ${pIdx})">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      `;
+      grid.appendChild(thumb);
+    });
+  }
+
+  window.deleteThumb = function(courseIdx, photoIdx) {
+    if (coursePhotosMap[courseIdx]) {
+      coursePhotosMap[courseIdx].splice(photoIdx, 1);
+      renderThumbs(courseIdx);
+    }
+  };
+
+  window.removeCourseItem = function(index) {
+    const card = courseList.querySelector(`.course-item-card[data-index="${index}"]`);
+    if (card) {
+      card.remove();
+      delete coursePhotosMap[index];
+      reindexCourses();
+    }
+  };
+
+  function reindexCourses() {
+    const cards = courseList.querySelectorAll('.course-item-card');
+    cards.forEach((card, idx) => {
+      card.setAttribute('data-index', idx);
+      const badge = card.querySelector('.course-badge');
+      if (badge) badge.textContent = `${idx + 1}차 코스`;
+      const removeBtn = card.querySelector('.btn-remove-course');
+      if (removeBtn) removeBtn.setAttribute('onclick', `removeCourseItem(${idx})`);
+    });
+    updateRemoveButtons();
+  }
+
+  function updateRemoveButtons() {
+    const cards = courseList.querySelectorAll('.course-item-card');
+    cards.forEach((card) => {
+      const removeBtn = card.querySelector('.btn-remove-course');
+      if (removeBtn) {
+        if (cards.length > 1) removeBtn.classList.remove('hidden');
+        else removeBtn.classList.add('hidden');
+      }
+    });
+  }
+
+  // Budget Chips
+  budgetChips.addEventListener('click', (e) => {
+    const target = e.target.closest('.chip');
+    if (!target) return;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    target.classList.add('active');
+    selectedBudget.value = target.getAttribute('data-value');
+  });
+
+  // Create Invitation Submit
+  createBtn.addEventListener('click', () => {
+    const senderName = document.getElementById('senderName').value.trim();
+    const receiverName = document.getElementById('receiverName').value.trim();
+    const dateVal = document.getElementById('date').value;
+    const mainArea = document.getElementById('mainArea').value.trim();
+    const budget = selectedBudget.value;
+    const message = document.getElementById('message').value.trim();
+    const theme = selectedTheme.value;
+
+    if (!senderName || !receiverName || !dateVal || !mainArea || !message) {
+      showToast('필수 항목을 모두 작성해주세요! 🌿', true);
+      return;
+    }
+
+    const courseCards = courseList.querySelectorAll('.course-item-card');
+    const courses = [];
+    let isValid = true;
+
+    courseCards.forEach((card, idx) => {
+      const type = card.querySelector('.course-type').value;
+      const time = card.querySelector('.course-time').value;
+      const name = card.querySelector('.course-name').value.trim();
+      const move = card.querySelector('.course-move').value.trim();
+      const tip = card.querySelector('.course-tip').value.trim();
+      let url = card.querySelector('.course-url').value.trim();
+
+      const photos = coursePhotosMap[idx] || [];
+
+      if (!name || !time) isValid = false;
+
+      if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+
+      courses.push({ t: type, tm: time, n: name, m: move, tp: tip, u: url, p: photos });
+    });
+
+    if (!isValid || courses.length === 0) {
+      showToast('각 코스의 장소 이름과 시간을 입력해 주세요!', true);
+      return;
+    }
+
+    const cardId = 'card_' + Date.now();
+    const payload = {
+      id: cardId,
+      s: senderName,
+      r: receiverName,
+      d: dateVal,
+      a: mainArea,
+      b: budget,
+      m: message,
+      tm: theme,
+      c: courses,
+      ts: Date.now()
+    };
+
+    try {
+      localStorage.setItem(cardId, JSON.stringify(payload));
+    } catch (e) {
+      console.warn('LocalStorage save warning:', e);
+    }
+
+    const encodedToken = encodePayload(payload);
+    const baseUrl = window.location.origin + window.location.pathname;
+    generatedShareUrl = `${baseUrl}?card=${encodedToken}`;
+
+    shareUrlInput.value = generatedShareUrl;
+    shareModal.classList.remove('hidden');
+  });
+
+  // Copy & Modal Handlers
+  copyBtn.addEventListener('click', () => {
+    if (!generatedShareUrl) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(generatedShareUrl)
+        .then(() => showToast('스토리 초대장 링크가 복사되었습니다! 🌿'))
+        .catch(() => fallbackCopy(generatedShareUrl));
+    } else {
+      fallbackCopy(generatedShareUrl);
+    }
+  });
+
+  function fallbackCopy(text) {
+    shareUrlInput.select();
+    document.execCommand('copy');
+    showToast('초대장 링크가 복사되었습니다!');
+  }
+
+  previewBtn.addEventListener('click', () => {
+    shareModal.classList.add('hidden');
+    window.location.href = generatedShareUrl;
+  });
+
+  closeModalBtn.addEventListener('click', () => {
+    shareModal.classList.add('hidden');
+  });
+
+  // Check URL Query & Decode safely
+  const urlParams = new URLSearchParams(window.location.search);
+  const cardToken = urlParams.get('card') || getHashParam('card');
+
+  if (cardToken) {
+    try {
+      recipientData = decodePayload(cardToken);
+      renderStoryViewer(recipientData);
+    } catch (err) {
+      console.warn('Parse error fallback:', err);
+      if (cardToken.startsWith('card_')) {
+        const localStr = localStorage.getItem(cardToken);
+        if (localStr) {
+          recipientData = JSON.parse(localStr);
+          renderStoryViewer(recipientData);
+          return;
+        }
+      }
+      showToast('새 초대장을 작성하시거나 최근 생성된 초대장을 확인하세요.', false);
+    }
+  }
+
+  // STORY PAGER ENGINE WITH CUSTOM DROPDOWN POPULATION
+  function renderStoryViewer(data) {
+    createMode.classList.add('hidden');
+    viewMode.classList.remove('hidden');
+
+    if (data.tm) {
+      appBody.className = `theme-${data.tm}`;
+    }
+
+    courseData = data.c || [];
+    currentStoryIndex = 0;
+
+    const totalPages = courseData.length + 1;
+    storyProgress.innerHTML = '';
+    for (let i = 0; i < totalPages; i++) {
+      const step = document.createElement('div');
+      step.className = `story-step ${i === 0 ? 'active' : ''}`;
+      storyProgress.appendChild(step);
+    }
+
+    // Populate Custom Dropdown Options for Feedback
+    dropdownMenu.innerHTML = '';
+    
+    if (courseData.length > 0) {
+      courseData.forEach((c, i) => {
+        const itemVal = `${i + 1}차 코스 (${c.n})`;
+        const itemEl = document.createElement('div');
+        itemEl.className = `dropdown-option-item ${i === 0 ? 'selected' : ''}`;
+        itemEl.textContent = itemVal;
+        itemEl.onclick = () => selectDropdownOption(itemVal);
+        dropdownMenu.appendChild(itemEl);
+      });
+
+      // Default First Option
+      selectDropdownOption(`${1}차 코스 (${courseData[0].n})`);
+    }
+
+    const optAllVal = '전체 코스 변경 요청';
+    const optAllEl = document.createElement('div');
+    optAllEl.className = 'dropdown-option-item';
+    optAllEl.textContent = optAllVal;
+    optAllEl.onclick = () => selectDropdownOption(optAllVal);
+    dropdownMenu.appendChild(optAllEl);
+
+    updateStoryPage();
+  }
+
+  function selectDropdownOption(val) {
+    selectedCourseText.textContent = val;
+    adjustCourseValue.value = val;
+    customDropdown.classList.remove('open');
+    dropdownMenu.classList.add('hidden');
+  }
+
+  function updateStoryPage() {
+    if (!recipientData) return;
+
+    const totalPages = courseData.length + 1;
+    pageIndicator.textContent = `${currentStoryIndex + 1} / ${totalPages}`;
+
+    const steps = storyProgress.querySelectorAll('.story-step');
+    steps.forEach((step, idx) => {
+      if (idx <= currentStoryIndex) step.classList.add('active');
+      else step.classList.remove('active');
+    });
+
+    prevStoryBtn.disabled = (currentStoryIndex === 0);
+    nextStoryBtn.disabled = (currentStoryIndex === totalPages - 1);
+
+    storyPageWrapper.innerHTML = '';
+    const slide = document.createElement('div');
+    slide.className = 'story-card-slide';
+
+    if (currentStoryIndex < courseData.length) {
+      const item = courseData[currentStoryIndex];
+      const moveBadge = item.m ? `<span><i class="fa-solid fa-person-walking"></i> ${item.m}</span>` : '';
+      const tipBox = item.tp ? `
+        <div class="story-tip-box">
+          <i class="fa-regular fa-lightbulb"></i>
+          <div><strong>남친 Tip:</strong> ${item.tp}</div>
+        </div>
+      ` : '';
+
+      let galleryHtml = '';
+      if (item.p && Array.isArray(item.p) && item.p.length > 0) {
+        const photoImgs = item.p.map(src => `<img src="${src}" class="gallery-photo-item" alt="분위기 사진">`).join('');
+        galleryHtml = `<div class="story-photo-gallery">${photoImgs}</div>`;
+      }
+
+      const linkBox = item.u ? `
+        <div class="story-link-box">
+          <a href="${item.u}" target="_blank" rel="noopener noreferrer" class="btn-story-link">
+            <i class="fa-solid fa-map-location-dot"></i> 가게/지도 정보 보러가기 (새창)
+          </a>
+        </div>
+      ` : '';
+
+      slide.innerHTML = `
+        <span class="story-header-tag">${currentStoryIndex + 1}차 코스 - ${item.t}</span>
+        <h2 class="story-place-title">${item.n}</h2>
+        <div class="story-meta-row">
+          <span><i class="fa-regular fa-clock"></i> ${item.tm} 시작</span>
+          ${moveBadge}
+        </div>
+        ${galleryHtml}
+        ${tipBox}
+        ${linkBox}
+      `;
+    } else {
+      // Final Summary Slide
+      slide.innerHTML = `
+        <span class="story-header-tag">💌 데이트 약속 최종 요약</span>
+        <h2 class="story-place-title">${recipientData.r}아, 나와 데이트할래?</h2>
+        <div class="story-meta-row" style="flex-wrap: wrap;">
+          <span><i class="fa-regular fa-calendar-check"></i> ${formatDateString(recipientData.d)}</span>
+          <span><i class="fa-solid fa-location-dot"></i> ${recipientData.a}</span>
+          <span><i class="fa-solid fa-wallet"></i> 예산 ${recipientData.b}</span>
+        </div>
+        <div class="story-tip-box" style="background: #FFF8F0; border-color: #F0D5C0;">
+          <i class="fa-solid fa-quote-left" style="color: #E07A5F;"></i>
+          <div style="white-space: pre-wrap; font-size: 1rem; line-height: 1.6;">${recipientData.m}</div>
+        </div>
+      `;
+    }
+
+    storyPageWrapper.appendChild(slide);
+  }
+
+  // Pager Event Listeners
+  prevStoryBtn.addEventListener('click', () => {
+    if (currentStoryIndex > 0) {
+      currentStoryIndex--;
+      updateStoryPage();
+    }
+  });
+
+  nextStoryBtn.addEventListener('click', () => {
+    const totalPages = courseData.length + 1;
+    if (currentStoryIndex < totalPages - 1) {
+      currentStoryIndex++;
+      updateStoryPage();
+    }
+  });
+
+  // Touch Swipe Support
+  let startX = 0;
+  storyPageWrapper.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+  });
+
+  storyPageWrapper.addEventListener('touchend', (e) => {
+    const endX = e.changedTouches[0].clientX;
+    const diff = startX - endX;
+    const totalPages = courseData.length + 1;
+
+    if (diff > 50 && currentStoryIndex < totalPages - 1) {
+      currentStoryIndex++;
+      updateStoryPage();
+    } else if (diff < -50 && currentStoryIndex > 0) {
+      currentStoryIndex--;
+      updateStoryPage();
+    }
+  });
+
+  // Accept & Feedback Handlers
+  acceptBtn.addEventListener('click', () => {
+    const sender = recipientData ? recipientData.s : '신청자';
+    acceptModalTitle.textContent = '🎉 데이트 약속을 수락하셨습니다! 🌿';
+    acceptModalDesc.textContent = `${sender}님과의 설레는 데이트 약속이 확정되었습니다! 약속 시간과 코스 장소를 캡처하여 간직해 보세요 💖`;
+    acceptOverlay.classList.remove('hidden');
+    
+    // Trigger Romantic Heart & Confetti Explosion Animation
+    triggerRomanticConfetti();
+  });
+
+  if (downloadCardBtn) {
+    downloadCardBtn.addEventListener('click', downloadCardImage);
+  }
+  if (downloadModalCardBtn) {
+    downloadModalCardBtn.addEventListener('click', downloadCardImage);
+  }
+
+  feedbackBtn.addEventListener('click', () => {
+    feedbackModal.classList.remove('hidden');
+  });
+
+  closeFeedbackModalBtn.addEventListener('click', () => {
+    feedbackModal.classList.add('hidden');
+  });
+
+  sendFeedbackKakaoBtn.addEventListener('click', () => {
+    const selectedTarget = adjustCourseValue.value || '코스 전체';
+    const reqMsg = adjustMessage.value.trim();
+    if (!reqMsg) {
+      showToast('변경하고 싶은 제안 내용을 작성해 주세요! 💬', true);
+      return;
+    }
+
+    const sender = recipientData ? recipientData.s : '남친';
+    const textToCopy = `[DatePlanner 코스 조정 요청 💬]\n${sender}아! 데이트 신청 잘 봤어 🌿\n\n📌 요청 코스: ${selectedTarget}\n💌 제안 내용: ${reqMsg}`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => {
+          showToast('조정 요청 문구가 복사되었습니다! 카톡으로 전송해 보세요 💬');
+          feedbackModal.classList.add('hidden');
+        });
+    } else {
+      showToast('요청 내용이 준비되었습니다! 카톡으로 소통해 보세요 💬');
+      feedbackModal.classList.add('hidden');
+    }
+  });
+
+  closeAcceptBtn.addEventListener('click', () => {
+    acceptOverlay.classList.add('hidden');
+  });
+
+  makeNewBtn.addEventListener('click', () => {
+    window.location.href = window.location.origin + window.location.pathname;
+  });
+
+  // MULTI-FALLBACK COMPATIBLE DECODER
+  function encodePayload(obj) {
+    const jsonStr = JSON.stringify(obj);
+    const bytes = new TextEncoder().encode(jsonStr);
+    let binStr = '';
+    bytes.forEach(b => binStr += String.fromCharCode(b));
+    return btoa(binStr).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function decodePayload(token) {
+    try {
+      let base64 = token.replace(/-/g, '+').replace(/_/g, '/');
+      while (base64.length % 4) {
+        base64 += '=';
+      }
+      const binStr = atob(base64);
+      const bytes = new Uint8Array(binStr.length);
+      for (let i = 0; i < binStr.length; i++) {
+        bytes[i] = binStr.charCodeAt(i);
+      }
+      const jsonStr = new TextDecoder().decode(bytes);
+      return JSON.parse(jsonStr);
+    } catch (e1) {
+      try {
+        const jsonStr = decodeURIComponent(atob(token));
+        return JSON.parse(jsonStr);
+      } catch (e2) {
+        const jsonStr = atob(token);
+        return JSON.parse(jsonStr);
+      }
+    }
+  }
+
+  function getHashParam(key) {
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    return params.get(key);
+  }
+
+  function formatDateString(dStr) {
+    const dateObj = new Date(dStr);
+    if (isNaN(dateObj.getTime())) return dStr;
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    const year = dateObj.getFullYear();
+    const month = dateObj.getMonth() + 1;
+    const date = dateObj.getDate();
+    const day = days[dateObj.getDay()];
+    return `${year}년 ${month}월 ${date}일 (${day})`;
+  }
+
+  function showToast(msg, isError = false) {
+    toastMsg.textContent = msg;
+    toast.style.background = isError ? '#E53935' : '#2B2D42';
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 3000);
+  }
+
+  // 4. ROMANTIC CONFETTI & HEART ANIMATION ENGINE
+  function triggerRomanticConfetti() {
+    if (typeof confetti !== 'function') return;
+
+    // First burst: Center hearts & pastel rose/gold confetti
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#E07A5F', '#F4F1DE', '#81B29A', '#F2CC8F', '#E8A598', '#FFB7C5'],
+      scalar: 1.2
+    });
+
+    // Side cannons after 250ms
+    setTimeout(() => {
+      confetti({
+        particleCount: 50,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ['#E07A5F', '#FFB7C5', '#F2CC8F']
+      });
+      confetti({
+        particleCount: 50,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ['#E07A5F', '#81B29A', '#F4F1DE']
+      });
+    }, 250);
+
+    // Heart rainfall finish after 600ms
+    setTimeout(() => {
+      confetti({
+        particleCount: 40,
+        spread: 100,
+        origin: { y: 0.4 },
+        colors: ['#E07A5F', '#FF6B81', '#FFB7C5'],
+        shapes: ['circle'],
+        scalar: 1.5
+      });
+    }, 600);
+  }
+
+  // 5. HTML2CANVAS HIGH-QUALITY CARD IMAGE DOWNLOAD ENGINE
+  function downloadCardImage() {
+    const cardTarget = document.getElementById('storyPageWrapper');
+    if (!cardTarget) return;
+
+    // Temporarily hide open modal overlays and toast notification so they don't appear in captured card image
+    const activeModals = Array.from(document.querySelectorAll('.modal-overlay:not(.hidden), .accept-overlay:not(.hidden)'));
+    const toastEl = document.getElementById('toast');
+
+    activeModals.forEach(m => {
+      m.style.opacity = '0';
+      m.style.visibility = 'hidden';
+    });
+    if (toastEl) {
+      toastEl.style.opacity = '0';
+      toastEl.style.visibility = 'hidden';
+    }
+
+    showToast('📸 초대장 카드를 이미지로 변환 중입니다...');
+
+    if (typeof html2canvas !== 'function') {
+      activeModals.forEach(m => {
+        m.style.opacity = '';
+        m.style.visibility = '';
+      });
+      if (toastEl) {
+        toastEl.style.opacity = '';
+        toastEl.style.visibility = '';
+      }
+      showToast('이미지 변환 모듈을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.', true);
+      return;
+    }
+
+    // Allow DOM layout to settle after hiding overlays
+    setTimeout(() => {
+      html2canvas(cardTarget, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#FFFFFF',
+        logging: false,
+        scrollX: 0,
+        scrollY: 0
+      }).then(canvas => {
+        // Restore modal overlays and toast
+        activeModals.forEach(m => {
+          m.style.opacity = '';
+          m.style.visibility = '';
+        });
+        if (toastEl) {
+          toastEl.style.opacity = '';
+          toastEl.style.visibility = '';
+        }
+
+        const imageUri = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        const recipientName = recipientData ? (recipientData.r || '데이트') : '데이트';
+        link.download = `DateCard_${recipientName}_초대장.png`;
+        link.href = imageUri;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('💖 데이트 카드 이미지가 저장되었습니다!');
+      }).catch(err => {
+        activeModals.forEach(m => {
+          m.style.opacity = '';
+          m.style.visibility = '';
+        });
+        if (toastEl) {
+          toastEl.style.opacity = '';
+          toastEl.style.visibility = '';
+        }
+        console.error('Card capture error:', err);
+        showToast('이미지 저장 중 오류가 발생했습니다.', true);
+      });
+    }, 120);
+  }
+});
