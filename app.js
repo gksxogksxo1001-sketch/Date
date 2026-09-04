@@ -158,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       window.Kakao.Auth.login({
+        scope: 'profile_nickname,profile_image',
         success: (authObj) => {
           window.Kakao.API.request({
             url: '/v2/user/me',
@@ -176,13 +177,15 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             fail: (error) => {
               console.error('Kakao profile request error:', error);
-              showToast('카카오 프로필 정보를 가져오지 못했습니다.', true);
+              showToast('카카오 프로필 정보를 가져오지 못했습니다: ' + (error.msg || ''), true);
             }
           });
         },
         fail: (err) => {
           console.error('Kakao login error:', err);
-          showToast('카카오 로그인에 실패하였습니다.', true);
+          const errorDetail = err.error_description || err.error || JSON.stringify(err);
+          console.warn('Kakao login error detail:', errorDetail);
+          showToast('카카오 로그인 오류: ' + (err.error_description || err.error || '설정 확인 필요'), true);
         }
       });
     },
