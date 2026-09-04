@@ -877,6 +877,19 @@ input:focus, select:focus, textarea:focus {
   color: #6F9E87 !important;
 }
 
+.btn-kakao {
+  background: #FEE500 !important;
+  color: #191919 !important;
+  border: none !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(254, 229, 0, 0.4) !important;
+}
+
+.btn-kakao:hover {
+  background: #FADA0A !important;
+  box-shadow: 0 6px 18px rgba(254, 229, 0, 0.5) !important;
+}
+
 /* TOAST NOTIFICATION POPUP */
 .toast {
   position: fixed;

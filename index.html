@@ -4,16 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>DatePlanner - 데이트 코스 신청기</title>
-  <meta name="description" content="회원가입 없이 내 갤러리 사진을 올리고 데이트 코스를 작성하여 전달하는 감성 초대장">
+  <!-- Open Graph / KakaoTalk Preview Meta Tags -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="💌 너를 위한 특별한 감성 데이트 초대장 💖">
+  <meta property="og:description" content="설레는 데이트 날짜, 장소, 코스 타임라인을 카드뉴스 스토리로 확인해 보세요! 🌿">
+  <meta property="og:image" content="https://gksxogksxo1001-sketch.github.io/Date/assets/restaurant.jpg">
+  <meta property="og:url" content="https://gksxogksxo1001-sketch.github.io/Date/">
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Canvas Confetti & html2canvas -->
+  <!-- Canvas Confetti & html2canvas & Kakao SDK -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body id="appBody" class="theme-cozy">
@@ -203,6 +209,9 @@
         </div>
 
         <div class="modal-actions">
+          <button type="button" id="shareKakaoBtn" class="btn-kakao btn-block">
+            <i class="fa-solid fa-comment"></i> 💬 카카오톡으로 초대장 보내기
+          </button>
           <button type="button" id="previewBtn" class="btn-primary">
             <i class="fa-solid fa-eye"></i> 스토리 초대장 미리보기
           </button>

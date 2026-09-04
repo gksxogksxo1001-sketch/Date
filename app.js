@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const shareModal = document.getElementById('shareModal');
   const shareUrlInput = document.getElementById('shareUrlInput');
   const copyBtn = document.getElementById('copyBtn');
+  const shareKakaoBtn = document.getElementById('shareKakaoBtn');
   const previewBtn = document.getElementById('previewBtn');
   const closeModalBtn = document.getElementById('closeModalBtn');
   
@@ -572,6 +573,64 @@ document.addEventListener('DOMContentLoaded', () => {
       updateStoryPage();
     }
   });
+
+  // KakaoTalk Share Handler
+  if (shareKakaoBtn) {
+    shareKakaoBtn.addEventListener('click', () => {
+      if (!generatedShareUrl) return;
+
+      // Check Kakao SDK
+      if (window.Kakao) {
+        // Automatically initialize Kakao SDK if KEY is set
+        const KAKAO_KEY = window.KAKAO_APP_KEY || ''; 
+        if (KAKAO_KEY && !window.Kakao.isInitialized()) {
+          window.Kakao.init(KAKAO_KEY);
+        }
+
+        if (window.Kakao.isInitialized()) {
+          const sender = document.getElementById('senderName').value.trim() || '신청자';
+          const receiver = document.getElementById('receiverName').value.trim() || '상대방';
+          const dateVal = document.getElementById('date').value;
+          const areaVal = document.getElementById('mainArea').value.trim() || '데이트 장소';
+          const formattedDate = formatDateString(dateVal);
+
+          window.Kakao.Share.sendDefault({
+            objectType: 'feed',
+            content: {
+              title: `💌 ${sender}님이 보낸 감성 데이트 초대장 💖`,
+              description: `${receiver}야! ${formattedDate}에 ${areaVal}에서 만나자! 🌿`,
+              imageUrl: 'https://gksxogksxo1001-sketch.github.io/Date/assets/restaurant.jpg',
+              link: {
+                mobileWebUrl: generatedShareUrl,
+                webUrl: generatedShareUrl,
+              },
+            },
+            buttons: [
+              {
+                title: '스토리 초대장 확인하기 💖',
+                link: {
+                  mobileWebUrl: generatedShareUrl,
+                  webUrl: generatedShareUrl,
+                },
+              },
+            ],
+          });
+          showToast('카카오톡 전송 창이 열렸습니다! 💬');
+          return;
+        }
+      }
+
+      // Fallback if Kakao Key is not set yet
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(generatedShareUrl)
+          .then(() => {
+            showToast('카톡 공유용 링크가 복사되었습니다! 카톡에 붙여넣어 보세요 💬');
+          });
+      } else {
+        showToast('초대장 링크가 복사되었습니다! 💬');
+      }
+    });
+  }
 
   // Accept & Feedback Handlers
   acceptBtn.addEventListener('click', () => {
