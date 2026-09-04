@@ -1,6 +1,10 @@
-/**
- * DATE PLANNER - CUSTOM FLOATING DROPDOWN COMPONENT ENGINE
- */
+// ====================================================
+// KAKAO TALK API KEY CONFIGURATION
+// 카카오 개발자 센터(https://developers.kakao.com)에서 발급받은
+// [JavaScript 키]를 아래 따옴표 안에 넣으시면 바로 카카오톡 피드가 뜹니다!
+// 예시: const KAKAO_APP_KEY = 'a1b2c3d4e5f6g7h8...';
+// ====================================================
+const KAKAO_APP_KEY = '';
 
 let courseData = [];
 let currentStoryIndex = 0;
@@ -579,12 +583,16 @@ document.addEventListener('DOMContentLoaded', () => {
     shareKakaoBtn.addEventListener('click', () => {
       if (!generatedShareUrl) return;
 
-      // Check Kakao SDK
-      if (window.Kakao) {
-        // Automatically initialize Kakao SDK if KEY is set
-        const KAKAO_KEY = window.KAKAO_APP_KEY || ''; 
-        if (KAKAO_KEY && !window.Kakao.isInitialized()) {
-          window.Kakao.init(KAKAO_KEY);
+      const appKey = KAKAO_APP_KEY || window.KAKAO_APP_KEY || '';
+
+      // Check Kakao SDK & Key
+      if (window.Kakao && appKey) {
+        if (!window.Kakao.isInitialized()) {
+          try {
+            window.Kakao.init(appKey);
+          } catch (e) {
+            console.error('Kakao init error:', e);
+          }
         }
 
         if (window.Kakao.isInitialized()) {
@@ -615,19 +623,22 @@ document.addEventListener('DOMContentLoaded', () => {
               },
             ],
           });
-          showToast('카카오톡 전송 창이 열렸습니다! 💬');
+          showToast('카카오톡 공유창이 열렸습니다! 💬');
           return;
         }
       }
 
-      // Fallback if Kakao Key is not set yet
+      // Fallback if Kakao Key is not set or not initialized yet
+      const senderName = document.getElementById('senderName').value.trim() || '신청자';
+      const textToCopy = `[DateCard 초대장 💌]\n${senderName}님이 보낸 데이트 초대장이 도착했습니다! 💖\n아래 링크를 눌러 스토리로 확인해 보세요 🌿\n\n${generatedShareUrl}`;
+
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(generatedShareUrl)
+        navigator.clipboard.writeText(textToCopy)
           .then(() => {
-            showToast('카톡 공유용 링크가 복사되었습니다! 카톡에 붙여넣어 보세요 💬');
+            showToast('카톡 공유 문구+링크가 복사되었습니다! 카톡창에 [붙여넣기]해 보세요 💬');
           });
       } else {
-        showToast('초대장 링크가 복사되었습니다! 💬');
+        showToast('초대장 링크가 복사되었습니다! 카톡에 붙여넣어 보세요 💬');
       }
     });
   }
