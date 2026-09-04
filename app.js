@@ -93,6 +93,22 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ====================================================
+  // SUPABASE CLIENT CONFIGURATION
+  // ====================================================
+  const SUPABASE_URL = 'https://cmxcazjrasptkspomyyo.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_XSJgAV4bPOhoWbG6DO0M7w_Fibr9uer';
+
+  let supabaseClient = null;
+  if (window.supabase && typeof window.supabase.createClient === 'function') {
+    try {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      console.log('Supabase client initialized successfully');
+    } catch (e) {
+      console.warn('Supabase initialization warning:', e);
+    }
+  }
+
+  // ====================================================
   // AUTH SERVICE (KAKAO 1-SECOND LOGIN)
   // ====================================================
   const AuthService = {
@@ -127,6 +143,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       this.renderUI();
       ArchiveService.loadAndRender();
+      if (user) {
+        ArchiveService.syncCloud();
+      }
     },
 
     login() {
@@ -184,17 +203,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userProfileNav) userProfileNav.classList.remove('hidden');
         if (userAvatarImg) userAvatarImg.src = this.currentUser.profileImage || 'assets/favicon.png';
         if (userNicknameSpan) userNicknameSpan.textContent = this.currentUser.nickname;
-        if (archiveUserStatusText) archiveUserStatusText.innerHTML = `<span class="badge-online">●</span> <strong>${this.currentUser.nickname}</strong>님의 카카오 계정에 안전하게 보관 중입니다.`;
+        if (archiveUserStatusText) archiveUserStatusText.innerHTML = `<span class="badge-online">●</span> <strong>${this.currentUser.nickname}</strong>님의 Supabase 클라우드에 안전하게 보관 중입니다.`;
       } else {
         if (kakaoLoginBtn) kakaoLoginBtn.classList.remove('hidden');
         if (userProfileNav) userProfileNav.classList.add('hidden');
-        if (archiveUserStatusText) archiveUserStatusText.textContent = '💡 카카오 로그인 시 모든 기기에서 안전하게 보관됩니다.';
+        if (archiveUserStatusText) archiveUserStatusText.textContent = '💡 카카오 로그인 시 Supabase 클라우드에 안전하게 영구 보관됩니다.';
       }
     }
   };
 
   // ====================================================
-  // ARCHIVE SERVICE (MY DATE CARDS STORAGE)
+  // ARCHIVE SERVICE (MY DATE CARDS STORAGE + SUPABASE SYNC)
   // ====================================================
   const ArchiveService = {
     STORAGE_KEY: 'dateplanner_archives',
@@ -209,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
 
-    save(cardPayload, shareUrl) {
+    async save(cardPayload, shareUrl) {
       const list = this.getAll();
       const existingIndex = list.findIndex(item => item.id === cardPayload.id);
       const archiveItem = {
@@ -242,9 +261,76 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       this.updateCountBadge();
+
+      // Cloud Sync to Supabase
+      if (supabaseClient) {
+        try {
+          const dbRow = {
+            id: archiveItem.id,
+            user_id: archiveItem.userId,
+            sender_name: archiveItem.senderName,
+            receiver_name: archiveItem.receiverName,
+            date_val: archiveItem.date,
+            area: archiveItem.area,
+            budget: archiveItem.budget,
+            message: archiveItem.message,
+            theme: archiveItem.theme,
+            courses: archiveItem.courses,
+            share_url: archiveItem.shareUrl,
+            created_at: new Date(archiveItem.createdAt).toISOString()
+          };
+          const { error } = await supabaseClient.from('date_cards').upsert(dbRow);
+          if (error) console.warn('Supabase save notice:', error.message);
+          else console.log('Card successfully synced to Supabase Cloud DB');
+        } catch (err) {
+          console.warn('Supabase upsert error:', err);
+        }
+      }
     },
 
-    delete(cardId) {
+    async syncCloud() {
+      if (!supabaseClient || !AuthService.currentUser) return;
+      try {
+        const { data, error } = await supabaseClient
+          .from('date_cards')
+          .select('*')
+          .eq('user_id', AuthService.currentUser.id)
+          .order('created_at', { ascending: false });
+
+        if (!error && Array.isArray(data) && data.length > 0) {
+          const cloudCards = data.map(row => ({
+            id: row.id,
+            senderName: row.sender_name,
+            receiverName: row.receiver_name,
+            date: row.date_val,
+            area: row.area,
+            budget: row.budget,
+            message: row.message,
+            theme: row.theme,
+            courses: row.courses || [],
+            shareUrl: row.share_url,
+            createdAt: new Date(row.created_at).getTime(),
+            userId: row.user_id
+          }));
+
+          const localList = this.getAll();
+          const mergedMap = new Map();
+          cloudCards.forEach(c => mergedMap.set(c.id, c));
+          localList.forEach(c => {
+            if (!mergedMap.has(c.id)) mergedMap.set(c.id, c);
+          });
+
+          const mergedList = Array.from(mergedMap.values());
+          mergedList.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(mergedList));
+          this.loadAndRender();
+        }
+      } catch (e) {
+        console.warn('Supabase cloud sync error:', e);
+      }
+    },
+
+    async delete(cardId) {
       let list = this.getAll();
       list = list.filter(item => item.id !== cardId);
       try {
@@ -254,6 +340,16 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('Archive delete error:', e);
       }
       this.loadAndRender();
+
+      // Cloud delete from Supabase
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('date_cards').delete().eq('id', cardId);
+        } catch (e) {
+          console.warn('Supabase delete error:', e);
+        }
+      }
+
       showToast('초대장이 보관함에서 삭제되었습니다.');
     },
 

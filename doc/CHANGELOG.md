@@ -4,6 +4,19 @@
 
 ---
 
+## [2026-09-04] Supabase 클라우드 데이터베이스(BaaS) 실시간 연동 완료
+
+### 🗄️ 백엔드 & 데이터베이스 연동
+- **Supabase JavaScript SDK (`@supabase/supabase-js`) 연동**:
+  - 프로젝트 URL (`https://cmxcazjrasptkspomyyo.supabase.co`) 및 Publishable Key 설정 완료
+- **실시간 클라우드 동기화 (`ArchiveService`)**:
+  - **클라우드 저장(Upsert)**: 초대장 생성 시 Supabase `date_cards` 테이블에 실시간 동기화
+  - **멀티 디바이스 복원(Cloud Sync)**: 카카오 로그인 시 해당 유저의 기존 초대장 데이터를 Supabase 클라우드에서 자동 불러오기
+  - **클라우드 삭제**: 보관함에서 삭제 시 로컬스토리지 및 Supabase DB에서 동시 삭제
+  - **하이브리드 캐싱**: 비회원은 LocalStorage, 회원은 LocalStorage + Supabase Cloud 이중 안전 보관
+
+---
+
 ## [2026-09-04] 랜딩 페이지 미리보기 개선 (3카드 나열) & 화사한 감성 톤앤매너 리뉴얼
 
 ### 🎨 디자인 & UI/UX 개선
