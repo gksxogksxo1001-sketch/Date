@@ -1,10 +1,8 @@
 // ====================================================
 // KAKAO TALK API KEY CONFIGURATION
-// 카카오 개발자 센터(https://developers.kakao.com)에서 발급받은
-// [JavaScript 키]를 아래 따옴표 안에 넣으시면 바로 카카오톡 피드가 뜹니다!
-// 예시: const KAKAO_APP_KEY = 'a1b2c3d4e5f6g7h8...';
+// 카카오 개발자 센터에서 발급받은 JavaScript 키 등록 완료
 // ====================================================
-const KAKAO_APP_KEY = '';
+const KAKAO_APP_KEY = 'd26b232de6dfcbfa561ff1fd2c6afd54';
 
 let courseData = [];
 let currentStoryIndex = 0;
