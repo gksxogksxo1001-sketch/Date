@@ -162,9 +162,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      let redirectUri = window.location.origin + window.location.pathname;
-      if (!redirectUri.startsWith('http://') && !redirectUri.startsWith('https://')) {
-        redirectUri = 'https://gksxogksxo1001-sketch.github.io/Date/';
+      let redirectUri = 'https://gksxogksxo1001-sketch.github.io/Date/';
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        redirectUri = window.location.origin + window.location.pathname;
       }
 
       if (window.Kakao.Auth && typeof window.Kakao.Auth.authorize === 'function') {
@@ -189,9 +189,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const code = urlParams.get('code');
       if (!code) return;
 
-      let redirectUri = window.location.origin + window.location.pathname;
-      if (!redirectUri.startsWith('http://') && !redirectUri.startsWith('https://')) {
-        redirectUri = 'https://gksxogksxo1001-sketch.github.io/Date/';
+      let redirectUri = 'https://gksxogksxo1001-sketch.github.io/Date/';
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        redirectUri = window.location.origin + window.location.pathname;
       }
 
       try {
