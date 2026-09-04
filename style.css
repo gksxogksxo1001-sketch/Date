@@ -2194,62 +2194,325 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
 }
 
 /* ==========================================================================
-   LANDING PAGE - RESPONSIVE
+   COMPREHENSIVE RESPONSIVE DESIGN (PC & MOBILE OPTIMIZED)
    ========================================================================== */
 
+/* --- TABLET & MOBILE BREAKPOINT (<= 768px) --- */
 @media (max-width: 768px) {
+  .app-container {
+    padding: 0 14px 36px 14px;
+  }
+
+  /* 3 STEPS */
   .steps-grid {
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
+    max-width: 360px;
+    margin: 0 auto;
   }
   .step-card {
     max-width: 100%;
     width: 100%;
+    padding: 26px 18px;
   }
   .step-arrow {
     transform: rotate(90deg);
   }
+
+  /* 4 FEATURES: Clean 2x2 Grid on Tablet/Mobile */
   .features-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
+    gap: 12px;
   }
+  .feature-card {
+    padding: 20px 12px;
+  }
+  .feature-icon {
+    width: 46px;
+    height: 46px;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+  }
+  .feature-card h3 {
+    font-size: 0.92rem;
+    min-height: 2.3em;
+  }
+  .feature-card p {
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  /* 3 PREVIEWS: Single Column with beautiful width */
   .preview-cards-grid {
     grid-template-columns: 1fr;
-    max-width: 380px;
+    max-width: 420px;
+    margin: 0 auto;
+    gap: 18px;
   }
+  .preview-card-img {
+    height: 190px;
+  }
+
   .landing-section {
-    padding: 60px 20px;
+    padding: 56px 18px;
+  }
+
+  /* FORM DUAL ROWS: Stack cleanly on Mobile for spacious touch targets */
+  .form-row.dual-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* THEME PICKER */
+  .theme-picker-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .theme-card {
+    padding: 10px 8px;
+  }
+  .theme-card-info strong {
+    font-size: 0.78rem;
+  }
+  .theme-card-info span {
+    font-size: 0.68rem;
+  }
+
+  /* CUSTOM CALENDAR POPUP ON MOBILE */
+  .custom-calendar-popup {
+    width: 100%;
+    max-width: 330px;
+    left: 0;
+    right: 0;
+    padding: 16px 14px;
+  }
+  .cal-day-cell {
+    font-size: 0.84rem;
+  }
+  .cal-popup-footer {
+    gap: 4px;
+  }
+  .cal-quick-btn {
+    font-size: 0.72rem;
+    padding: 6px 2px;
+  }
+
+  /* CUSTOM DROPDOWN ON MOBILE */
+  .custom-dropdown-menu {
+    min-width: 100%;
+    width: 100%;
+    max-height: 240px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .dropdown-option-item {
+    padding: 12px 14px;
+    font-size: 0.88rem;
+  }
+
+  /* STORY CONTROLS */
+  .story-controls {
+    gap: 8px;
+  }
+  .btn-story-nav {
+    padding: 10px 14px;
+    font-size: 0.85rem;
   }
 }
 
-@media (max-width: 540px) {
+/* --- SMALL MOBILE BREAKPOINT (<= 480px) --- */
+@media (max-width: 480px) {
+  /* NAVBAR */
   .global-navbar {
-    padding: 8px 12px;
-    margin-bottom: 16px;
+    padding: 8px 10px;
+    margin-bottom: 12px;
   }
   .nav-brand-text {
+    font-size: 1.05rem;
+  }
+  .logo-icon {
     font-size: 1.1rem;
+  }
+  .nav-actions {
+    gap: 6px;
+  }
+  .nav-btn-archive {
+    padding: 6px 8px;
+    font-size: 0.85rem;
   }
   .nav-btn-archive .nav-btn-text {
     display: none;
   }
-  .nav-btn-archive {
-    padding: 8px 10px;
-  }
   .nav-kakao-login-btn {
-    padding: 7px 12px;
-    font-size: 0.82rem;
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    gap: 4px;
+  }
+  .nav-avatar {
+    width: 24px;
+    height: 24px;
   }
   .nav-nickname {
-    max-width: 65px;
-    font-size: 0.8rem;
+    max-width: 55px;
+    font-size: 0.75rem;
   }
+
+  /* HERO */
+  .landing-hero {
+    padding: 56px 16px 44px;
+  }
+  .hero-title {
+    font-size: 1.85rem;
+    line-height: 1.25;
+  }
+  .hero-subtitle {
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
+  .hero-cta-btn {
+    padding: 14px 20px;
+    font-size: 0.95rem;
+    width: 100%;
+    justify-content: center;
+  }
+  .hero-note {
+    font-size: 0.75rem;
+    line-height: 1.45;
+  }
+
+  /* SECTION TITLES */
+  .landing-section {
+    padding: 44px 14px;
+  }
+  .section-title {
+    font-size: 1.45rem;
+  }
+  .section-desc {
+    font-size: 0.86rem;
+    margin-bottom: 26px;
+  }
+
+  /* 4 FEATURE CARDS: Super-clean touch cards */
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .feature-card {
+    padding: 16px 8px;
+    border-radius: 14px;
+  }
+  .feature-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    border-radius: 12px;
+  }
+  .feature-card h3 {
+    font-size: 0.84rem;
+    min-height: 2.4em;
+    margin-bottom: 4px;
+  }
+  .feature-card p {
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+
+  /* THEME PICKER: Single column row list on small mobile */
+  .theme-picker-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .theme-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+  }
+  .theme-color-preview {
+    width: 42px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+  .theme-card-info strong {
+    font-size: 0.88rem;
+  }
+
+  /* CUSTOM CALENDAR POPUP: Perfectly centered on screen with zero overflow */
+  .custom-calendar-popup {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: calc(100vw - 28px) !important;
+    max-width: 320px !important;
+    padding: 14px 10px;
+    border-radius: 16px;
+  }
+  .cal-popup-header {
+    margin-bottom: 10px;
+  }
+  .cal-month-text {
+    font-size: 0.95rem;
+  }
+  .cal-nav-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+  .cal-days-grid {
+    gap: 2px;
+  }
+  .cal-day-cell {
+    font-size: 0.82rem;
+    border-radius: 8px;
+  }
+  .cal-popup-footer {
+    gap: 3px;
+    padding-top: 10px;
+    margin-top: 10px;
+  }
+  .cal-quick-btn {
+    font-size: 0.7rem;
+    padding: 5px 2px;
+  }
+
+  /* MAIN CARD */
+  .main-card {
+    padding: 20px 14px;
+    border-radius: 18px;
+  }
+  .card-header h2 {
+    font-size: 1.25rem;
+  }
+  .card-header p {
+    font-size: 0.82rem;
+  }
+  .budget-chips {
+    gap: 6px;
+  }
+  .budget-chips .chip {
+    padding: 8px 10px;
+    font-size: 0.78rem;
+  }
+
+  /* ARCHIVE MODAL */
   .modal-card-large {
-    padding: 18px 14px !important;
+    padding: 16px 12px !important;
+    border-radius: 18px !important;
   }
   .btn-archive-action {
-    font-size: 0.78rem !important;
-    padding: 8px 6px !important;
+    font-size: 0.76rem !important;
+    padding: 7px 5px !important;
+  }
+
+  /* BOTTOM CTA */
+  .landing-bottom-cta {
+    padding: 48px 16px;
+  }
+  .landing-bottom-cta h2 {
+    font-size: 1.4rem;
+  }
+  .landing-bottom-cta p {
+    font-size: 0.88rem;
+    margin-bottom: 24px;
   }
 }
 

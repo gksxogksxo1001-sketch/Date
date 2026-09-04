@@ -778,6 +778,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function openCalendar() {
+      if (calSelectedDate) {
+        calCurrentYear = calSelectedDate.getFullYear();
+        calCurrentMonth = calSelectedDate.getMonth();
+      }
       popup.classList.remove('hidden');
       trigger.classList.add('open');
       renderCalendarDays();
