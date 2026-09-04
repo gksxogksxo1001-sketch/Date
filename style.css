@@ -717,6 +717,44 @@ input:focus, select:focus, textarea:focus {
   margin-top: 24px !important;
 }
 
+/* CREATOR & ACCEPTED STATUS BANNERS */
+.creator-notice-banner {
+  background: #F0F7F4;
+  border: 1px solid rgba(129, 178, 154, 0.4);
+  border-radius: var(--radius-lg);
+  padding: 12px 16px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--sage-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.accepted-status-banner {
+  background: #FFF0F3;
+  border: 1.5px solid rgba(224, 122, 95, 0.4);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--coral-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(224, 122, 95, 0.15);
+  animation: pulseSubtle 2.5s infinite ease-in-out;
+}
+
+@keyframes pulseSubtle {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
 .btn-accept {
   background: var(--sage-accent) !important;
   color: #FFFFFF !important;

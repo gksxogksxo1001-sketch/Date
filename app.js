@@ -83,6 +83,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const downloadCardBtn = document.getElementById('downloadCardBtn');
   const downloadModalCardBtn = document.getElementById('downloadModalCardBtn');
   const sendAcceptKakaoBtn = document.getElementById('sendAcceptKakaoBtn');
+  const creatorNoticeBanner = document.getElementById('creatorNoticeBanner');
+  const acceptedStatusBanner = document.getElementById('acceptedStatusBanner');
+  const creatorShareAgainBtn = document.getElementById('creatorShareAgainBtn');
 
   let generatedShareUrl = '';
 
@@ -914,8 +917,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const cardId = 'card_' + Date.now();
+    const creatorId = AuthService.currentUser ? AuthService.currentUser.id : ('creator_' + Date.now());
     const payload = {
       id: cardId,
+      creatorId: creatorId,
       s: senderName,
       r: receiverName,
       d: dateVal,
@@ -929,6 +934,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       localStorage.setItem(cardId, JSON.stringify(payload));
+      const myCreated = JSON.parse(localStorage.getItem('dateplanner_my_created_ids') || '[]');
+      if (!myCreated.includes(cardId)) {
+        myCreated.push(cardId);
+        localStorage.setItem('dateplanner_my_created_ids', JSON.stringify(myCreated));
+      }
     } catch (e) {
       console.warn('LocalStorage save warning:', e);
     }
@@ -1047,6 +1057,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dropdownMenu.appendChild(optAllEl);
 
     updateStoryPage();
+    updateViewerActionUI(data);
   }
 
   function selectDropdownOption(val) {
@@ -1237,70 +1248,216 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Role & Acceptance UI State Controller
+  function updateViewerActionUI(data) {
+    if (!data) return;
+
+    const cardId = data.id || data.cardId;
+    let myCreated = [];
+    try {
+      myCreated = JSON.parse(localStorage.getItem('dateplanner_my_created_ids') || '[]');
+    } catch (e) {}
+
+    const isCreator = Boolean(
+      (cardId && myCreated.includes(cardId)) || 
+      (AuthService.currentUser && data.creatorId && AuthService.currentUser.id === data.creatorId)
+    );
+
+    let acceptedList = [];
+    try {
+      acceptedList = JSON.parse(localStorage.getItem('dateplanner_accepted_cards') || '[]');
+    } catch (e) {}
+
+    let isAccepted = Boolean(
+      (cardId && acceptedList.includes(cardId)) || 
+      data.isAccepted === true
+    );
+
+    if (isCreator) {
+      // 1. Creator (Sender) View: Never show accept or feedback buttons
+      if (creatorNoticeBanner) creatorNoticeBanner.classList.remove('hidden');
+      if (creatorShareAgainBtn) creatorShareAgainBtn.classList.remove('hidden');
+      if (acceptBtn) acceptBtn.classList.add('hidden');
+      if (feedbackBtn) feedbackBtn.classList.add('hidden');
+      if (downloadCardBtn) downloadCardBtn.classList.remove('hidden');
+
+      if (isAccepted) {
+        if (acceptedStatusBanner) {
+          acceptedStatusBanner.classList.remove('hidden');
+          acceptedStatusBanner.innerHTML = '<i class="fa-solid fa-heart-circle-check"></i> <span>상대방이 데이트 약속을 수락했습니다! 💖</span>';
+        }
+      } else {
+        if (acceptedStatusBanner) acceptedStatusBanner.classList.add('hidden');
+      }
+      return;
+    }
+
+    // 2. Recipient View
+    if (creatorNoticeBanner) creatorNoticeBanner.classList.add('hidden');
+    if (creatorShareAgainBtn) creatorShareAgainBtn.classList.add('hidden');
+
+    if (isAccepted) {
+      // Already accepted: Permanently hide accept and feedback buttons, only show downloadCardBtn
+      if (acceptedStatusBanner) {
+        acceptedStatusBanner.classList.remove('hidden');
+        acceptedStatusBanner.innerHTML = '<i class="fa-solid fa-heart-circle-check"></i> <span>데이트 약속을 수락하셨습니다! (확정됨 💖)</span>';
+      }
+      if (acceptBtn) acceptBtn.classList.add('hidden');
+      if (feedbackBtn) feedbackBtn.classList.add('hidden');
+      if (downloadCardBtn) downloadCardBtn.classList.remove('hidden');
+    } else {
+      // Not yet accepted: show accept and feedback buttons
+      if (acceptedStatusBanner) acceptedStatusBanner.classList.add('hidden');
+      if (acceptBtn) acceptBtn.classList.remove('hidden');
+      if (feedbackBtn) feedbackBtn.classList.remove('hidden');
+      if (downloadCardBtn) downloadCardBtn.classList.remove('hidden');
+    }
+
+    // Cloud Verification with Supabase
+    if (supabaseClient && cardId) {
+      supabaseClient
+        .from('date_cards')
+        .select('is_accepted')
+        .eq('id', cardId)
+        .maybeSingle()
+        .then(({ data: dbRow }) => {
+          if (dbRow && dbRow.is_accepted && !isAccepted) {
+            try {
+              acceptedList.push(cardId);
+              localStorage.setItem('dateplanner_accepted_cards', JSON.stringify(acceptedList));
+            } catch (e) {}
+            updateViewerActionUI(Object.assign({}, data, { isAccepted: true }));
+          }
+        })
+        .catch(() => {});
+    }
+  }
+
   // Accept & Feedback Handlers
   acceptBtn.addEventListener('click', async () => {
     const sender = recipientData ? recipientData.s : '신청자';
     const recipient = recipientData ? recipientData.r : '그대';
-    acceptModalTitle.textContent = '🎉 데이트 약속을 수락하셨습니다!';
-    acceptModalDesc.textContent = `${sender}님과의 설레는 데이트 약속이 확정되었습니다! 아래 버튼을 눌러 ${sender}님께 카카오톡으로 수락 답장을 보내보세요 💖`;
-    acceptOverlay.classList.remove('hidden');
-    
-    // Trigger Romantic Heart & Confetti Explosion Animation
-    triggerRomanticConfetti();
-
-    // Mark as accepted in Supabase & LocalStorage
+    const targetDate = recipientData ? formatDateString(recipientData.d) : '특별한 날';
     const cardId = recipientData ? (recipientData.id || recipientData.cardId) : null;
+    const currentUrl = window.location.href;
+
+    // 1. Mark accepted locally & in Supabase
     if (cardId) {
+      try {
+        const acceptedList = JSON.parse(localStorage.getItem('dateplanner_accepted_cards') || '[]');
+        if (!acceptedList.includes(cardId)) {
+          acceptedList.push(cardId);
+          localStorage.setItem('dateplanner_accepted_cards', JSON.stringify(acceptedList));
+        }
+      } catch (e) {}
       ArchiveService.markCardAccepted(cardId);
     }
+
+    // 2. Immediately lock UI (hide accept & feedback buttons, keep only image download button)
+    if (acceptBtn) acceptBtn.classList.add('hidden');
+    if (feedbackBtn) feedbackBtn.classList.add('hidden');
+    if (acceptedStatusBanner) {
+      acceptedStatusBanner.classList.remove('hidden');
+      acceptedStatusBanner.innerHTML = '<i class="fa-solid fa-heart-circle-check"></i> <span>데이트 약속을 수락하셨습니다! (확정됨 💖)</span>';
+    }
+    if (downloadCardBtn) downloadCardBtn.classList.remove('hidden');
+
+    // 3. Trigger Romantic Heart & Confetti Explosion Animation
+    triggerRomanticConfetti();
+
+    // 4. Open Accept Modal
+    acceptModalTitle.textContent = '🎉 데이트 약속을 수락하셨습니다!';
+    acceptModalDesc.textContent = `${sender}님과의 설레는 데이트 약속이 확정되었습니다! 아래 버튼을 눌러 ${sender}님께 카카오톡으로 수락 답장을 전송해 보세요 💖`;
+    acceptOverlay.classList.remove('hidden');
+
+    // 5. Automatically open Kakao Share dialog so recipient can send acceptance message back to creator
+    sendAcceptKakaoMessage(true);
   });
 
-  if (sendAcceptKakaoBtn) {
-    sendAcceptKakaoBtn.addEventListener('click', () => {
-      const sender = recipientData ? recipientData.s : '신청자';
-      const recipient = recipientData ? recipientData.r : '그대';
-      const targetDate = recipientData ? formatDateString(recipientData.d) : '특별한 날';
-      const currentUrl = window.location.href;
+  function sendAcceptKakaoMessage(isAuto = false) {
+    const sender = recipientData ? recipientData.s : '신청자';
+    const recipient = recipientData ? recipientData.r : '그대';
+    const targetDate = recipientData ? formatDateString(recipientData.d) : '특별한 날';
+    const currentUrl = window.location.href;
 
-      // 1. Send via Kakao Talk Share
-      if (window.Kakao && window.Kakao.isInitialized && window.Kakao.isInitialized()) {
-        try {
-          window.Kakao.Share.sendDefault({
-            objectType: 'feed',
-            content: {
-              title: `💖 [데이트 수락] ${recipient}님이 데이트 코스를 수락했어요!`,
-              description: `${sender}아! 네가 정성껏 보내준 데이트 코스 너무 마음에 들어 🌿\n📅 데이트 약속: ${targetDate}\n설레는 마음으로 그날 만나요 ✨`,
-              imageUrl: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop',
+    if (window.Kakao && window.Kakao.isInitialized && window.Kakao.isInitialized()) {
+      try {
+        window.Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: `💖 [데이트 수락] ${recipient}님이 데이트 코스를 수락했어요!`,
+            description: `${sender}아! 네가 정성껏 보내준 데이트 코스 너무 마음에 들어 🌿\n📅 데이트 약속: ${targetDate}\n설레는 마음으로 그날 만나요 ✨`,
+            imageUrl: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop',
+            link: {
+              mobileWebUrl: currentUrl,
+              webUrl: currentUrl
+            }
+          },
+          buttons: [
+            {
+              title: '확정된 데이트 코스 보기 💖',
               link: {
                 mobileWebUrl: currentUrl,
                 webUrl: currentUrl
               }
-            },
-            buttons: [
-              {
-                title: '확정된 데이트 코스 보기 💖',
-                link: {
-                  mobileWebUrl: currentUrl,
-                  webUrl: currentUrl
-                }
-              }
-            ]
-          });
-          showToast('카카오톡으로 수락 답장 창이 열렸습니다! 💖');
-          return;
-        } catch (e) {
-          console.error('Kakao accept reply share error:', e);
-        }
-      }
-
-      // Fallback: Clipboard copy
-      const textToCopy = `[DatePlanner 데이트 수락 💖]\n${sender}아! 정성껏 보내준 데이트 코스 너무 완벽해! 기쁜 마음으로 수락할게 🌿\n\n📅 데이트 날짜: ${targetDate}\n✨ 확정 코스 보기: ${currentUrl}`;
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(textToCopy).then(() => {
-          showToast('수락 답장 문구가 복사되었습니다! 카톡에 붙여넣어 보세요 💖');
+            }
+          ]
         });
+        if (!isAuto) showToast('카카오톡으로 수락 답장 창이 열렸습니다! 💖');
+        return;
+      } catch (e) {
+        console.error('Kakao accept reply share error:', e);
+      }
+    }
+
+    const textToCopy = `[DatePlanner 데이트 수락 💖]\n${sender}아! 정성껏 보내준 데이트 코스 너무 완벽해! 기쁜 마음으로 수락할게 🌿\n\n📅 데이트 날짜: ${targetDate}\n✨ 확정 코스 보기: ${currentUrl}`;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        showToast('수락 답장 문구가 복사되었습니다! 카톡에 붙여넣어 보세요 💖');
+      });
+    } else {
+      showToast('데이트 수락이 확정되었습니다! 💖');
+    }
+  }
+
+  if (sendAcceptKakaoBtn) {
+    sendAcceptKakaoBtn.addEventListener('click', () => sendAcceptKakaoMessage(false));
+  }
+
+  if (creatorShareAgainBtn) {
+    creatorShareAgainBtn.addEventListener('click', () => {
+      const targetUrl = window.location.href;
+      const recipient = recipientData ? recipientData.r : '소중한 사람';
+      const sender = recipientData ? recipientData.s : '신청자';
+      if (window.Kakao && window.Kakao.isInitialized && window.Kakao.isInitialized()) {
+        window.Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: `💌 [DateCard] ${sender}님이 보낸 데이트 초대장`,
+            description: `${recipient}아, 너만을 위해 준비한 감성 데이트 코스야! 확인해 볼래? 🌿`,
+            imageUrl: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=600&auto=format&fit=crop',
+            link: {
+              mobileWebUrl: targetUrl,
+              webUrl: targetUrl
+            }
+          },
+          buttons: [
+            {
+              title: '스토리 초대장 확인하기 💖',
+              link: {
+                mobileWebUrl: targetUrl,
+                webUrl: targetUrl
+              }
+            }
+          ]
+        });
+        showToast('카카오톡 공유창이 열렸습니다! 💬');
       } else {
-        showToast('데이트 수락이 확정되었습니다! 💖');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(targetUrl).then(() => {
+            showToast('초대장 링크가 복사되었습니다! 카톡에 붙여넣어 보세요 💬');
+          });
+        }
       }
     });
   }

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,14 +11,16 @@
   <link rel="apple-touch-icon" href="assets/favicon.png">
   <!-- Open Graph / KakaoTalk Preview Meta Tags -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="💌 너를 위한 특별한 감성 데이트 초대장 💖">
+  <meta property="og:title" content="너를 위한 특별한 감성 데이트 초대장 💖">
   <meta property="og:description" content="설레는 데이트 날짜, 장소, 코스 타임라인을 카드뉴스 스토리로 확인해 보세요! 🌿">
   <meta property="og:image" content="https://gksxogksxo1001-sketch.github.io/Date/assets/restaurant.jpg">
   <meta property="og:url" content="https://gksxogksxo1001-sketch.github.io/Date/">
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Pretendard:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Canvas Confetti & html2canvas & Kakao SDK v2 & Supabase SDK -->
@@ -27,6 +30,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body id="appBody" class="theme-cozy">
 
   <main class="app-container">
@@ -37,7 +41,7 @@
         <i class="fa-solid fa-compass logo-icon"></i>
         <span class="nav-brand-text">DatePlanner</span>
       </div>
-      
+
       <div class="nav-actions">
         <!-- MY ARCHIVE BUTTON -->
         <button type="button" id="openArchiveBtn" class="nav-btn-archive" title="내 데이트 보관함">
@@ -53,7 +57,7 @@
             <i class="fa-solid fa-comment"></i>
             <span>카카오 로그인</span>
           </button>
-          
+
           <!-- Logged In State (hidden by default) -->
           <div id="userProfileNav" class="nav-user-profile hidden">
             <img id="userAvatarImg" src="assets/favicon.png" class="nav-avatar" alt="카카오 프로필">
@@ -73,7 +77,7 @@
       <div class="landing-hero">
         <div class="hero-bg-overlay"></div>
         <div class="hero-content">
-          <div class="hero-badge">💌 DatePlanner</div>
+          <div class="hero-badge">DatePlanner</div>
           <h1 class="hero-title">너를 위한<br>특별한 데이트 초대장</h1>
           <p class="hero-subtitle">회원가입 없이 10초 만에, 감성 코스 초대장을 만들어<br>카카오톡으로 보내보세요</p>
           <button id="heroCTA" class="hero-cta-btn">
@@ -122,22 +126,26 @@
         <p class="section-desc">데이트 초대장을 더욱 특별하게</p>
         <div class="features-grid">
           <div class="feature-card">
-            <div class="feature-icon" style="background: linear-gradient(135deg, #E07A5F, #F2A65A)"><i class="fa-solid fa-palette"></i></div>
+            <div class="feature-icon" style="background: linear-gradient(135deg, #E07A5F, #F2A65A)"><i
+                class="fa-solid fa-palette"></i></div>
             <h3>3가지 감성 테마</h3>
             <p>Warm Cozy, Romantic Rose, Midnight Navy 중 선택</p>
           </div>
           <div class="feature-card">
-            <div class="feature-icon" style="background: linear-gradient(135deg, #81B29A, #3D9970)"><i class="fa-solid fa-camera-retro"></i></div>
+            <div class="feature-icon" style="background: linear-gradient(135deg, #81B29A, #3D9970)"><i
+                class="fa-solid fa-camera-retro"></i></div>
             <h3>사진 업로드</h3>
             <p>코스별 내 갤러리 사진으로 더 생생한 초대장</p>
           </div>
           <div class="feature-card">
-            <div class="feature-icon" style="background: linear-gradient(135deg, #6C63FF, #B983FF)"><i class="fa-solid fa-book-open"></i></div>
+            <div class="feature-icon" style="background: linear-gradient(135deg, #6C63FF, #B983FF)"><i
+                class="fa-solid fa-book-open"></i></div>
             <h3>스토리 뷰어</h3>
             <p>인스타 스토리처럼 한 장씩 넘겨보는 감성 카드</p>
           </div>
           <div class="feature-card">
-            <div class="feature-icon" style="background: linear-gradient(135deg, #E07A5F, #FF6B81)"><i class="fa-solid fa-heart"></i></div>
+            <div class="feature-icon" style="background: linear-gradient(135deg, #E07A5F, #FF6B81)"><i
+                class="fa-solid fa-heart"></i></div>
             <h3>수락 폭죽 연출</h3>
             <p>수락 시 로맨틱 하트·꽃가루 파티클 애니메이션</p>
           </div>
@@ -214,19 +222,19 @@
 
     <!-- SECTION 1: CREATE COURSE ROOM FORM (방 만들기 모드) -->
     <section id="createMode" class="card-container main-card hidden">
-      
+
       <div class="card-header">
         <h2><i class="fa-solid fa-pen-sparkles"></i> 데이트 신청 방 만들기</h2>
         <p>코스를 작성하시면 상대방에게 <strong>카드뉴스/스토리 스타일</strong>로 멋지게 전달됩니다.</p>
       </div>
 
       <form id="invitationForm" onsubmit="event.preventDefault();">
-        
+
         <!-- THEME SELECTION WITH HOVER PREVIEW -->
         <div class="form-group margin-bottom-lg">
           <label class="label-large"><i class="fa-solid fa-palette"></i> 초대장 디자인 테마 선택 (마우스를 올리면 미리보기)</label>
           <div class="theme-picker-grid" id="themePicker">
-            
+
             <div class="theme-card active" data-theme="cozy">
               <div class="theme-color-preview cozy-bg"></div>
               <div class="theme-card-info">
@@ -320,8 +328,10 @@
 
         <!-- Expanded Message Box -->
         <div class="form-group margin-top-lg">
-          <label for="message" class="label-large"><i class="fa-regular fa-comment-dots"></i> 한 줄 메시지 (상대방에게 전하는 초청 메시지)</label>
-          <textarea id="message" rows="5" class="textarea-large" placeholder="상대방에게 전하고 싶은 마음을 작성해 보세요." required></textarea>
+          <label for="message" class="label-large"><i class="fa-regular fa-comment-dots"></i> 한 줄 메시지 (상대방에게 전하는 초청
+            메시지)</label>
+          <textarea id="message" rows="5" class="textarea-large" placeholder="상대방에게 전하고 싶은 마음을 작성해 보세요."
+            required></textarea>
         </div>
 
         <!-- Submit Button -->
@@ -333,7 +343,7 @@
 
     <!-- SECTION 2: VIEW STORY CARD SLIDER (상대방 카드뉴스/스토리 뷰) -->
     <section id="viewMode" class="card-container main-card hidden">
-      
+
       <!-- Story Top Progress Bar -->
       <div id="storyProgress" class="story-progress-bar">
         <!-- Rendered dynamically -->
@@ -357,15 +367,38 @@
 
       <!-- Story Bottom Action Buttons -->
       <div class="cta-container margin-top-md">
+        <!-- Creator Notice (Only shown to sender/creator) -->
+        <div id="creatorNoticeBanner" class="creator-notice-banner hidden">
+          <i class="fa-solid fa-crown"></i>
+          <span>내가 만든 데이트 초대장입니다 (상대방 화면에서만 수락 버튼이 표시됩니다)</span>
+        </div>
+
+        <!-- Accepted Notice (Shown when card is accepted) -->
+        <div id="acceptedStatusBanner" class="accepted-status-banner hidden">
+          <i class="fa-solid fa-heart-circle-check"></i>
+          <span>데이트 약속이 기쁘게 수락되었습니다! 💖</span>
+        </div>
+
+        <!-- Accept Button (Only shown to recipient before accepting) -->
         <button type="button" id="acceptBtn" class="btn-accept btn-block">
           <i class="fa-solid fa-heart-circle-check"></i> 데이트 코스 완벽해! 수락하기
         </button>
+
+        <!-- Download Card Image (Always shown) -->
         <button type="button" id="downloadCardBtn" class="btn-secondary btn-block btn-download">
           <i class="fa-solid fa-camera"></i> 스토리 카드 이미지로 저장하기
         </button>
+
+        <!-- Feedback Button (Only shown to recipient before accepting) -->
         <button type="button" id="feedbackBtn" class="btn-secondary btn-block">
           <i class="fa-regular fa-comment-dots"></i> 살짝 코스 조정 요청하기
         </button>
+
+        <!-- Creator Share Again Button (Only shown to creator) -->
+        <button type="button" id="creatorShareAgainBtn" class="btn-kakao btn-block hidden">
+          <i class="fa-solid fa-comment"></i> 카카오톡으로 상대방에게 다시 보내기
+        </button>
+
         <button type="button" id="makeNewBtn" class="btn-link-subtle btn-block">
           <i class="fa-solid fa-wand-magic-sparkles"></i> 나도 데이트 코스 신청 방 만들기
         </button>
@@ -401,7 +434,8 @@
     <!-- MODAL: COURSE FEEDBACK / ADJUSTMENT REQUEST (WITH CUSTOM UI DROPDOWN) -->
     <div id="feedbackModal" class="modal-overlay hidden">
       <div class="modal-card">
-        <div class="modal-icon" style="background: #FFF3E0; color: #F57C00;"><i class="fa-regular fa-comment-dots"></i></div>
+        <div class="modal-icon" style="background: #FFF3E0; color: #F57C00;"><i class="fa-regular fa-comment-dots"></i>
+        </div>
         <h3>코스 살짝 조정 요청하기 💬</h3>
         <p>남친에게 변경하고 싶은 내용이나 피드백을 전달해 보세요!</p>
 
@@ -439,7 +473,8 @@
       <div class="modal-card modal-card-large">
         <div class="modal-header-row">
           <div class="modal-title-group">
-            <div class="modal-icon" style="background: #FFE8EC; color: #E07A5F;"><i class="fa-solid fa-box-archive"></i></div>
+            <div class="modal-icon" style="background: #FFE8EC; color: #E07A5F;"><i class="fa-solid fa-box-archive"></i>
+            </div>
             <div class="modal-title-text">
               <h3>내 데이트 보관함 💌</h3>
               <p class="modal-subtitle" id="archiveUserStatusText">카카오 로그인 시 모든 기기에서 안전하게 보관됩니다.</p>
@@ -497,4 +532,5 @@
 
   <script src="app.js"></script>
 </body>
+
 </html>
