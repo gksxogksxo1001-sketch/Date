@@ -30,6 +30,41 @@
 
   <main class="app-container">
 
+    <!-- ==================== GLOBAL NAVBAR ==================== -->
+    <nav class="global-navbar" id="globalNavbar">
+      <div class="nav-brand" id="navBrandBtn" title="홈으로 이동">
+        <i class="fa-solid fa-compass logo-icon"></i>
+        <span class="nav-brand-text">DatePlanner</span>
+      </div>
+      
+      <div class="nav-actions">
+        <!-- MY ARCHIVE BUTTON -->
+        <button type="button" id="openArchiveBtn" class="nav-btn-archive" title="내 데이트 보관함">
+          <i class="fa-solid fa-box-archive"></i>
+          <span class="nav-btn-text">내 보관함</span>
+          <span id="archiveCountBadge" class="badge-count hidden">0</span>
+        </button>
+
+        <!-- KAKAO AUTH CONTAINER -->
+        <div id="authContainer" class="nav-auth-container">
+          <!-- Logged Out State -->
+          <button type="button" id="kakaoLoginBtn" class="nav-kakao-login-btn" title="카카오톡 1초 간편 로그인">
+            <i class="fa-solid fa-comment"></i>
+            <span>카카오 로그인</span>
+          </button>
+          
+          <!-- Logged In State (hidden by default) -->
+          <div id="userProfileNav" class="nav-user-profile hidden">
+            <img id="userAvatarImg" src="assets/favicon.png" class="nav-avatar" alt="카카오 프로필">
+            <span id="userNicknameSpan" class="nav-nickname"></span>
+            <button type="button" id="kakaoLogoutBtn" class="nav-logout-btn" title="로그아웃">
+              <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
     <!-- ==================== LANDING PAGE ==================== -->
     <section id="landingMode" class="landing-page">
 
@@ -393,6 +428,43 @@
             <i class="fa-solid fa-paper-plane"></i> 카톡/메시지로 요청 전송하기
           </button>
           <button type="button" id="closeFeedbackModalBtn" class="btn-secondary">취소</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL: MY DATE CARDS ARCHIVE ==================== -->
+    <div id="archiveModal" class="modal-overlay hidden">
+      <div class="modal-card modal-card-large">
+        <div class="modal-header-row">
+          <div class="modal-title-group">
+            <div class="modal-icon" style="background: #FFE8EC; color: #E07A5F;"><i class="fa-solid fa-box-archive"></i></div>
+            <div class="modal-title-text">
+              <h3>내 데이트 보관함 💌</h3>
+              <p class="modal-subtitle" id="archiveUserStatusText">카카오 로그인 시 모든 기기에서 안전하게 보관됩니다.</p>
+            </div>
+          </div>
+          <button type="button" id="closeArchiveModalBtn" class="modal-close-icon-btn" title="닫기">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="archive-modal-body">
+          <!-- DYNAMIC ARCHIVE CARDS GRID -->
+          <div id="archiveCardsGrid" class="archive-cards-grid"></div>
+
+          <!-- EMPTY STATE -->
+          <div id="archiveEmptyState" class="archive-empty-state hidden">
+            <div class="empty-icon"><i class="fa-regular fa-envelope-open"></i></div>
+            <h4>보관된 초대장이 아직 없습니다</h4>
+            <p>소중한 사람을 위한 설레는 데이트 코스를 작성해 보세요! 🌿</p>
+            <button type="button" id="archiveCreateNewBtn" class="btn-primary">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> 첫 데이트 초대장 만들기
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-actions-row">
+          <button type="button" id="closeArchiveBottomBtn" class="btn-secondary">닫기</button>
         </div>
       </div>
     </div>

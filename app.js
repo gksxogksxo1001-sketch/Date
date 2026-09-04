@@ -24,6 +24,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const themePicker = document.getElementById('themePicker');
   const selectedTheme = document.getElementById('selectedTheme');
 
+  // Global Nav & Auth Elements
+  const navBrandBtn = document.getElementById('navBrandBtn');
+  const openArchiveBtn = document.getElementById('openArchiveBtn');
+  const archiveCountBadge = document.getElementById('archiveCountBadge');
+  const kakaoLoginBtn = document.getElementById('kakaoLoginBtn');
+  const userProfileNav = document.getElementById('userProfileNav');
+  const userAvatarImg = document.getElementById('userAvatarImg');
+  const userNicknameSpan = document.getElementById('userNicknameSpan');
+  const kakaoLogoutBtn = document.getElementById('kakaoLogoutBtn');
+
+  // Archive Modal Elements
+  const archiveModal = document.getElementById('archiveModal');
+  const closeArchiveModalBtn = document.getElementById('closeArchiveModalBtn');
+  const closeArchiveBottomBtn = document.getElementById('closeArchiveBottomBtn');
+  const archiveCardsGrid = document.getElementById('archiveCardsGrid');
+  const archiveEmptyState = document.getElementById('archiveEmptyState');
+  const archiveCreateNewBtn = document.getElementById('archiveCreateNewBtn');
+  const archiveUserStatusText = document.getElementById('archiveUserStatusText');
+
   // Story Pager Elements
   const storyProgress = document.getElementById('storyProgress');
   const storyPageWrapper = document.getElementById('storyPageWrapper');
@@ -38,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const shareKakaoBtn = document.getElementById('shareKakaoBtn');
   const previewBtn = document.getElementById('previewBtn');
   const closeModalBtn = document.getElementById('closeModalBtn');
+  const makeNewBtn = document.getElementById('makeNewBtn');
   
   // Custom Dropdown Feedback Elements
   const feedbackBtn = document.getElementById('feedbackBtn');
@@ -62,6 +82,379 @@ document.addEventListener('DOMContentLoaded', () => {
   const downloadModalCardBtn = document.getElementById('downloadModalCardBtn');
 
   let generatedShareUrl = '';
+
+  // Initialize Kakao SDK
+  if (window.Kakao && !window.Kakao.isInitialized()) {
+    try {
+      window.Kakao.init(KAKAO_APP_KEY);
+    } catch (e) {
+      console.error('Kakao init error:', e);
+    }
+  }
+
+  // ====================================================
+  // AUTH SERVICE (KAKAO 1-SECOND LOGIN)
+  // ====================================================
+  const AuthService = {
+    currentUser: null,
+
+    init() {
+      this.loadSession();
+      this.renderUI();
+    },
+
+    loadSession() {
+      try {
+        const saved = localStorage.getItem('dateplanner_user');
+        if (saved) {
+          this.currentUser = JSON.parse(saved);
+        }
+      } catch (e) {
+        console.warn('Failed to load user session', e);
+      }
+    },
+
+    saveSession(user) {
+      this.currentUser = user;
+      try {
+        if (user) {
+          localStorage.setItem('dateplanner_user', JSON.stringify(user));
+        } else {
+          localStorage.removeItem('dateplanner_user');
+        }
+      } catch (e) {
+        console.warn('Failed to save session', e);
+      }
+      this.renderUI();
+      ArchiveService.loadAndRender();
+    },
+
+    login() {
+      if (!window.Kakao) {
+        showToast('카카오 SDK를 불러오는 중입니다.', true);
+        return;
+      }
+      if (!window.Kakao.isInitialized()) {
+        window.Kakao.init(KAKAO_APP_KEY);
+      }
+
+      window.Kakao.Auth.login({
+        success: (authObj) => {
+          window.Kakao.API.request({
+            url: '/v2/user/me',
+            success: (res) => {
+              const kakaoAccount = res.kakao_account || {};
+              const profile = kakaoAccount.profile || {};
+              const user = {
+                id: 'kakao_' + res.id,
+                nickname: profile.nickname || '카카오 회원',
+                profileImage: profile.profile_image_url || profile.thumbnail_image_url || 'assets/favicon.png',
+                email: kakaoAccount.email || '',
+                loginTime: Date.now()
+              };
+              this.saveSession(user);
+              showToast(`💖 ${user.nickname}님, 환영합니다!`);
+            },
+            fail: (error) => {
+              console.error('Kakao profile request error:', error);
+              showToast('카카오 프로필 정보를 가져오지 못했습니다.', true);
+            }
+          });
+        },
+        fail: (err) => {
+          console.error('Kakao login error:', err);
+          showToast('카카오 로그인에 실패하였습니다.', true);
+        }
+      });
+    },
+
+    logout() {
+      if (window.Kakao && window.Kakao.Auth && window.Kakao.Auth.getAccessToken()) {
+        window.Kakao.Auth.logout(() => {
+          console.log('Kakao SDK logged out');
+        });
+      }
+      this.saveSession(null);
+      showToast('로그아웃 되었습니다.');
+    },
+
+    renderUI() {
+      if (this.currentUser) {
+        if (kakaoLoginBtn) kakaoLoginBtn.classList.add('hidden');
+        if (userProfileNav) userProfileNav.classList.remove('hidden');
+        if (userAvatarImg) userAvatarImg.src = this.currentUser.profileImage || 'assets/favicon.png';
+        if (userNicknameSpan) userNicknameSpan.textContent = this.currentUser.nickname;
+        if (archiveUserStatusText) archiveUserStatusText.innerHTML = `<span class="badge-online">●</span> <strong>${this.currentUser.nickname}</strong>님의 카카오 계정에 안전하게 보관 중입니다.`;
+      } else {
+        if (kakaoLoginBtn) kakaoLoginBtn.classList.remove('hidden');
+        if (userProfileNav) userProfileNav.classList.add('hidden');
+        if (archiveUserStatusText) archiveUserStatusText.textContent = '💡 카카오 로그인 시 모든 기기에서 안전하게 보관됩니다.';
+      }
+    }
+  };
+
+  // ====================================================
+  // ARCHIVE SERVICE (MY DATE CARDS STORAGE)
+  // ====================================================
+  const ArchiveService = {
+    STORAGE_KEY: 'dateplanner_archives',
+
+    getAll() {
+      try {
+        const data = localStorage.getItem(this.STORAGE_KEY);
+        return data ? JSON.parse(data) : [];
+      } catch (e) {
+        console.warn('Archive load error:', e);
+        return [];
+      }
+    },
+
+    save(cardPayload, shareUrl) {
+      const list = this.getAll();
+      const existingIndex = list.findIndex(item => item.id === cardPayload.id);
+      const archiveItem = {
+        id: cardPayload.id || ('card_' + Date.now()),
+        senderName: cardPayload.s,
+        receiverName: cardPayload.r,
+        date: cardPayload.d,
+        area: cardPayload.a,
+        budget: cardPayload.b,
+        message: cardPayload.m,
+        theme: cardPayload.tm,
+        courses: cardPayload.c || [],
+        shareUrl: shareUrl,
+        createdAt: Date.now(),
+        userId: AuthService.currentUser ? AuthService.currentUser.id : 'guest'
+      };
+
+      if (existingIndex >= 0) {
+        list[existingIndex] = archiveItem;
+      } else {
+        list.unshift(archiveItem);
+      }
+
+      if (list.length > 50) list.length = 50;
+
+      try {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(list));
+      } catch (e) {
+        console.warn('Archive save error:', e);
+      }
+
+      this.updateCountBadge();
+    },
+
+    delete(cardId) {
+      let list = this.getAll();
+      list = list.filter(item => item.id !== cardId);
+      try {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(list));
+        localStorage.removeItem(cardId);
+      } catch (e) {
+        console.warn('Archive delete error:', e);
+      }
+      this.loadAndRender();
+      showToast('초대장이 보관함에서 삭제되었습니다.');
+    },
+
+    updateCountBadge() {
+      if (!archiveCountBadge) return;
+      const list = this.getAll();
+      if (list.length > 0) {
+        archiveCountBadge.textContent = list.length;
+        archiveCountBadge.classList.remove('hidden');
+      } else {
+        archiveCountBadge.classList.add('hidden');
+      }
+    },
+
+    loadAndRender() {
+      this.updateCountBadge();
+      if (!archiveCardsGrid || !archiveEmptyState) return;
+
+      const list = this.getAll();
+      if (list.length === 0) {
+        archiveCardsGrid.innerHTML = '';
+        archiveEmptyState.classList.remove('hidden');
+        return;
+      }
+
+      archiveEmptyState.classList.add('hidden');
+      archiveCardsGrid.innerHTML = '';
+
+      list.forEach(item => {
+        const cardEl = document.createElement('div');
+        cardEl.className = `archive-card-item theme-${item.theme || 'cozy'}`;
+
+        const courseSummary = (item.courses || []).map((c, i) => `${i + 1}차: ${c.n}`).join(' ➔ ') || '코스 정보 없음';
+        const createdDateStr = new Date(item.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const targetDateStr = formatDateString(item.date);
+        const themeLabel = item.theme === 'rose' ? '🌹 Romantic Rose' : (item.theme === 'midnight' ? '🌙 Midnight Navy' : '🌿 Warm Cozy');
+
+        cardEl.innerHTML = `
+          <div class="archive-card-header">
+            <div class="archive-theme-pill">${themeLabel}</div>
+            <span class="archive-date-tag">${createdDateStr} 생성</span>
+          </div>
+          <div class="archive-card-body">
+            <h4 class="archive-card-title">To. <strong>${item.receiverName}</strong> <span style="font-weight:400; font-size:0.88rem; color:var(--text-muted);">(From. ${item.senderName})</span></h4>
+            <div class="archive-meta">
+              <span><i class="fa-regular fa-calendar-check"></i> ${targetDateStr}</span>
+              <span><i class="fa-solid fa-location-dot"></i> ${item.area}</span>
+              <span><i class="fa-solid fa-wallet"></i> ${item.budget}</span>
+            </div>
+            <div class="archive-courses-preview">
+              <i class="fa-solid fa-route"></i> <span>${courseSummary}</span>
+            </div>
+          </div>
+          <div class="archive-card-actions">
+            <button type="button" class="btn-archive-action btn-view" title="스토리 초대장 열기" onclick="window.viewArchiveCard('${item.shareUrl}')">
+              <i class="fa-solid fa-eye"></i> 열기
+            </button>
+            <button type="button" class="btn-archive-action btn-copy" title="공유 링크 복사" onclick="window.copyArchiveLink('${item.shareUrl}')">
+              <i class="fa-solid fa-link"></i> 링크복사
+            </button>
+            <button type="button" class="btn-archive-action btn-kakao" title="카카오톡 재전송" onclick="window.shareArchiveKakao('${item.id}')">
+              <i class="fa-solid fa-comment"></i> 카톡
+            </button>
+            <button type="button" class="btn-archive-action btn-delete" title="초대장 삭제" onclick="window.deleteArchiveItem('${item.id}')">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        `;
+        archiveCardsGrid.appendChild(cardEl);
+      });
+    }
+  };
+
+  // Global Actions for Archive Cards
+  window.viewArchiveCard = function(shareUrl) {
+    if (archiveModal) archiveModal.classList.add('hidden');
+    window.location.href = shareUrl;
+  };
+
+  window.copyArchiveLink = function(shareUrl) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => showToast('초대장 링크가 복사되었습니다! 🌿'))
+        .catch(() => fallbackCopyDirect(shareUrl));
+    } else {
+      fallbackCopyDirect(shareUrl);
+    }
+  };
+
+  function fallbackCopyDirect(text) {
+    const tempInput = document.createElement('input');
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
+    showToast('초대장 링크가 복사되었습니다!');
+  }
+
+  window.shareArchiveKakao = function(cardId) {
+    const item = ArchiveService.getAll().find(c => c.id === cardId);
+    if (!item) return;
+
+    if (window.Kakao) {
+      if (!window.Kakao.isInitialized()) {
+        try {
+          window.Kakao.init(KAKAO_APP_KEY);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      if (window.Kakao.isInitialized()) {
+        let targetUrl = item.shareUrl;
+        if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+          targetUrl = 'https://gksxogksxo1001-sketch.github.io/Date/' + (targetUrl.includes('?') ? targetUrl.substring(targetUrl.indexOf('?')) : '');
+        }
+
+        window.Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: `💌 ${item.senderName}님이 보낸 감성 데이트 초대장 💖`,
+            description: `${item.receiverName}야! ${formatDateString(item.date)}에 ${item.area}에서 만나자! 🌿`,
+            imageUrl: 'https://gksxogksxo1001-sketch.github.io/Date/assets/restaurant.jpg',
+            link: {
+              mobileWebUrl: targetUrl,
+              webUrl: targetUrl,
+            },
+          },
+          buttons: [
+            {
+              title: '스토리 초대장 확인하기 💖',
+              link: {
+                mobileWebUrl: targetUrl,
+                webUrl: targetUrl,
+              },
+            },
+          ],
+        });
+        showToast('카카오톡 공유창이 열렸습니다! 💬');
+        return;
+      }
+    }
+
+    // Fallback
+    window.copyArchiveLink(item.shareUrl);
+  };
+
+  window.deleteArchiveItem = function(cardId) {
+    if (confirm('이 데이트 초대장을 보관함에서 삭제하시겠습니까?')) {
+      ArchiveService.delete(cardId);
+    }
+  };
+
+  // Nav & Auth Event Handlers
+  if (navBrandBtn) {
+    navBrandBtn.addEventListener('click', () => {
+      window.location.href = window.location.origin + window.location.pathname;
+    });
+  }
+
+  if (kakaoLoginBtn) {
+    kakaoLoginBtn.addEventListener('click', () => {
+      AuthService.login();
+    });
+  }
+
+  if (kakaoLogoutBtn) {
+    kakaoLogoutBtn.addEventListener('click', () => {
+      AuthService.logout();
+    });
+  }
+
+  if (openArchiveBtn) {
+    openArchiveBtn.addEventListener('click', () => {
+      ArchiveService.loadAndRender();
+      if (archiveModal) archiveModal.classList.remove('hidden');
+    });
+  }
+
+  if (closeArchiveModalBtn) {
+    closeArchiveModalBtn.addEventListener('click', () => {
+      if (archiveModal) archiveModal.classList.add('hidden');
+    });
+  }
+
+  if (closeArchiveBottomBtn) {
+    closeArchiveBottomBtn.addEventListener('click', () => {
+      if (archiveModal) archiveModal.classList.add('hidden');
+    });
+  }
+
+  if (archiveCreateNewBtn) {
+    archiveCreateNewBtn.addEventListener('click', () => {
+      if (archiveModal) archiveModal.classList.add('hidden');
+      switchToCreateMode();
+    });
+  }
+
+  // Initialize Auth & Archive
+  AuthService.init();
+  ArchiveService.updateCountBadge();
 
   // ========== LANDING PAGE CTA HANDLERS ==========
   function switchToCreateMode() {
@@ -378,6 +771,9 @@ document.addEventListener('DOMContentLoaded', () => {
       baseUrl = 'https://gksxogksxo1001-sketch.github.io/Date/';
     }
     generatedShareUrl = `${baseUrl}?card=${encodedToken}`;
+
+    // Auto-save to Date Cards Archive
+    ArchiveService.save(payload, generatedShareUrl);
 
     shareUrlInput.value = generatedShareUrl;
     shareModal.classList.remove('hidden');
