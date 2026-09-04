@@ -358,16 +358,16 @@
       <!-- Story Bottom Action Buttons -->
       <div class="cta-container margin-top-md">
         <button type="button" id="acceptBtn" class="btn-accept btn-block">
-          <i class="fa-regular fa-face-smile-beam"></i> 데이트 코스 완벽해! 수락하기 🌿
+          <i class="fa-solid fa-heart-circle-check"></i> 데이트 코스 완벽해! 수락하기
         </button>
         <button type="button" id="downloadCardBtn" class="btn-secondary btn-block btn-download">
-          <i class="fa-solid fa-camera"></i> 📷 스토리 카드 이미지로 저장하기
+          <i class="fa-solid fa-camera"></i> 스토리 카드 이미지로 저장하기
         </button>
         <button type="button" id="feedbackBtn" class="btn-secondary btn-block">
           <i class="fa-regular fa-comment-dots"></i> 살짝 코스 조정 요청하기
         </button>
         <button type="button" id="makeNewBtn" class="btn-link-subtle btn-block">
-          <i class="fa-solid fa-plus"></i> 나도 데이트 코스 신청 방 만들기
+          <i class="fa-solid fa-wand-magic-sparkles"></i> 나도 데이트 코스 신청 방 만들기
         </button>
       </div>
     </section>
@@ -388,7 +388,7 @@
 
         <div class="modal-actions">
           <button type="button" id="shareKakaoBtn" class="btn-kakao btn-block">
-            <i class="fa-solid fa-comment"></i> 💬 카카오톡으로 초대장 보내기
+            <i class="fa-solid fa-comment"></i> 카카오톡으로 초대장 보내기
           </button>
           <button type="button" id="previewBtn" class="btn-primary">
             <i class="fa-solid fa-eye"></i> 스토리 초대장 미리보기
@@ -480,11 +480,14 @@
     <div id="acceptOverlay" class="accept-overlay hidden">
       <div class="accept-card">
         <div class="big-icon"><i class="fa-solid fa-heart-circle-check"></i></div>
-        <h2 id="acceptModalTitle">🎉 데이트 약속을 수락하셨습니다! 🌿</h2>
+        <h2 id="acceptModalTitle">🎉 데이트 약속을 수락하셨습니다!</h2>
         <p id="acceptModalDesc">신청자와의 설레는 데이트 약속이 확정되었습니다! 약속 시간과 코스 장소를 캡처하여 간직해 보세요 💖</p>
         <div class="modal-actions-column margin-top-md">
+          <button type="button" id="sendAcceptKakaoBtn" class="btn-kakao btn-block">
+            <i class="fa-solid fa-comment"></i> 카카오톡으로 수락 답장 보내기
+          </button>
           <button type="button" id="downloadModalCardBtn" class="btn-primary btn-hero">
-            <i class="fa-solid fa-camera"></i> 📷 데이트 카드 이미지 저장하기
+            <i class="fa-solid fa-camera"></i> 데이트 카드 이미지 저장하기
           </button>
           <button type="button" id="closeAcceptBtn" class="btn-secondary">확인</button>
         </div>

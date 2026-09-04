@@ -82,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeAcceptBtn = document.getElementById('closeAcceptBtn');
   const downloadCardBtn = document.getElementById('downloadCardBtn');
   const downloadModalCardBtn = document.getElementById('downloadModalCardBtn');
+  const sendAcceptKakaoBtn = document.getElementById('sendAcceptKakaoBtn');
 
   let generatedShareUrl = '';
 
@@ -398,6 +399,30 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('초대장이 보관함에서 삭제되었습니다.');
     },
 
+    async markCardAccepted(cardId) {
+      if (!cardId) return;
+      const list = this.getAll();
+      const target = list.find(item => item.id === cardId);
+      if (target) {
+        target.isAccepted = true;
+        target.acceptedAt = Date.now();
+        try {
+          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(list));
+        } catch (e) {}
+      }
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient
+            .from('date_cards')
+            .update({ is_accepted: true, accepted_at: new Date().toISOString() })
+            .eq('id', cardId);
+        } catch (e) {
+          console.warn('Supabase markCardAccepted notice:', e);
+        }
+      }
+    },
+
     updateCountBadge() {
       if (!archiveCountBadge) return;
       const list = this.getAll();
@@ -425,16 +450,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
       list.forEach(item => {
         const cardEl = document.createElement('div');
-        cardEl.className = `archive-card-item theme-${item.theme || 'cozy'}`;
+        cardEl.className = `archive-card-item theme-${item.theme || 'cozy'} ${item.isAccepted ? 'is-accepted' : ''}`;
 
         const courseSummary = (item.courses || []).map((c, i) => `${i + 1}차: ${c.n}`).join(' ➔ ') || '코스 정보 없음';
         const createdDateStr = new Date(item.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         const targetDateStr = formatDateString(item.date);
         const themeLabel = item.theme === 'rose' ? '🌹 Romantic Rose' : (item.theme === 'midnight' ? '🌙 Midnight Navy' : '🌿 Warm Cozy');
+        const acceptBadge = item.isAccepted ? `<div class="archive-status-badge accepted"><i class="fa-solid fa-heart"></i> 상대방 수락 완료!</div>` : '';
 
         cardEl.innerHTML = `
           <div class="archive-card-header">
-            <div class="archive-theme-pill">${themeLabel}</div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="archive-theme-pill">${themeLabel}</div>
+              ${acceptBadge}
+            </div>
             <span class="archive-date-tag">${createdDateStr} 생성</span>
           </div>
           <div class="archive-card-body">
@@ -1071,7 +1100,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ` : '';
 
       slide.innerHTML = `
-        <span class="story-header-tag">${currentStoryIndex + 1}차 코스 - ${item.t}</span>
+        <span class="story-header-tag">${currentStoryIndex + 1}차 코스 · ${item.t}</span>
         <h2 class="story-place-title">${item.n}</h2>
         <div class="story-meta-row">
           <span><i class="fa-regular fa-clock"></i> ${item.tm} 시작</span>
@@ -1209,15 +1238,72 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Accept & Feedback Handlers
-  acceptBtn.addEventListener('click', () => {
+  acceptBtn.addEventListener('click', async () => {
     const sender = recipientData ? recipientData.s : '신청자';
-    acceptModalTitle.textContent = '🎉 데이트 약속을 수락하셨습니다! 🌿';
-    acceptModalDesc.textContent = `${sender}님과의 설레는 데이트 약속이 확정되었습니다! 약속 시간과 코스 장소를 캡처하여 간직해 보세요 💖`;
+    const recipient = recipientData ? recipientData.r : '그대';
+    acceptModalTitle.textContent = '🎉 데이트 약속을 수락하셨습니다!';
+    acceptModalDesc.textContent = `${sender}님과의 설레는 데이트 약속이 확정되었습니다! 아래 버튼을 눌러 ${sender}님께 카카오톡으로 수락 답장을 보내보세요 💖`;
     acceptOverlay.classList.remove('hidden');
     
     // Trigger Romantic Heart & Confetti Explosion Animation
     triggerRomanticConfetti();
+
+    // Mark as accepted in Supabase & LocalStorage
+    const cardId = recipientData ? (recipientData.id || recipientData.cardId) : null;
+    if (cardId) {
+      ArchiveService.markCardAccepted(cardId);
+    }
   });
+
+  if (sendAcceptKakaoBtn) {
+    sendAcceptKakaoBtn.addEventListener('click', () => {
+      const sender = recipientData ? recipientData.s : '신청자';
+      const recipient = recipientData ? recipientData.r : '그대';
+      const targetDate = recipientData ? formatDateString(recipientData.d) : '특별한 날';
+      const currentUrl = window.location.href;
+
+      // 1. Send via Kakao Talk Share
+      if (window.Kakao && window.Kakao.isInitialized && window.Kakao.isInitialized()) {
+        try {
+          window.Kakao.Share.sendDefault({
+            objectType: 'feed',
+            content: {
+              title: `💖 [데이트 수락] ${recipient}님이 데이트 코스를 수락했어요!`,
+              description: `${sender}아! 네가 정성껏 보내준 데이트 코스 너무 마음에 들어 🌿\n📅 데이트 약속: ${targetDate}\n설레는 마음으로 그날 만나요 ✨`,
+              imageUrl: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop',
+              link: {
+                mobileWebUrl: currentUrl,
+                webUrl: currentUrl
+              }
+            },
+            buttons: [
+              {
+                title: '확정된 데이트 코스 보기 💖',
+                link: {
+                  mobileWebUrl: currentUrl,
+                  webUrl: currentUrl
+                }
+              }
+            ]
+          });
+          showToast('카카오톡으로 수락 답장 창이 열렸습니다! 💖');
+          return;
+        } catch (e) {
+          console.error('Kakao accept reply share error:', e);
+        }
+      }
+
+      // Fallback: Clipboard copy
+      const textToCopy = `[DatePlanner 데이트 수락 💖]\n${sender}아! 정성껏 보내준 데이트 코스 너무 완벽해! 기쁜 마음으로 수락할게 🌿\n\n📅 데이트 날짜: ${targetDate}\n✨ 확정 코스 보기: ${currentUrl}`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          showToast('수락 답장 문구가 복사되었습니다! 카톡에 붙여넣어 보세요 💖');
+        });
+      } else {
+        showToast('데이트 수락이 확정되었습니다! 💖');
+      }
+    });
+  }
 
   if (downloadCardBtn) {
     downloadCardBtn.addEventListener('click', downloadCardImage);
@@ -1243,8 +1329,43 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const sender = recipientData ? recipientData.s : '남친';
-    const textToCopy = `[DatePlanner 코스 조정 요청 💬]\n${sender}아! 데이트 신청 잘 봤어 🌿\n\n📌 요청 코스: ${selectedTarget}\n💌 제안 내용: ${reqMsg}`;
+    const recipient = recipientData ? recipientData.r : '그대';
+    const currentUrl = window.location.href;
 
+    // 1. Send feedback via Kakao Talk Share
+    if (window.Kakao && window.Kakao.isInitialized && window.Kakao.isInitialized()) {
+      try {
+        window.Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: `💌 [데이트 조율] ${recipient}님의 코스 변경 제안`,
+            description: `${sender}아! [${selectedTarget}] 코스에 대해 의견이 있어요:\n"${reqMsg}"\n함께 이야기 나누고 조율해 봐요 🌿`,
+            imageUrl: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=600&auto=format&fit=crop',
+            link: {
+              mobileWebUrl: currentUrl,
+              webUrl: currentUrl
+            }
+          },
+          buttons: [
+            {
+              title: '코스 확인하고 조율하기 💬',
+              link: {
+                mobileWebUrl: currentUrl,
+                webUrl: currentUrl
+              }
+            }
+          ]
+        });
+        showToast('카카오톡 조정 요청 창이 열렸습니다! 💬');
+        feedbackModal.classList.add('hidden');
+        return;
+      } catch (e) {
+        console.error('Kakao feedback share error:', e);
+      }
+    }
+
+    // Fallback: Clipboard copy
+    const textToCopy = `[DatePlanner 코스 조정 요청 💬]\n${sender}아! 데이트 신청 잘 봤어 🌿\n\n📌 요청 코스: ${selectedTarget}\n💌 제안 내용: "${reqMsg}"\n\n👉 코스 링크: ${currentUrl}`;
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(textToCopy)
         .then(() => {

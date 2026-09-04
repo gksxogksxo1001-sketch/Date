@@ -1171,6 +1171,20 @@ input:focus, select:focus, textarea:focus {
   color: #4A6FA5;
 }
 
+.archive-status-badge.accepted {
+  background: #FFE8EC;
+  color: #E07A5F;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(224, 122, 95, 0.3);
+  box-shadow: 0 2px 8px rgba(224, 122, 95, 0.15);
+}
+
 .archive-date-tag {
   font-size: 0.78rem;
   color: var(--text-muted);
