@@ -99,6 +99,84 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ====================================================
+  // UNIFIED CLIPBOARD & KAKAO SHARE HELPERS
+  // ====================================================
+  function copyToClipboard(text, successMsg = '링크가 복사되었습니다! 🌿') {
+    if (!text) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => showToast(successMsg))
+        .catch(() => fallbackCopy(text, successMsg));
+    } else {
+      fallbackCopy(text, successMsg);
+    }
+  }
+
+  function fallbackCopy(text, successMsg) {
+    const tempInput = document.createElement('textarea');
+    tempInput.value = text;
+    tempInput.style.position = 'fixed';
+    tempInput.style.opacity = '0';
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    try {
+      document.execCommand('copy');
+      showToast(successMsg);
+    } catch (e) {
+      showToast('복사에 실패했습니다. 직접 복사해 주세요.', true);
+    }
+    document.body.removeChild(tempInput);
+  }
+
+  function sendKakaoFeed({ title, description, imageUrl, webUrl, buttonTitle, fallbackText, toastMsg, isAuto = false }) {
+    if (window.Kakao && !window.Kakao.isInitialized()) {
+      try {
+        window.Kakao.init(KAKAO_APP_KEY);
+      } catch (e) {}
+    }
+
+    let finalUrl = webUrl || window.location.href;
+    if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+      finalUrl = 'https://gksxogksxo1001-sketch.github.io/Date/' + (finalUrl.includes('?') ? finalUrl.substring(finalUrl.indexOf('?')) : '');
+    }
+
+    if (window.Kakao && window.Kakao.isInitialized && window.Kakao.isInitialized()) {
+      try {
+        window.Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: title,
+            description: description,
+            imageUrl: imageUrl || 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop',
+            link: {
+              mobileWebUrl: finalUrl,
+              webUrl: finalUrl
+            }
+          },
+          buttons: [
+            {
+              title: buttonTitle || '초대장 확인하기 💖',
+              link: {
+                mobileWebUrl: finalUrl,
+                webUrl: finalUrl
+              }
+            }
+          ]
+        });
+        if (!isAuto) showToast(toastMsg || '카카오톡 공유창이 열렸습니다! 💬');
+        return true;
+      } catch (e) {
+        console.warn('Kakao share notice:', e);
+      }
+    }
+
+    if (fallbackText) {
+      copyToClipboard(fallbackText, '카카오톡 공유 문구가 복사되었습니다! 카톡에 붙여넣어 보세요 💬');
+    }
+    return false;
+  }
+
+  // ====================================================
   // SUPABASE CLIENT CONFIGURATION
   // ====================================================
   const SUPABASE_URL = 'https://cmxcazjrasptkspomyyo.supabase.co';
@@ -108,7 +186,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.supabase && typeof window.supabase.createClient === 'function') {
     try {
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      console.log('Supabase client initialized successfully');
     } catch (e) {
       console.warn('Supabase initialization warning:', e);
     }
@@ -507,71 +584,22 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   window.copyArchiveLink = function(shareUrl) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(shareUrl)
-        .then(() => showToast('초대장 링크가 복사되었습니다! 🌿'))
-        .catch(() => fallbackCopyDirect(shareUrl));
-    } else {
-      fallbackCopyDirect(shareUrl);
-    }
+    copyToClipboard(shareUrl, '초대장 링크가 복사되었습니다! 🌿');
   };
-
-  function fallbackCopyDirect(text) {
-    const tempInput = document.createElement('input');
-    tempInput.value = text;
-    document.body.appendChild(tempInput);
-    tempInput.select();
-    document.execCommand('copy');
-    document.body.removeChild(tempInput);
-    showToast('초대장 링크가 복사되었습니다!');
-  }
 
   window.shareArchiveKakao = function(cardId) {
     const item = ArchiveService.getAll().find(c => c.id === cardId);
     if (!item) return;
 
-    if (window.Kakao) {
-      if (!window.Kakao.isInitialized()) {
-        try {
-          window.Kakao.init(KAKAO_APP_KEY);
-        } catch (e) {
-          console.error(e);
-        }
-      }
-      if (window.Kakao.isInitialized()) {
-        let targetUrl = item.shareUrl;
-        if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
-          targetUrl = 'https://gksxogksxo1001-sketch.github.io/Date/' + (targetUrl.includes('?') ? targetUrl.substring(targetUrl.indexOf('?')) : '');
-        }
-
-        window.Kakao.Share.sendDefault({
-          objectType: 'feed',
-          content: {
-            title: `💌 ${item.senderName}님이 보낸 감성 데이트 초대장 💖`,
-            description: `${item.receiverName}야! ${formatDateString(item.date)}에 ${item.area}에서 만나자! 🌿`,
-            imageUrl: 'https://gksxogksxo1001-sketch.github.io/Date/assets/restaurant.jpg',
-            link: {
-              mobileWebUrl: targetUrl,
-              webUrl: targetUrl,
-            },
-          },
-          buttons: [
-            {
-              title: '스토리 초대장 확인하기 💖',
-              link: {
-                mobileWebUrl: targetUrl,
-                webUrl: targetUrl,
-              },
-            },
-          ],
-        });
-        showToast('카카오톡 공유창이 열렸습니다! 💬');
-        return;
-      }
-    }
-
-    // Fallback
-    window.copyArchiveLink(item.shareUrl);
+    sendKakaoFeed({
+      title: `💌 ${item.senderName}님이 보낸 감성 데이트 초대장 💖`,
+      description: `${item.receiverName}야! ${formatDateString(item.date)}에 ${item.area}에서 만나자! 🌿`,
+      imageUrl: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop',
+      webUrl: item.shareUrl,
+      buttonTitle: '스토리 초대장 확인하기 💖',
+      fallbackText: `[DateCard 초대장 💌]\n${item.senderName}님이 보낸 데이트 초대장:\n${item.shareUrl}`,
+      toastMsg: '카카오톡 공유창이 열렸습니다! 💬'
+    });
   };
 
   window.deleteArchiveItem = function(cardId) {
@@ -962,20 +990,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Copy & Modal Handlers
   copyBtn.addEventListener('click', () => {
     if (!generatedShareUrl) return;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(generatedShareUrl)
-        .then(() => showToast('스토리 초대장 링크가 복사되었습니다! 🌿'))
-        .catch(() => fallbackCopy(generatedShareUrl));
-    } else {
-      fallbackCopy(generatedShareUrl);
-    }
+    copyToClipboard(generatedShareUrl, '스토리 초대장 링크가 복사되었습니다! 🌿');
   });
-
-  function fallbackCopy(text) {
-    shareUrlInput.select();
-    document.execCommand('copy');
-    showToast('초대장 링크가 복사되었습니다!');
-  }
 
   previewBtn.addEventListener('click', () => {
     shareModal.classList.add('hidden');
@@ -1182,69 +1198,21 @@ document.addEventListener('DOMContentLoaded', () => {
     shareKakaoBtn.addEventListener('click', () => {
       if (!generatedShareUrl) return;
 
-      const appKey = KAKAO_APP_KEY || window.KAKAO_APP_KEY || '';
+      const sender = document.getElementById('senderName').value.trim() || '신청자';
+      const receiver = document.getElementById('receiverName').value.trim() || '상대방';
+      const dateVal = document.getElementById('date').value;
+      const areaVal = document.getElementById('mainArea').value.trim() || '데이트 장소';
+      const formattedDate = formatDateString(dateVal);
 
-      // Check Kakao SDK & Key
-      if (window.Kakao && appKey) {
-        if (!window.Kakao.isInitialized()) {
-          try {
-            window.Kakao.init(appKey);
-          } catch (e) {
-            console.error('Kakao init error:', e);
-          }
-        }
-
-        if (window.Kakao.isInitialized()) {
-          const sender = document.getElementById('senderName').value.trim() || '신청자';
-          const receiver = document.getElementById('receiverName').value.trim() || '상대방';
-          const dateVal = document.getElementById('date').value;
-          const areaVal = document.getElementById('mainArea').value.trim() || '데이트 장소';
-          const formattedDate = formatDateString(dateVal);
-
-          // Guarantee link URL uses registered HTTPS domain for Kakao API
-          let targetShareUrl = generatedShareUrl;
-          if (!targetShareUrl.startsWith('http://') && !targetShareUrl.startsWith('https://')) {
-            targetShareUrl = 'https://gksxogksxo1001-sketch.github.io/Date/' + (targetShareUrl.includes('?') ? targetShareUrl.substring(targetShareUrl.indexOf('?')) : '');
-          }
-
-          window.Kakao.Share.sendDefault({
-            objectType: 'feed',
-            content: {
-              title: `💌 ${sender}님이 보낸 감성 데이트 초대장 💖`,
-              description: `${receiver}야! ${formattedDate}에 ${areaVal}에서 만나자! 🌿`,
-              imageUrl: 'https://gksxogksxo1001-sketch.github.io/Date/assets/restaurant.jpg',
-              link: {
-                mobileWebUrl: targetShareUrl,
-                webUrl: targetShareUrl,
-              },
-            },
-            buttons: [
-              {
-                title: '스토리 초대장 확인하기 💖',
-                link: {
-                  mobileWebUrl: targetShareUrl,
-                  webUrl: targetShareUrl,
-                },
-              },
-            ],
-          });
-          showToast('카카오톡 공유창이 열렸습니다! 💬');
-          return;
-        }
-      }
-
-      // Fallback if Kakao Key is not set or not initialized yet
-      const senderName = document.getElementById('senderName').value.trim() || '신청자';
-      const textToCopy = `[DateCard 초대장 💌]\n${senderName}님이 보낸 데이트 초대장이 도착했습니다! 💖\n아래 링크를 눌러 스토리로 확인해 보세요 🌿\n\n${generatedShareUrl}`;
-
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(textToCopy)
-          .then(() => {
-            showToast('카톡 공유 문구+링크가 복사되었습니다! 카톡창에 [붙여넣기]해 보세요 💬');
-          });
-      } else {
-        showToast('초대장 링크가 복사되었습니다! 카톡에 붙여넣어 보세요 💬');
-      }
+      sendKakaoFeed({
+        title: `💌 ${sender}님이 보낸 감성 데이트 초대장 💖`,
+        description: `${receiver}야! ${formattedDate}에 ${areaVal}에서 만나자! 🌿`,
+        imageUrl: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop',
+        webUrl: generatedShareUrl,
+        buttonTitle: '스토리 초대장 확인하기 💖',
+        fallbackText: `[DateCard 초대장 💌]\n${sender}님이 보낸 데이트 초대장이 도착했습니다! 💖\n아래 링크를 눌러 스토리로 확인해 보세요 🌿\n\n${generatedShareUrl}`,
+        toastMsg: '카카오톡 공유창이 열렸습니다! 💬'
+      });
     });
   }
 
@@ -1380,44 +1348,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const targetDate = recipientData ? formatDateString(recipientData.d) : '특별한 날';
     const currentUrl = window.location.href;
 
-    if (window.Kakao && window.Kakao.isInitialized && window.Kakao.isInitialized()) {
-      try {
-        window.Kakao.Share.sendDefault({
-          objectType: 'feed',
-          content: {
-            title: `💖 [데이트 수락] ${recipient}님이 데이트 코스를 수락했어요!`,
-            description: `${sender}아! 네가 정성껏 보내준 데이트 코스 너무 마음에 들어 🌿\n📅 데이트 약속: ${targetDate}\n설레는 마음으로 그날 만나요 ✨`,
-            imageUrl: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop',
-            link: {
-              mobileWebUrl: currentUrl,
-              webUrl: currentUrl
-            }
-          },
-          buttons: [
-            {
-              title: '확정된 데이트 코스 보기 💖',
-              link: {
-                mobileWebUrl: currentUrl,
-                webUrl: currentUrl
-              }
-            }
-          ]
-        });
-        if (!isAuto) showToast('카카오톡으로 수락 답장 창이 열렸습니다! 💖');
-        return;
-      } catch (e) {
-        console.error('Kakao accept reply share error:', e);
-      }
-    }
-
-    const textToCopy = `[DatePlanner 데이트 수락 💖]\n${sender}아! 정성껏 보내준 데이트 코스 너무 완벽해! 기쁜 마음으로 수락할게 🌿\n\n📅 데이트 날짜: ${targetDate}\n✨ 확정 코스 보기: ${currentUrl}`;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(textToCopy).then(() => {
-        showToast('수락 답장 문구가 복사되었습니다! 카톡에 붙여넣어 보세요 💖');
-      });
-    } else {
-      showToast('데이트 수락이 확정되었습니다! 💖');
-    }
+    sendKakaoFeed({
+      title: `💖 [데이트 수락] ${recipient}님이 데이트 코스를 수락했어요!`,
+      description: `${sender}아! 네가 정성껏 보내준 데이트 코스 너무 마음에 들어 🌿\n📅 데이트 약속: ${targetDate}\n설레는 마음으로 그날 만나요 ✨`,
+      imageUrl: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop',
+      webUrl: currentUrl,
+      buttonTitle: '확정된 데이트 코스 보기 💖',
+      fallbackText: `[DatePlanner 데이트 수락 💖]\n${sender}아! 정성껏 보내준 데이트 코스 너무 완벽해! 기쁜 마음으로 수락할게 🌿\n\n📅 데이트 날짜: ${targetDate}\n✨ 확정 코스 보기: ${currentUrl}`,
+      toastMsg: '카카오톡으로 수락 답장 창이 열렸습니다! 💖',
+      isAuto: isAuto
+    });
   }
 
   if (sendAcceptKakaoBtn) {
@@ -1429,45 +1369,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const targetUrl = window.location.href;
       const recipient = recipientData ? recipientData.r : '소중한 사람';
       const sender = recipientData ? recipientData.s : '신청자';
-      if (window.Kakao && window.Kakao.isInitialized && window.Kakao.isInitialized()) {
-        window.Kakao.Share.sendDefault({
-          objectType: 'feed',
-          content: {
-            title: `💌 [DateCard] ${sender}님이 보낸 데이트 초대장`,
-            description: `${recipient}아, 너만을 위해 준비한 감성 데이트 코스야! 확인해 볼래? 🌿`,
-            imageUrl: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=600&auto=format&fit=crop',
-            link: {
-              mobileWebUrl: targetUrl,
-              webUrl: targetUrl
-            }
-          },
-          buttons: [
-            {
-              title: '스토리 초대장 확인하기 💖',
-              link: {
-                mobileWebUrl: targetUrl,
-                webUrl: targetUrl
-              }
-            }
-          ]
-        });
-        showToast('카카오톡 공유창이 열렸습니다! 💬');
-      } else {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(targetUrl).then(() => {
-            showToast('초대장 링크가 복사되었습니다! 카톡에 붙여넣어 보세요 💬');
-          });
-        }
-      }
+
+      sendKakaoFeed({
+        title: `💌 [DateCard] ${sender}님이 보낸 데이트 초대장`,
+        description: `${recipient}아, 너만을 위해 준비한 감성 데이트 코스야! 확인해 볼래? 🌿`,
+        imageUrl: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=600&auto=format&fit=crop',
+        webUrl: targetUrl,
+        buttonTitle: '스토리 초대장 확인하기 💖',
+        fallbackText: `[DateCard 초대장 💌]\n${sender}님이 보낸 데이트 초대장:\n${targetUrl}`,
+        toastMsg: '카카오톡 공유창이 열렸습니다! 💬'
+      });
     });
   }
 
-  if (downloadCardBtn) {
-    downloadCardBtn.addEventListener('click', downloadCardImage);
-  }
-  if (downloadModalCardBtn) {
-    downloadModalCardBtn.addEventListener('click', downloadCardImage);
-  }
+  [downloadCardBtn, downloadModalCardBtn].forEach(btn => {
+    if (btn) btn.addEventListener('click', downloadCardImage);
+  });
 
   feedbackBtn.addEventListener('click', () => {
     feedbackModal.classList.remove('hidden');
@@ -1489,50 +1406,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const recipient = recipientData ? recipientData.r : '그대';
     const currentUrl = window.location.href;
 
-    // 1. Send feedback via Kakao Talk Share
-    if (window.Kakao && window.Kakao.isInitialized && window.Kakao.isInitialized()) {
-      try {
-        window.Kakao.Share.sendDefault({
-          objectType: 'feed',
-          content: {
-            title: `💌 [데이트 조율] ${recipient}님의 코스 변경 제안`,
-            description: `${sender}아! [${selectedTarget}] 코스에 대해 의견이 있어요:\n"${reqMsg}"\n함께 이야기 나누고 조율해 봐요 🌿`,
-            imageUrl: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=600&auto=format&fit=crop',
-            link: {
-              mobileWebUrl: currentUrl,
-              webUrl: currentUrl
-            }
-          },
-          buttons: [
-            {
-              title: '코스 확인하고 조율하기 💬',
-              link: {
-                mobileWebUrl: currentUrl,
-                webUrl: currentUrl
-              }
-            }
-          ]
-        });
-        showToast('카카오톡 조정 요청 창이 열렸습니다! 💬');
-        feedbackModal.classList.add('hidden');
-        return;
-      } catch (e) {
-        console.error('Kakao feedback share error:', e);
-      }
-    }
+    sendKakaoFeed({
+      title: `💌 [데이트 조율] ${recipient}님의 코스 변경 제안`,
+      description: `${sender}아! [${selectedTarget}] 코스에 대해 의견이 있어요:\n"${reqMsg}"\n함께 이야기 나누고 조율해 봐요 🌿`,
+      imageUrl: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=600&auto=format&fit=crop',
+      webUrl: currentUrl,
+      buttonTitle: '코스 확인하고 조율하기 💬',
+      fallbackText: `[DatePlanner 코스 조정 요청 💬]\n${sender}아! 데이트 신청 잘 봤어 🌿\n\n📌 요청 코스: ${selectedTarget}\n💌 제안 내용: "${reqMsg}"\n\n👉 코스 링크: ${currentUrl}`,
+      toastMsg: '카카오톡 조정 요청 창이 열렸습니다! 💬'
+    });
 
-    // Fallback: Clipboard copy
-    const textToCopy = `[DatePlanner 코스 조정 요청 💬]\n${sender}아! 데이트 신청 잘 봤어 🌿\n\n📌 요청 코스: ${selectedTarget}\n💌 제안 내용: "${reqMsg}"\n\n👉 코스 링크: ${currentUrl}`;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(textToCopy)
-        .then(() => {
-          showToast('조정 요청 문구가 복사되었습니다! 카톡으로 전송해 보세요 💬');
-          feedbackModal.classList.add('hidden');
-        });
-    } else {
-      showToast('요청 내용이 준비되었습니다! 카톡으로 소통해 보세요 💬');
-      feedbackModal.classList.add('hidden');
-    }
+    feedbackModal.classList.add('hidden');
   });
 
   closeAcceptBtn.addEventListener('click', () => {
