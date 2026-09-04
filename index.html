@@ -29,8 +29,145 @@
 <body id="appBody" class="theme-cozy">
 
   <main class="app-container">
-    <!-- Header -->
-    <header class="app-header">
+
+    <!-- ==================== LANDING PAGE ==================== -->
+    <section id="landingMode" class="landing-page">
+
+      <!-- HERO SECTION -->
+      <div class="landing-hero">
+        <div class="hero-bg-overlay"></div>
+        <div class="hero-content">
+          <div class="hero-badge">💌 DatePlanner</div>
+          <h1 class="hero-title">너를 위한<br>특별한 데이트 초대장</h1>
+          <p class="hero-subtitle">회원가입 없이 10초 만에, 감성 코스 초대장을 만들어<br>카카오톡으로 보내보세요</p>
+          <button id="heroCTA" class="hero-cta-btn">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            데이트 초대장 만들기
+          </button>
+          <p class="hero-note">✅ 완전 무료 · 회원가입 없음 · 앱 설치 불필요</p>
+        </div>
+        <div class="hero-scroll-hint">
+          <span>더 알아보기</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </div>
+      </div>
+
+      <!-- HOW IT WORKS - 3 STEPS -->
+      <div class="landing-section landing-steps-section">
+        <h2 class="section-title"><i class="fa-solid fa-shoe-prints"></i> 이렇게 쉬워요</h2>
+        <p class="section-desc">딱 3단계면 충분합니다</p>
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <div class="step-icon"><i class="fa-solid fa-pen-fancy"></i></div>
+            <h3>코스 작성</h3>
+            <p>장소, 시간, 사진을 담아<br>나만의 데이트 코스를 구성하세요</p>
+          </div>
+          <div class="step-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <div class="step-icon"><i class="fa-solid fa-link"></i></div>
+            <h3>링크 생성</h3>
+            <p>원클릭으로 감성 초대장<br>공유 링크가 자동 생성됩니다</p>
+          </div>
+          <div class="step-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <div class="step-icon"><i class="fa-brands fa-rocketchat"></i></div>
+            <h3>카톡 전송</h3>
+            <p>카카오톡으로 상대방에게<br>바로 초대장을 전달하세요</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- FEATURES - 4 Cards -->
+      <div class="landing-section landing-features-section">
+        <h2 class="section-title"><i class="fa-solid fa-gem"></i> 주요 기능</h2>
+        <p class="section-desc">데이트 초대장을 더욱 특별하게</p>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon" style="background: linear-gradient(135deg, #E07A5F, #F2A65A)"><i class="fa-solid fa-palette"></i></div>
+            <h3>3가지 감성 테마</h3>
+            <p>Warm Cozy, Romantic Rose, Midnight Navy 중 선택</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background: linear-gradient(135deg, #81B29A, #3D9970)"><i class="fa-solid fa-camera-retro"></i></div>
+            <h3>사진 업로드</h3>
+            <p>코스별 내 갤러리 사진으로 더 생생한 초대장</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background: linear-gradient(135deg, #6C63FF, #B983FF)"><i class="fa-solid fa-book-open"></i></div>
+            <h3>스토리 뷰어</h3>
+            <p>인스타 스토리처럼 한 장씩 넘겨보는 감성 카드</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background: linear-gradient(135deg, #E07A5F, #FF6B81)"><i class="fa-solid fa-heart"></i></div>
+            <h3>수락 폭죽 연출</h3>
+            <p>수락 시 로맨틱 하트·꽃가루 파티클 애니메이션</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SAMPLE PREVIEW -->
+      <div class="landing-section landing-preview-section">
+        <h2 class="section-title"><i class="fa-solid fa-mobile-screen-button"></i> 이렇게 보여요</h2>
+        <p class="section-desc">상대방이 받는 초대장 미리보기</p>
+        <div class="preview-mockup">
+          <div class="mockup-phone">
+            <div class="mockup-notch"></div>
+            <div class="mockup-screen">
+              <div class="mockup-story-card">
+                <div class="mockup-story-img" style="background-image: url('assets/restaurant.jpg')">
+                  <div class="mockup-story-overlay">
+                    <span class="mockup-badge">🍽️ 1차 맛집</span>
+                    <h4>성수동 파스타 맛집</h4>
+                    <p>18:00 · 이탈리안 레스토랑</p>
+                  </div>
+                </div>
+              </div>
+              <div class="mockup-story-card">
+                <div class="mockup-story-img" style="background-image: url('assets/cafe.jpg')">
+                  <div class="mockup-story-overlay">
+                    <span class="mockup-badge">☕ 2차 카페</span>
+                    <h4>한강뷰 감성 카페</h4>
+                    <p>20:00 · 디저트 & 커피</p>
+                  </div>
+                </div>
+              </div>
+              <div class="mockup-story-card">
+                <div class="mockup-story-img" style="background-image: url('assets/nightview.jpg')">
+                  <div class="mockup-story-overlay">
+                    <span class="mockup-badge">🌙 3차 야경</span>
+                    <h4>남산타워 야경 산책</h4>
+                    <p>21:30 · 산책 & 야경 감상</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM CTA -->
+      <div class="landing-section landing-bottom-cta">
+        <h2>지금 바로 시작해 보세요 💌</h2>
+        <p>당신의 데이트를 더 특별하게 만들어 드릴게요</p>
+        <button id="bottomCTA" class="hero-cta-btn">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          데이트 초대장 만들기
+        </button>
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="landing-footer">
+        <p>Made with 💖 by DatePlanner</p>
+      </footer>
+
+    </section>
+    <!-- ==================== END LANDING PAGE ==================== -->
+
+    <!-- Header (visible in create/view mode) -->
+    <header id="appHeader" class="app-header hidden">
       <div class="logo">
         <i class="fa-solid fa-compass logo-icon"></i>
         <span>DatePlanner</span>
@@ -39,7 +176,7 @@
     </header>
 
     <!-- SECTION 1: CREATE COURSE ROOM FORM (방 만들기 모드) -->
-    <section id="createMode" class="card-container main-card">
+    <section id="createMode" class="card-container main-card hidden">
       
       <div class="card-header">
         <h2><i class="fa-solid fa-pen-sparkles"></i> 데이트 신청 방 만들기</h2>

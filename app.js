@@ -12,6 +12,8 @@ const coursePhotosMap = {}; // Stores photo DataURLs per course index
 document.addEventListener('DOMContentLoaded', () => {
   // DOM Elements
   const appBody = document.getElementById('appBody');
+  const landingMode = document.getElementById('landingMode');
+  const appHeader = document.getElementById('appHeader');
   const createMode = document.getElementById('createMode');
   const viewMode = document.getElementById('viewMode');
   const courseList = document.getElementById('courseList');
@@ -60,6 +62,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const downloadModalCardBtn = document.getElementById('downloadModalCardBtn');
 
   let generatedShareUrl = '';
+
+  // ========== LANDING PAGE CTA HANDLERS ==========
+  function switchToCreateMode() {
+    landingMode.classList.add('hidden');
+    appHeader.classList.remove('hidden');
+    createMode.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  const heroCTA = document.getElementById('heroCTA');
+  const bottomCTA = document.getElementById('bottomCTA');
+  if (heroCTA) heroCTA.addEventListener('click', switchToCreateMode);
+  if (bottomCTA) bottomCTA.addEventListener('click', switchToCreateMode);
 
   // Default DatePicker to tomorrow
   const tomorrow = new Date();
@@ -400,6 +415,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const cardToken = urlParams.get('card') || getHashParam('card');
 
   if (cardToken) {
+    // Hide landing page immediately when viewing a shared card
+    landingMode.classList.add('hidden');
     try {
       recipientData = decodePayload(cardToken);
       renderStoryViewer(recipientData);
@@ -419,6 +436,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // STORY PAGER ENGINE WITH CUSTOM DROPDOWN POPULATION
   function renderStoryViewer(data) {
+    landingMode.classList.add('hidden');
+    appHeader.classList.remove('hidden');
     createMode.classList.add('hidden');
     viewMode.classList.remove('hidden');
 
