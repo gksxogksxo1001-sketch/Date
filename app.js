@@ -355,6 +355,8 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('LocalStorage save warning:', e);
     }
 
+    const encodedToken = encodePayload(payload);
+
     let baseUrl = window.location.origin + window.location.pathname;
     // Fallback file:// local testing to the registered GitHub Pages domain for Kakao API compatibility
     if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
