@@ -355,8 +355,11 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('LocalStorage save warning:', e);
     }
 
-    const encodedToken = encodePayload(payload);
-    const baseUrl = window.location.origin + window.location.pathname;
+    let baseUrl = window.location.origin + window.location.pathname;
+    // Fallback file:// local testing to the registered GitHub Pages domain for Kakao API compatibility
+    if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+      baseUrl = 'https://gksxogksxo1001-sketch.github.io/Date/';
+    }
     generatedShareUrl = `${baseUrl}?card=${encodedToken}`;
 
     shareUrlInput.value = generatedShareUrl;
@@ -600,6 +603,12 @@ document.addEventListener('DOMContentLoaded', () => {
           const areaVal = document.getElementById('mainArea').value.trim() || '데이트 장소';
           const formattedDate = formatDateString(dateVal);
 
+          // Guarantee link URL uses registered HTTPS domain for Kakao API
+          let targetShareUrl = generatedShareUrl;
+          if (!targetShareUrl.startsWith('http://') && !targetShareUrl.startsWith('https://')) {
+            targetShareUrl = 'https://gksxogksxo1001-sketch.github.io/Date/' + (targetShareUrl.includes('?') ? targetShareUrl.substring(targetShareUrl.indexOf('?')) : '');
+          }
+
           window.Kakao.Share.sendDefault({
             objectType: 'feed',
             content: {
@@ -607,16 +616,16 @@ document.addEventListener('DOMContentLoaded', () => {
               description: `${receiver}야! ${formattedDate}에 ${areaVal}에서 만나자! 🌿`,
               imageUrl: 'https://gksxogksxo1001-sketch.github.io/Date/assets/restaurant.jpg',
               link: {
-                mobileWebUrl: generatedShareUrl,
-                webUrl: generatedShareUrl,
+                mobileWebUrl: targetShareUrl,
+                webUrl: targetShareUrl,
               },
             },
             buttons: [
               {
                 title: '스토리 초대장 확인하기 💖',
                 link: {
-                  mobileWebUrl: generatedShareUrl,
-                  webUrl: generatedShareUrl,
+                  mobileWebUrl: targetShareUrl,
+                  webUrl: targetShareUrl,
                 },
               },
             ],
