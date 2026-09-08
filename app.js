@@ -1300,7 +1300,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
       baseUrl = 'https://gksxogksxo1001-sketch.github.io/Date/';
     }
-    generatedShareUrl = `${baseUrl}?card=${encodedToken}`;
+    generatedShareUrl = `${baseUrl}#card=${encodedToken}`;
 
     // Auto-save to Date Cards Archive
     ArchiveService.save(payload, generatedShareUrl);
@@ -1324,9 +1324,19 @@ document.addEventListener('DOMContentLoaded', () => {
     shareModal.classList.add('hidden');
   });
 
-  // Check URL Query & Decode safely
+  // Check URL Query & Hash & Decode safely
+  // 하위 호환: ?card= (레거시) 또는 #card= (신규) 모두 지원
   const urlParams = new URLSearchParams(window.location.search);
-  const cardToken = urlParams.get('card') || getHashParam('card');
+  const queryCardToken = urlParams.get('card');
+  const hashCardToken = getHashParam('card');
+  const cardToken = hashCardToken || queryCardToken;
+
+  // 레거시 ?card= URL로 접속 시 → #card= 형식으로 자동 리다이렉트 (서버 502 방지)
+  if (queryCardToken && !hashCardToken) {
+    const cleanBase = window.location.origin + window.location.pathname;
+    window.location.replace(`${cleanBase}#card=${queryCardToken}`);
+    return; // 리다이렉트 후 페이지 재로드 시 #card=로 처리
+  }
 
   if (cardToken) {
     // Hide landing page immediately when viewing a shared card
@@ -1344,7 +1354,8 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
       }
-      showToast('새 초대장을 작성하시거나 최근 생성된 초대장을 확인하세요.', false);
+      showToast('초대장 데이터를 불러올 수 없습니다. 새 초대장을 작성해 주세요.', true);
+      landingMode.classList.remove('hidden');
     }
   }
 
