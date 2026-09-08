@@ -87,6 +87,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const acceptedStatusBanner = document.getElementById('acceptedStatusBanner');
   const creatorShareAgainBtn = document.getElementById('creatorShareAgainBtn');
 
+  // Duplicate Notice Modal Elements
+  const duplicateModal = document.getElementById('duplicateModal');
+  const dupReceiverName = document.getElementById('dupReceiverName');
+  const dupPreviewTag = document.getElementById('dupPreviewTag');
+  const dupPreviewCreated = document.getElementById('dupPreviewCreated');
+  const dupPreviewTitle = document.getElementById('dupPreviewTitle');
+  const dupPreviewMeta = document.getElementById('dupPreviewMeta');
+  const dupPreviewCourses = document.getElementById('dupPreviewCourses');
+  const dupOpenExistingBtn = document.getElementById('dupOpenExistingBtn');
+  const dupOpenArchiveBtn = document.getElementById('dupOpenArchiveBtn');
+  const closeDupModalBtn = document.getElementById('closeDupModalBtn');
+
+  let isCreatingCard = false;
   let generatedShareUrl = '';
 
   // Initialize Kakao SDK
@@ -354,11 +367,87 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
 
+    findDuplicate({ senderName, receiverName, date, area, courses }) {
+      const list = this.getAll();
+      const normalize = (str) => (str || '').trim().toLowerCase();
+      const s = normalize(senderName);
+      const r = normalize(receiverName);
+      const d = (date || '').trim();
+      const a = normalize(area);
+
+      return list.find(item => {
+        const matchBasic = normalize(item.senderName) === s &&
+                           normalize(item.receiverName) === r &&
+                           (item.date || '').trim() === d &&
+                           normalize(item.area) === a;
+        if (!matchBasic) return false;
+
+        if (courses && courses.length > 0 && item.courses && item.courses.length > 0) {
+          const itemCoursesSig = item.courses.map(c => normalize(c.n)).join('|');
+          const newCoursesSig = courses.map(c => normalize(c.n)).join('|');
+          return itemCoursesSig === newCoursesSig || matchBasic;
+        }
+        return true;
+      }) || null;
+    },
+
+    cleanupDuplicates() {
+      try {
+        const list = this.getAll();
+        if (!Array.isArray(list) || list.length <= 1) return;
+
+        const seenKeys = new Set();
+        const uniqueList = [];
+
+        for (const item of list) {
+          const courseSig = (item.courses || []).map(c => (c.n || '').trim()).join(',');
+          const key = `${(item.senderName || '').trim()}_${(item.receiverName || '').trim()}_${(item.date || '').trim()}_${(item.area || '').trim()}_${courseSig}`;
+
+          if (!seenKeys.has(key)) {
+            seenKeys.add(key);
+            uniqueList.push(item);
+          }
+        }
+
+        if (uniqueList.length !== list.length) {
+          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(uniqueList));
+          this.updateCountBadge();
+        }
+      } catch (e) {
+        console.warn('Archive cleanup notice:', e);
+      }
+    },
+
     async save(cardPayload, shareUrl) {
       const list = this.getAll();
-      const existingIndex = list.findIndex(item => item.id === cardPayload.id);
+      let existingIndex = list.findIndex(item => item.id === cardPayload.id);
+
+      // 동일한 일정(보낸이, 받는이, 날짜, 지역, 코스)의 카드가 이미 존재하면 갱신하여 중복 누적 방지
+      if (existingIndex < 0) {
+        const normalize = (str) => (str || '').trim().toLowerCase();
+        const s = normalize(cardPayload.s);
+        const r = normalize(cardPayload.r);
+        const d = (cardPayload.d || '').trim();
+        const a = normalize(cardPayload.a);
+        const newCoursesSig = (cardPayload.c || []).map(c => normalize(c.n)).join('|');
+
+        existingIndex = list.findIndex(item => {
+          const basicMatch = normalize(item.senderName) === s &&
+                             normalize(item.receiverName) === r &&
+                             (item.date || '').trim() === d &&
+                             normalize(item.area) === a;
+          if (!basicMatch) return false;
+          if (newCoursesSig && item.courses && item.courses.length > 0) {
+            const itemSig = item.courses.map(c => normalize(c.n)).join('|');
+            return itemSig === newCoursesSig || basicMatch;
+          }
+          return basicMatch;
+        });
+      }
+
+      const existingItem = existingIndex >= 0 ? list[existingIndex] : null;
       const archiveItem = {
-        id: cardPayload.id || ('card_' + Date.now()),
+        id: (existingItem && existingItem.id) || cardPayload.id || ('card_' + Date.now()),
         senderName: cardPayload.s,
         receiverName: cardPayload.r,
         date: cardPayload.d,
@@ -367,9 +456,11 @@ document.addEventListener('DOMContentLoaded', () => {
         message: cardPayload.m,
         theme: cardPayload.tm,
         courses: cardPayload.c || [],
-        shareUrl: shareUrl,
-        createdAt: Date.now(),
-        userId: AuthService.currentUser ? AuthService.currentUser.id : 'guest'
+        shareUrl: shareUrl || (existingItem && existingItem.shareUrl),
+        createdAt: existingItem ? existingItem.createdAt : Date.now(),
+        userId: AuthService.currentUser ? AuthService.currentUser.id : 'guest',
+        isAccepted: existingItem ? existingItem.isAccepted : false,
+        acceptedAt: existingItem ? existingItem.acceptedAt : null
       };
 
       if (existingIndex >= 0) {
@@ -515,6 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     loadAndRender() {
+      this.cleanupDuplicates();
       this.updateCountBadge();
       if (!archiveCardsGrid || !archiveEmptyState) return;
 
@@ -580,7 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Global Actions for Archive Cards
   window.viewArchiveCard = function(shareUrl) {
     if (archiveModal) archiveModal.classList.add('hidden');
-    window.location.href = shareUrl;
+    openCardFromShareUrl(shareUrl);
   };
 
   window.copyArchiveLink = function(shareUrl) {
@@ -1215,6 +1307,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Create Invitation Submit
   createBtn.addEventListener('click', () => {
+    if (isCreatingCard) return;
+
     const senderName = document.getElementById('senderName').value.trim();
     const receiverName = document.getElementById('receiverName').value.trim();
     const dateVal = document.getElementById('date').value;
@@ -1255,6 +1349,27 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('각 코스의 장소 이름과 시간을 입력해 주세요!', true);
       return;
     }
+
+    // 1. 보관함 중복 확인: 이미 동일한 데이트 초대장이 보관함에 있는지 검사
+    const existingDuplicate = ArchiveService.findDuplicate({
+      senderName,
+      receiverName,
+      date: dateVal,
+      area: mainArea,
+      courses
+    });
+
+    if (existingDuplicate) {
+      showDuplicateNotice(existingDuplicate);
+      return;
+    }
+
+    // 2. 무한 클릭 방지 및 로딩 상태 활성화
+    isCreatingCard = true;
+    createBtn.disabled = true;
+    createBtn.classList.add('btn-loading');
+    const originalBtnHtml = createBtn.innerHTML;
+    createBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 초대장 생성 중...';
 
     const cardId = 'card_' + Date.now();
     const creatorId = AuthService.currentUser ? AuthService.currentUser.id : ('creator_' + Date.now());
@@ -1307,7 +1422,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
     shareUrlInput.value = generatedShareUrl;
     shareModal.classList.remove('hidden');
+
+    setTimeout(() => {
+      isCreatingCard = false;
+      createBtn.disabled = false;
+      createBtn.classList.remove('btn-loading');
+      createBtn.innerHTML = originalBtnHtml;
+    }, 800);
   });
+
+  // Duplicate Invitation Notice Modal Handler
+  function showDuplicateNotice(card) {
+    if (!duplicateModal) {
+      alert(`이미 ${card.receiverName}님에게 보낼 데이트 초대장이 보관함에 보관되어 있습니다!`);
+      return;
+    }
+
+    if (dupReceiverName) dupReceiverName.textContent = card.receiverName;
+    if (dupPreviewTag) {
+      dupPreviewTag.textContent = card.theme === 'rose' ? '🌹 Romantic Rose' : (card.theme === 'midnight' ? '🌙 Midnight Navy' : '🌿 Warm Cozy');
+    }
+    if (dupPreviewCreated) {
+      dupPreviewCreated.textContent = new Date(card.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 생성';
+    }
+    if (dupPreviewTitle) {
+      dupPreviewTitle.innerHTML = `To. <strong>${card.receiverName}</strong> <span style="font-size:0.85rem; color:var(--text-muted); font-weight:400;">(From. ${card.senderName})</span>`;
+    }
+    if (dupPreviewMeta) {
+      dupPreviewMeta.innerHTML = `
+        <span><i class="fa-regular fa-calendar-check"></i> ${formatDateString(card.date)}</span>
+        <span><i class="fa-solid fa-location-dot"></i> ${card.area}</span>
+        <span><i class="fa-solid fa-wallet"></i> ${card.budget}</span>
+      `;
+    }
+    if (dupPreviewCourses) {
+      const summary = (card.courses || []).map((c, i) => `${i + 1}차: ${c.n}`).join(' ➔ ') || '코스 정보';
+      dupPreviewCourses.innerHTML = `<i class="fa-solid fa-route"></i> <span>${summary}</span>`;
+    }
+
+    duplicateModal.classList.remove('hidden');
+
+    dupOpenExistingBtn.onclick = () => {
+      duplicateModal.classList.add('hidden');
+      openCardFromShareUrl(card.shareUrl || card.id);
+    };
+
+    dupOpenArchiveBtn.onclick = () => {
+      duplicateModal.classList.add('hidden');
+      if (archiveModal) {
+        archiveModal.classList.remove('hidden');
+        ArchiveService.loadAndRender();
+      }
+    };
+
+    closeDupModalBtn.onclick = () => {
+      duplicateModal.classList.add('hidden');
+    };
+  }
 
   // Copy & Modal Handlers
   copyBtn.addEventListener('click', () => {
@@ -1317,47 +1488,127 @@ document.addEventListener('DOMContentLoaded', () => {
 
   previewBtn.addEventListener('click', () => {
     shareModal.classList.add('hidden');
-    window.location.href = generatedShareUrl;
+    openCardFromShareUrl(generatedShareUrl);
   });
 
   closeModalBtn.addEventListener('click', () => {
     shareModal.classList.add('hidden');
   });
 
-  // Check URL Query & Hash & Decode safely
-  // 하위 호환: ?card= (레거시) 또는 #card= (신규) 모두 지원
-  const urlParams = new URLSearchParams(window.location.search);
-  const queryCardToken = urlParams.get('card');
-  const hashCardToken = getHashParam('card');
-  const cardToken = hashCardToken || queryCardToken;
+  // Open and View Story Card from URL or Token
+  function openCardFromShareUrl(shareUrl) {
+    if (!shareUrl) return;
+    if (archiveModal) archiveModal.classList.add('hidden');
+    if (shareModal) shareModal.classList.add('hidden');
+    if (duplicateModal) duplicateModal.classList.add('hidden');
 
-  // 레거시 ?card= URL로 접속 시 → #card= 형식으로 자동 리다이렉트 (서버 502 방지)
-  if (queryCardToken && !hashCardToken) {
-    const cleanBase = window.location.origin + window.location.pathname;
-    window.location.replace(`${cleanBase}#card=${queryCardToken}`);
-    return; // 리다이렉트 후 페이지 재로드 시 #card=로 처리
-  }
-
-  if (cardToken) {
-    // Hide landing page immediately when viewing a shared card
-    landingMode.classList.add('hidden');
+    let token = '';
     try {
-      recipientData = decodePayload(cardToken);
-      renderStoryViewer(recipientData);
-    } catch (err) {
-      console.warn('Parse error fallback:', err);
-      if (cardToken.startsWith('card_')) {
-        const localStr = localStorage.getItem(cardToken);
-        if (localStr) {
-          recipientData = JSON.parse(localStr);
-          renderStoryViewer(recipientData);
-          return;
-        }
+      if (shareUrl.includes('#card=')) {
+        token = shareUrl.split('#card=')[1].split('&')[0];
+      } else if (shareUrl.includes('?card=')) {
+        token = shareUrl.split('?card=')[1].split('&')[0];
+      } else if (shareUrl.startsWith('card_')) {
+        token = shareUrl;
       }
-      showToast('초대장 데이터를 불러올 수 없습니다. 새 초대장을 작성해 주세요.', true);
-      landingMode.classList.remove('hidden');
+    } catch (e) {
+      console.warn('Token extract error:', e);
+    }
+
+    if (token) {
+      const targetHash = `#card=${token}`;
+      if (window.location.hash !== targetHash) {
+        history.pushState(null, '', targetHash);
+      }
+      loadCardByToken(token);
+    } else {
+      window.location.href = shareUrl;
     }
   }
+
+  function loadCardByToken(token) {
+    if (!token) return false;
+    let data = null;
+
+    try {
+      data = decodePayload(token);
+    } catch (err) {
+      console.warn('Payload decode fallback:', err);
+    }
+
+    if (!data && token.startsWith('card_')) {
+      try {
+        const localStr = localStorage.getItem(token);
+        if (localStr) data = JSON.parse(localStr);
+      } catch (e) {}
+    }
+
+    if (!data) {
+      const archiveItem = ArchiveService.getAll().find(item =>
+        item.id === token || (item.shareUrl && item.shareUrl.includes(token))
+      );
+      if (archiveItem) {
+        data = {
+          id: archiveItem.id,
+          creatorId: archiveItem.userId,
+          s: archiveItem.senderName,
+          r: archiveItem.receiverName,
+          d: archiveItem.date,
+          a: archiveItem.area,
+          b: archiveItem.budget,
+          m: archiveItem.message,
+          tm: archiveItem.theme,
+          c: archiveItem.courses || [],
+          ts: archiveItem.createdAt
+        };
+      }
+    }
+
+    if (data) {
+      recipientData = data;
+      renderStoryViewer(data);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return true;
+    } else {
+      showToast('초대장 데이터를 불러올 수 없습니다. 새 초대장을 작성해 주세요.', true);
+      landingMode.classList.remove('hidden');
+      return false;
+    }
+  }
+
+  function checkAndLoadCardFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryCardToken = urlParams.get('card');
+    const hashCardToken = getHashParam('card');
+    const cardToken = hashCardToken || queryCardToken;
+
+    // 레거시 ?card= URL로 접속 시 → #card= 형식으로 자동 리다이렉트 (서버 502 방지)
+    if (queryCardToken && !hashCardToken) {
+      const cleanBase = window.location.origin + window.location.pathname;
+      window.location.replace(`${cleanBase}#card=${queryCardToken}`);
+      return;
+    }
+
+    if (cardToken) {
+      loadCardByToken(cardToken);
+    }
+  }
+
+  // Hashchange listener for smooth back/forward and direct navigation
+  window.addEventListener('hashchange', () => {
+    const hashCardToken = getHashParam('card');
+    if (hashCardToken) {
+      loadCardByToken(hashCardToken);
+    } else if (!window.location.hash || window.location.hash === '#' || window.location.hash === '#/') {
+      viewMode.classList.add('hidden');
+      createMode.classList.add('hidden');
+      appHeader.classList.add('hidden');
+      landingMode.classList.remove('hidden');
+    }
+  });
+
+  // Initial Check on Page Load
+  checkAndLoadCardFromUrl();
 
   // STORY PAGER ENGINE WITH CUSTOM DROPDOWN POPULATION
   function renderStoryViewer(data) {

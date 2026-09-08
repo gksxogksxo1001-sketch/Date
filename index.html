@@ -472,6 +472,49 @@
       </div>
     </div>
 
+    <!-- MODAL: DUPLICATE INVITATION NOTICE -->
+    <div id="duplicateModal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-icon" style="background: #FFF3E0; color: #E07A5F;">
+          <i class="fa-solid fa-clone"></i>
+        </div>
+        <h3>이미 보관함에 생성된 초대장입니다 💌</h3>
+        <p id="duplicateModalDesc">
+          To. <strong id="dupReceiverName"></strong>님에게 보낼 데이트 초대장이 이미 보관함에 저장되어 있습니다.<br>
+          중복 생성을 방지하기 위해 기존 초대장으로 안내해 드릴게요!
+        </p>
+
+        <div class="duplicate-card-preview" id="duplicateCardPreview">
+          <div class="dup-preview-header">
+            <span class="dup-preview-tag" id="dupPreviewTag">Warm Cozy</span>
+            <span class="dup-preview-date" id="dupPreviewCreated">방금 전 생성</span>
+          </div>
+          <div class="dup-preview-body">
+            <h4 id="dupPreviewTitle">To. ㅈㅇ (From. ㅎㅌ)</h4>
+            <div class="dup-preview-meta" id="dupPreviewMeta">
+              <span><i class="fa-regular fa-calendar-check"></i> 9월 9일</span>
+              <span><i class="fa-solid fa-location-dot"></i> 성수동</span>
+            </div>
+            <div class="dup-preview-courses" id="dupPreviewCourses">
+              <i class="fa-solid fa-route"></i> <span>코스 정보</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="dupOpenExistingBtn" class="btn-primary">
+            <i class="fa-solid fa-eye"></i> 기존 초대장 바로 열기
+          </button>
+          <button type="button" id="dupOpenArchiveBtn" class="btn-secondary">
+            <i class="fa-solid fa-box-archive"></i> 보관함에서 확인하기
+          </button>
+          <button type="button" id="closeDupModalBtn" class="btn-link-subtle">
+            창 닫기
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- MODAL: COURSE FEEDBACK / ADJUSTMENT REQUEST (WITH CUSTOM UI DROPDOWN) -->
     <div id="feedbackModal" class="modal-overlay hidden">
       <div class="modal-card">

@@ -2520,3 +2520,84 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
   display: none !important;
 }
 
+/* DUPLICATE MODAL PREVIEW CARD */
+.duplicate-card-preview {
+  background: #FAF7F5;
+  border: 1.5px solid rgba(224, 122, 95, 0.28);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin: 16px 0;
+  text-align: left;
+  box-shadow: 0 4px 14px rgba(224, 122, 95, 0.08);
+}
+
+.dup-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.dup-preview-tag {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--coral-main);
+  background: #FFE8EC;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.dup-preview-date {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.dup-preview-body h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 6px;
+}
+
+.dup-preview-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.dup-preview-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dup-preview-courses {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  background: #FFFFFF;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dup-preview-courses span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-loading {
+  opacity: 0.75 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
