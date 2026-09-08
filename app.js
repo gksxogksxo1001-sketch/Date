@@ -1166,13 +1166,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function reindexCourses() {
     const cards = courseList.querySelectorAll('.course-item-card');
+    // coursePhotosMap 키를 새 인덱스에 맞게 재매핑
+    const newPhotosMap = {};
     cards.forEach((card, idx) => {
+      const oldIndex = parseInt(card.getAttribute('data-index'));
+      newPhotosMap[idx] = coursePhotosMap[oldIndex] || [];
       card.setAttribute('data-index', idx);
       const badge = card.querySelector('.course-badge');
       if (badge) badge.textContent = `${idx + 1}차 코스`;
       const removeBtn = card.querySelector('.btn-remove-course');
       if (removeBtn) removeBtn.setAttribute('onclick', `removeCourseItem(${idx})`);
+      // 갤러리 file input과 thumbs grid의 인덱스도 업데이트
+      const fileInput = card.querySelector('.photo-upload-input');
+      if (fileInput) {
+        fileInput.id = `fileInput_${idx}`;
+        fileInput.setAttribute('onchange', `handleGalleryUpload(event, ${idx})`);
+      }
+      const uploadLabel = card.querySelector('.photo-upload-label');
+      if (uploadLabel) uploadLabel.setAttribute('for', `fileInput_${idx}`);
+      const thumbsGrid = card.querySelector('.upload-thumbs-grid');
+      if (thumbsGrid) thumbsGrid.id = `thumbsGrid_${idx}`;
     });
+    // coursePhotosMap 교체
+    Object.keys(coursePhotosMap).forEach(k => delete coursePhotosMap[k]);
+    Object.assign(coursePhotosMap, newPhotosMap);
     updateRemoveButtons();
   }
 
@@ -1266,7 +1283,17 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('LocalStorage save warning:', e);
     }
 
-    const encodedToken = encodePayload(payload);
+    // URL 공유용 payload: 사진 DataURL을 제외하여 URL 길이 초과 방지
+    // 사진은 localStorage에만 보관되며, 수신자는 사진 없이 코스 정보를 확인
+    const payloadForUrl = {
+      ...payload,
+      c: payload.c.map(course => {
+        const { p, ...rest } = course;
+        return rest;
+      })
+    };
+
+    const encodedToken = encodePayload(payloadForUrl);
 
     let baseUrl = window.location.origin + window.location.pathname;
     // Fallback file:// local testing to the registered GitHub Pages domain for Kakao API compatibility

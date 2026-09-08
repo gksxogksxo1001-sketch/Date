@@ -18,8 +18,12 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Pretendard (공식 CDN - Google Fonts 미등록 폰트) -->
+  <link rel="stylesheet" as="style" crossorigin
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <!-- Outfit (Google Fonts) -->
   <link
-    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Pretendard:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap"
     rel="stylesheet">
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -154,7 +158,7 @@
 
       <!-- SAMPLE PREVIEW: 3-CARDS HORIZONTAL GRID -->
       <div class="landing-section landing-preview-section">
-        <h2 class="section-title"><i class="fa-solid fa-sparkles"></i> 이렇게 보여요</h2>
+        <h2 class="section-title"><i class="fa-solid fa-wand-magic-sparkles"></i> 이렇게 보여요</h2>
         <p class="section-desc">상대방 화면에서 인스타 스토리처럼 생생하게 확인하는 3단계 코스</p>
         <div class="preview-cards-grid">
           <!-- Card 1 -->
@@ -224,7 +228,7 @@
     <section id="createMode" class="card-container main-card hidden">
 
       <div class="card-header">
-        <h2><i class="fa-solid fa-pen-sparkles"></i> 데이트 신청 방 만들기</h2>
+        <h2><i class="fa-solid fa-pen-fancy"></i> 데이트 신청 방 만들기</h2>
         <p>코스를 작성하시면 상대방에게 <strong>카드뉴스/스토리 스타일</strong>로 멋지게 전달됩니다.</p>
       </div>
 
@@ -293,7 +297,7 @@
             <label for="dateDisplay"><i class="fa-regular fa-calendar-check"></i> 만날 날짜</label>
             <div class="custom-datepicker-wrapper" id="customDatePickerWrapper">
               <div class="datepicker-input-box" id="datepickerTrigger" tabindex="0">
-                <i class="fa-regular fa-calendar-heart datepicker-lead-icon"></i>
+                <i class="fa-regular fa-calendar datepicker-lead-icon"></i>
                 <input type="text" id="dateDisplay" placeholder="만날 날짜를 선택해 주세요 📅" readonly required>
                 <i class="fa-solid fa-chevron-down datepicker-arrow-icon"></i>
               </div>
