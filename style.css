@@ -2980,28 +2980,158 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
   transform: translateY(-1.5px);
 }
 
-/* 2. Story Card Save Button in Story Viewer */
-.btn-save-calendar {
-  background: linear-gradient(135deg, #FF6B81, #E07A5F);
-  color: #FFFFFF !important;
+/* 2. Custom Action Dropdown Menu in Story Viewer */
+.action-dropdown-wrapper {
+  position: relative;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.btn-action-dropdown-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFFFFF;
+  border: 1.5px solid #F5CDD4;
+  border-radius: 18px;
+  padding: 13px 20px;
+  color: var(--text-dark);
   font-weight: 700;
-  box-shadow: 0 6px 18px rgba(224, 122, 95, 0.32);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.94rem;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(224, 122, 95, 0.08);
+  transition: all 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.btn-action-dropdown-toggle .btn-action-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text-dark);
+}
+
+.btn-action-dropdown-toggle .btn-action-label i {
+  color: var(--coral-main);
+  font-size: 1rem;
+}
+
+.btn-action-dropdown-toggle .dropdown-arrow {
+  color: var(--coral-main);
+  font-size: 0.85rem;
+  transition: transform 0.25s ease;
+}
+
+.btn-action-dropdown-toggle:hover {
+  background: #FFF9F8;
+  border-color: var(--coral-main);
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 16px rgba(224, 122, 95, 0.18);
+}
+
+.btn-action-dropdown-toggle.open {
+  border-color: var(--coral-main);
+  box-shadow: 0 0 0 4px var(--coral-light);
+  background: #FFFFFF;
+}
+
+.btn-action-dropdown-toggle.open .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Menu Floating Sheet */
+.action-dropdown-menu {
+  position: relative;
+  margin-top: 10px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid #F5E5E0;
+  border-radius: 20px;
+  padding: 8px;
+  box-shadow: 0 16px 36px rgba(224, 122, 95, 0.16), 0 2px 8px rgba(0, 0, 0, 0.04);
+  animation: calPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dropdown-action-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: #FFFFFF;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.dropdown-action-item:hover {
+  background: #FFF4F2;
+  border-color: #FFD8CE;
+  transform: translateX(3px);
+}
+
+.action-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
 }
 
-.btn-save-calendar:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(224, 122, 95, 0.42);
-  filter: brightness(1.04);
+.dropdown-action-item:hover .action-icon-wrap {
+  transform: scale(1.08);
 }
 
-.btn-save-calendar.saved {
-  background: linear-gradient(135deg, #2EC4B6, #20A497) !important;
-  box-shadow: 0 4px 14px rgba(46, 196, 182, 0.35);
+.action-icon-wrap.icon-calendar {
+  background: #FFE8EC;
+  color: #E07A5F;
+}
+
+.action-icon-wrap.icon-camera {
+  background: #E8F7F5;
+  color: #2EC4B6;
+}
+
+.action-icon-wrap.icon-feedback {
+  background: #F3F0FF;
+  color: #6C5CE7;
+}
+
+.action-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.action-title {
+  font-size: 0.93rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.action-desc {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+/* When calendar is already saved */
+#saveStoryCardBtn.saved .action-icon-wrap {
+  background: #E0F7F4;
+  color: #20A497;
+}
+
+#saveStoryCardBtn.saved .action-title {
+  color: #20A497;
 }
 
 /* 3. Calendar Modal Container - Ultra Sleek & Modern Glassmorphism */

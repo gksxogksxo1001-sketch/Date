@@ -431,20 +431,52 @@
           <i class="fa-solid fa-heart-circle-check"></i> 데이트 코스 완벽해! 수락하기
         </button>
 
-        <!-- Save Story Card to Calendar & Archive -->
-        <button type="button" id="saveStoryCardBtn" class="btn-primary btn-block btn-save-calendar">
-          <i class="fa-solid fa-calendar-plus"></i> 스토리 카드 저장하기 (내 캘린더 등록)
-        </button>
+        <!-- Action Dropdown Menu (일정 저장 및 더보기) -->
+        <div class="action-dropdown-wrapper" id="actionDropdownWrapper">
+          <button type="button" id="actionDropdownToggle" class="btn-action-dropdown-toggle btn-block">
+            <span class="btn-action-label">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span id="actionDropdownLabel">일정 저장 & 기능 더보기</span>
+            </span>
+            <i class="fa-solid fa-chevron-down dropdown-arrow" id="actionDropdownArrow"></i>
+          </button>
 
-        <!-- Download Card Image (Always shown) -->
-        <button type="button" id="downloadCardBtn" class="btn-secondary btn-block btn-download">
-          <i class="fa-solid fa-camera"></i> 스토리 카드 이미지로 저장하기
-        </button>
+          <!-- Dropdown Floating Menu Sheet -->
+          <div class="action-dropdown-menu hidden" id="actionDropdownMenu">
+            <!-- Save to Calendar & Archive -->
+            <button type="button" id="saveStoryCardBtn" class="dropdown-action-item">
+              <div class="action-icon-wrap icon-calendar">
+                <i class="fa-solid fa-calendar-plus"></i>
+              </div>
+              <div class="action-text-wrap">
+                <span class="action-title" id="saveStoryCardTitle">내 캘린더에 일정 담기</span>
+                <span class="action-desc">상대방 캘린더와 보관함에 자동 등록</span>
+              </div>
+            </button>
 
-        <!-- Feedback Button (Only shown to recipient before accepting) -->
-        <button type="button" id="feedbackBtn" class="btn-secondary btn-block">
-          <i class="fa-regular fa-comment-dots"></i> 살짝 코스 조정 요청하기
-        </button>
+            <!-- Download Card Image -->
+            <button type="button" id="downloadCardBtn" class="dropdown-action-item">
+              <div class="action-icon-wrap icon-camera">
+                <i class="fa-solid fa-camera"></i>
+              </div>
+              <div class="action-text-wrap">
+                <span class="action-title">스토리 카드 이미지 저장</span>
+                <span class="action-desc">고화질 PNG 이미지로 사진첩 소장</span>
+              </div>
+            </button>
+
+            <!-- Feedback / Adjustment Request -->
+            <button type="button" id="feedbackBtn" class="dropdown-action-item">
+              <div class="action-icon-wrap icon-feedback">
+                <i class="fa-regular fa-comment-dots"></i>
+              </div>
+              <div class="action-text-wrap">
+                <span class="action-title">살짝 코스 조정 요청하기</span>
+                <span class="action-desc">시간이나 장소 조율 메시지 작성</span>
+              </div>
+            </button>
+          </div>
+        </div>
 
         <!-- Creator Share Again Button (Only shown to creator) -->
         <button type="button" id="creatorShareAgainBtn" class="btn-kakao btn-block hidden">

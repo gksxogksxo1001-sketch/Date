@@ -59,8 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const archiveCreateNewBtn = document.getElementById('archiveCreateNewBtn');
   const archiveUserStatusText = document.getElementById('archiveUserStatusText');
 
-  // Save to Calendar Button in Story Viewer
+  // Action Dropdown Elements in Story Viewer
+  const actionDropdownWrapper = document.getElementById('actionDropdownWrapper');
+  const actionDropdownToggle = document.getElementById('actionDropdownToggle');
+  const actionDropdownMenu = document.getElementById('actionDropdownMenu');
   const saveStoryCardBtn = document.getElementById('saveStoryCardBtn');
+  const saveStoryCardTitle = document.getElementById('saveStoryCardTitle');
 
   // Story Pager Elements
   const storyProgress = document.getElementById('storyProgress');
@@ -1178,6 +1182,35 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize Calendar Service
   CalendarService.init();
 
+  // Action Dropdown Toggle & Auto Close Handlers
+  if (actionDropdownToggle && actionDropdownMenu) {
+    actionDropdownToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isClosed = actionDropdownMenu.classList.contains('hidden');
+      if (isClosed) {
+        actionDropdownMenu.classList.remove('hidden');
+        actionDropdownToggle.classList.add('open');
+      } else {
+        actionDropdownMenu.classList.add('hidden');
+        actionDropdownToggle.classList.remove('open');
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (actionDropdownWrapper && !actionDropdownWrapper.contains(e.target)) {
+        actionDropdownMenu.classList.add('hidden');
+        actionDropdownToggle.classList.remove('open');
+      }
+    });
+
+    actionDropdownMenu.querySelectorAll('.dropdown-action-item').forEach(item => {
+      item.addEventListener('click', () => {
+        actionDropdownMenu.classList.add('hidden');
+        actionDropdownToggle.classList.remove('open');
+      });
+    });
+  }
+
   // Save Story Card to Calendar & Archive Handler
   if (saveStoryCardBtn) {
     saveStoryCardBtn.addEventListener('click', async () => {
@@ -1203,7 +1236,9 @@ document.addEventListener('DOMContentLoaded', () => {
       await ArchiveService.save(cardPayload, shareUrl);
 
       saveStoryCardBtn.classList.add('saved');
-      saveStoryCardBtn.innerHTML = '<i class="fa-solid fa-check"></i> 캘린더 & 보관함 저장 완료 💖';
+      if (saveStoryCardTitle) {
+        saveStoryCardTitle.textContent = '내 캘린더에 저장 완료 💖';
+      }
 
       showToast('🎉 내 캘린더와 보관함에 데이트 일정이 쏙 담겼습니다! 📅');
 
@@ -2586,6 +2621,27 @@ document.addEventListener('DOMContentLoaded', () => {
       data.isAccepted === true
     );
 
+    // Helper function for calendar save button state
+    function updateSaveBtnState() {
+      if (!saveStoryCardBtn) return;
+      const isSaved = ArchiveService.findDuplicate({
+        senderName: data.s,
+        receiverName: data.r,
+        date: data.d,
+        area: data.a,
+        courses: data.c
+      });
+      if (isSaved) {
+        saveStoryCardBtn.classList.add('saved');
+        if (saveStoryCardTitle) saveStoryCardTitle.textContent = '내 캘린더에 저장 완료 💖';
+      } else {
+        saveStoryCardBtn.classList.remove('saved');
+        if (saveStoryCardTitle) saveStoryCardTitle.textContent = '내 캘린더에 데이트 담기';
+      }
+    }
+
+    if (actionDropdownWrapper) actionDropdownWrapper.classList.remove('hidden');
+
     if (isCreator) {
       // 1. Creator (Sender) View: Never show accept or feedback buttons
       if (creatorNoticeBanner) creatorNoticeBanner.classList.remove('hidden');
@@ -2593,7 +2649,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (acceptBtn) acceptBtn.classList.add('hidden');
       if (feedbackBtn) feedbackBtn.classList.add('hidden');
       if (downloadCardBtn) downloadCardBtn.classList.remove('hidden');
-      if (saveStoryCardBtn) saveStoryCardBtn.classList.add('hidden');
+      if (saveStoryCardBtn) saveStoryCardBtn.classList.remove('hidden');
+
+      updateSaveBtnState();
 
       if (isAccepted) {
         if (acceptedStatusBanner) {
@@ -2611,7 +2669,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (creatorShareAgainBtn) creatorShareAgainBtn.classList.add('hidden');
 
     if (isAccepted) {
-      // Already accepted: Permanently hide accept and feedback buttons, only show downloadCardBtn
+      // Already accepted: Permanently hide accept and feedback buttons
       if (acceptedStatusBanner) {
         acceptedStatusBanner.classList.remove('hidden');
         acceptedStatusBanner.innerHTML = '<i class="fa-solid fa-heart-circle-check"></i> <span>데이트 약속을 수락하셨습니다! (확정됨 💖)</span>';
@@ -2619,32 +2677,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (acceptBtn) acceptBtn.classList.add('hidden');
       if (feedbackBtn) feedbackBtn.classList.add('hidden');
       if (downloadCardBtn) downloadCardBtn.classList.remove('hidden');
+      if (saveStoryCardBtn) saveStoryCardBtn.classList.remove('hidden');
     } else {
       // Not yet accepted: show accept and feedback buttons
       if (acceptedStatusBanner) acceptedStatusBanner.classList.add('hidden');
       if (acceptBtn) acceptBtn.classList.remove('hidden');
       if (feedbackBtn) feedbackBtn.classList.remove('hidden');
       if (downloadCardBtn) downloadCardBtn.classList.remove('hidden');
+      if (saveStoryCardBtn) saveStoryCardBtn.classList.remove('hidden');
     }
 
-    // Save to Calendar & Archive Button State
-    if (saveStoryCardBtn) {
-      saveStoryCardBtn.classList.remove('hidden');
-      const isSaved = ArchiveService.findDuplicate({
-        senderName: data.s,
-        receiverName: data.r,
-        date: data.d,
-        area: data.a,
-        courses: data.c
-      });
-      if (isSaved) {
-        saveStoryCardBtn.classList.add('saved');
-        saveStoryCardBtn.innerHTML = '<i class="fa-solid fa-check"></i> 캘린더에 저장된 데이트 💖';
-      } else {
-        saveStoryCardBtn.classList.remove('saved');
-        saveStoryCardBtn.innerHTML = '<i class="fa-solid fa-calendar-plus"></i> 스토리 카드 저장하기 (내 캘린더 담기)';
-      }
-    }
+    updateSaveBtnState();
 
     // Cloud Verification with Supabase
     if (supabaseClient && cardId) {
