@@ -310,11 +310,14 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
         const res = await userRes.json();
-        const profile = (res.kakao_account && res.kakao_account.profile) || {};
+        let profileImg = profile.profile_image_url || profile.thumbnail_image_url || 'assets/favicon.png';
+        if (profileImg.startsWith('http://')) {
+          profileImg = profileImg.replace('http://', 'https://');
+        }
         const user = {
           id: 'kakao_' + res.id,
           nickname: profile.nickname || '카카오 회원',
-          profileImage: profile.profile_image_url || profile.thumbnail_image_url || 'assets/favicon.png',
+          profileImage: profileImg,
           email: (res.kakao_account && res.kakao_account.email) || '',
           loginTime: Date.now()
         };
@@ -482,9 +485,10 @@ document.addEventListener('DOMContentLoaded', () => {
       // Cloud Sync to Supabase
       if (supabaseClient) {
         try {
+          const validUserId = (AuthService.currentUser && AuthService.currentUser.id && !AuthService.currentUser.id.startsWith('creator_') && !AuthService.currentUser.id.startsWith('guest')) ? AuthService.currentUser.id : null;
           const dbRow = {
             id: archiveItem.id,
-            user_id: archiveItem.userId,
+            user_id: validUserId,
             sender_name: archiveItem.senderName,
             receiver_name: archiveItem.receiverName,
             date_val: archiveItem.date,
@@ -1613,7 +1617,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // STORY PAGER ENGINE WITH CUSTOM DROPDOWN POPULATION
   function renderStoryViewer(data) {
     landingMode.classList.add('hidden');
-    appHeader.classList.remove('hidden');
+    appHeader.classList.add('hidden'); // 스토리 뷰어에서는 상단 글로벌 네비바만 보이도록 대형 헤더 숨김
     createMode.classList.add('hidden');
     viewMode.classList.remove('hidden');
 
