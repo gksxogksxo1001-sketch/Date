@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const calPrevBtn = document.getElementById('calPrevBtn');
   const calNextBtn = document.getElementById('calNextBtn');
   const calMonthTitle = document.getElementById('calMonthTitle');
+  const calTodayQuickBtn = document.getElementById('calTodayQuickBtn');
   const calendarDaysGrid = document.getElementById('calendarDaysGrid');
   const calSelectedDateLabel = document.getElementById('calSelectedDateLabel');
   const calSelectedCountBadge = document.getElementById('calSelectedCountBadge');
@@ -766,6 +767,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (calNextBtn) {
         calNextBtn.addEventListener('click', () => this.changeMonth(1));
       }
+      if (calTodayQuickBtn) {
+        calTodayQuickBtn.addEventListener('click', () => this.goToToday());
+      }
       if (openCalendarNavBtn) {
         openCalendarNavBtn.addEventListener('click', () => this.open());
       }
@@ -775,6 +779,88 @@ document.addEventListener('DOMContentLoaded', () => {
       if (closeCalendarBottomBtn) {
         closeCalendarBottomBtn.addEventListener('click', () => this.close());
       }
+      this.bindSwipeDrag();
+    },
+
+    bindSwipeDrag() {
+      const board = document.querySelector('.calendar-board');
+      if (!board) return;
+
+      let isDown = false;
+      let startX = 0;
+      let diffX = 0;
+
+      // Mouse drag handlers
+      board.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.cal-event-chip') || e.target.closest('.cal-detail-card')) return;
+        isDown = true;
+        startX = e.pageX;
+        diffX = 0;
+        board.classList.add('is-dragging');
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        diffX = e.pageX - startX;
+        if (calendarDaysGrid && Math.abs(diffX) > 5) {
+          calendarDaysGrid.style.transform = `translateX(${diffX * 0.35}px)`;
+        }
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (!isDown) return;
+        isDown = false;
+        board.classList.remove('is-dragging');
+        if (calendarDaysGrid) {
+          calendarDaysGrid.style.transform = '';
+        }
+        if (diffX > 55) {
+          this.changeMonth(-1); // 오른쪽으로 드래그 -> 이전 달
+        } else if (diffX < -55) {
+          this.changeMonth(1); // 왼쪽으로 드래그 -> 다음 달
+        }
+        diffX = 0;
+      });
+
+      // Mobile Touch swipe handlers
+      let touchStartX = 0;
+      let touchDiffX = 0;
+      board.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+          touchStartX = e.touches[0].pageX;
+          touchDiffX = 0;
+        }
+      }, { passive: true });
+
+      board.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1) {
+          touchDiffX = e.touches[0].pageX - touchStartX;
+          if (calendarDaysGrid && Math.abs(touchDiffX) > 10) {
+            calendarDaysGrid.style.transform = `translateX(${touchDiffX * 0.35}px)`;
+          }
+        }
+      }, { passive: true });
+
+      board.addEventListener('touchend', () => {
+        if (calendarDaysGrid) {
+          calendarDaysGrid.style.transform = '';
+        }
+        if (touchDiffX > 50) {
+          this.changeMonth(-1); // 우측 스와이프 -> 이전 달
+        } else if (touchDiffX < -50) {
+          this.changeMonth(1); // 좌측 스와이프 -> 다음 달
+        }
+        touchDiffX = 0;
+      });
+    },
+
+    goToToday() {
+      const today = new Date();
+      this.viewYear = today.getFullYear();
+      this.viewMonth = today.getMonth();
+      this.selectedDateKey = this.formatDateKey(today);
+      this.render();
+      showToast('오늘 날짜로 이동했습니다! 🎯');
     },
 
     open() {
@@ -912,7 +998,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const d = prevMonthLastDate - i;
         const cell = document.createElement('div');
         cell.className = 'cal-day-box other-month';
-        cell.innerHTML = `<span class="cal-day-num">${d}</span>`;
+        cell.innerHTML = `
+          <div class="cal-day-top-row">
+            <span class="cal-day-num">${d}</span>
+          </div>`;
         calendarDaysGrid.appendChild(cell);
       }
 
@@ -923,11 +1012,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const dStr = String(day).padStart(2, '0');
         const mStr = String(this.viewMonth + 1).padStart(2, '0');
         const dateKey = `${this.viewYear}-${mStr}-${dStr}`;
+        const isToday = (dateKey === todayKey);
 
         let classNames = ['cal-day-box'];
         if (dayOfWeek === 0) classNames.push('sun');
         if (dayOfWeek === 6) classNames.push('sat');
-        if (dateKey === todayKey) classNames.push('is-today');
+        if (isToday) classNames.push('is-today');
         if (dateKey === this.selectedDateKey) classNames.push('is-selected');
 
         cell.className = classNames.join(' ');
@@ -957,7 +1047,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         cell.innerHTML = `
-          <span class="cal-day-num">${day}</span>
+          <div class="cal-day-top-row">
+            <span class="cal-day-num">${day}</span>
+            ${isToday ? '<span class="cal-today-tag">오늘</span>' : ''}
+          </div>
           ${chipsHtml}
         `;
 
@@ -977,7 +1070,10 @@ document.addEventListener('DOMContentLoaded', () => {
       for (let day = 1; day <= remaining; day++) {
         const cell = document.createElement('div');
         cell.className = 'cal-day-box other-month';
-        cell.innerHTML = `<span class="cal-day-num">${day}</span>`;
+        cell.innerHTML = `
+          <div class="cal-day-top-row">
+            <span class="cal-day-num">${day}</span>
+          </div>`;
         calendarDaysGrid.appendChild(cell);
       }
 

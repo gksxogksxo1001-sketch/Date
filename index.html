@@ -632,23 +632,29 @@
         <div class="calendar-modal-body">
           <!-- CALENDAR CONTROLS (최대 2달 전 ~ 2달 후) -->
           <div class="calendar-nav-bar">
-            <button type="button" id="calPrevBtn" class="cal-nav-btn" title="이전 달">
+            <button type="button" id="calPrevBtn" class="cal-nav-btn" title="이전 달 (좌측 드래그 가능)">
               <i class="fa-solid fa-chevron-left"></i>
             </button>
             <div class="cal-current-month-wrap">
               <span id="calMonthTitle" class="cal-month-title">2026년 9월</span>
-              <span id="calRangeBadge" class="cal-range-badge">최대 ±2개월 범위</span>
+              <div class="cal-range-meta">
+                <span id="calRangeBadge" class="cal-range-badge">최대 ±2개월 범위</span>
+                <button type="button" id="calTodayQuickBtn" class="cal-today-quick-btn" title="오늘 날짜로 이동">오늘 바로가기 🎯</button>
+              </div>
             </div>
-            <button type="button" id="calNextBtn" class="cal-nav-btn" title="다음 달">
+            <button type="button" id="calNextBtn" class="cal-nav-btn" title="다음 달 (우측 드래그 가능)">
               <i class="fa-solid fa-chevron-right"></i>
             </button>
           </div>
 
-          <!-- CALENDAR LEGEND (구분 가이드 - 시각적 구분 강화) -->
+          <!-- CALENDAR LEGEND & SWIPE HINT (구분 가이드 - 시각적 구분 강화) -->
           <div class="calendar-legend-bar">
-            <span class="cal-legend-item legend-sent"><span class="legend-badge badge-sent">보낸 약속</span> 내가 초대한 데이트</span>
-            <span class="cal-legend-item legend-received"><span class="legend-badge badge-received">받은 초대</span> 내가 초대받은 데이트</span>
-            <span class="cal-legend-item legend-today"><span class="legend-badge badge-today">오늘</span> Today</span>
+            <div class="cal-legend-group">
+              <span class="cal-legend-item legend-sent"><span class="legend-badge badge-sent">보낸 약속</span> 내가 초대한 데이트</span>
+              <span class="cal-legend-item legend-received"><span class="legend-badge badge-received">받은 초대</span> 내가 초대받은 데이트</span>
+              <span class="cal-legend-item legend-today"><span class="legend-badge badge-today">오늘</span> Today</span>
+            </div>
+            <span class="cal-drag-hint"><i class="fa-solid fa-arrows-left-right"></i> 좌우 드래그로 달 넘기기</span>
           </div>
 
           <!-- CALENDAR GRID -->
