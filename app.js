@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Global Nav & Auth Elements
   const navBrandBtn = document.getElementById('navBrandBtn');
+  const openCalendarNavBtn = document.getElementById('openCalendarNavBtn');
   const openArchiveBtn = document.getElementById('openArchiveBtn');
   const archiveCountBadge = document.getElementById('archiveCountBadge');
   const kakaoLoginBtn = document.getElementById('kakaoLoginBtn');
@@ -35,6 +36,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const userAvatarImg = document.getElementById('userAvatarImg');
   const userNicknameSpan = document.getElementById('userNicknameSpan');
   const kakaoLogoutBtn = document.getElementById('kakaoLogoutBtn');
+
+  // Calendar Modal Elements
+  const calendarModal = document.getElementById('calendarModal');
+  const closeCalendarModalBtn = document.getElementById('closeCalendarModalBtn');
+  const closeCalendarBottomBtn = document.getElementById('closeCalendarBottomBtn');
+  const calPrevBtn = document.getElementById('calPrevBtn');
+  const calNextBtn = document.getElementById('calNextBtn');
+  const calMonthTitle = document.getElementById('calMonthTitle');
+  const calendarDaysGrid = document.getElementById('calendarDaysGrid');
+  const calSelectedDateLabel = document.getElementById('calSelectedDateLabel');
+  const calSelectedCountBadge = document.getElementById('calSelectedCountBadge');
+  const calSelectedEventsList = document.getElementById('calSelectedEventsList');
 
   // Archive Modal Elements
   const archiveModal = document.getElementById('archiveModal');
@@ -44,6 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const archiveEmptyState = document.getElementById('archiveEmptyState');
   const archiveCreateNewBtn = document.getElementById('archiveCreateNewBtn');
   const archiveUserStatusText = document.getElementById('archiveUserStatusText');
+
+  // Save to Calendar Button in Story Viewer
+  const saveStoryCardBtn = document.getElementById('saveStoryCardBtn');
 
   // Story Pager Elements
   const storyProgress = document.getElementById('storyProgress');
@@ -371,10 +387,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userAvatarImg) userAvatarImg.src = this.currentUser.profileImage || 'assets/favicon.png';
         if (userNicknameSpan) userNicknameSpan.textContent = this.currentUser.nickname;
         if (archiveUserStatusText) archiveUserStatusText.innerHTML = `<span class="badge-online">●</span> <strong>${this.currentUser.nickname}</strong>님의 Supabase 클라우드에 안전하게 보관 중입니다.`;
+        if (openCalendarNavBtn) openCalendarNavBtn.classList.remove('hidden');
       } else {
         if (kakaoLoginBtn) kakaoLoginBtn.classList.remove('hidden');
         if (userProfileNav) userProfileNav.classList.add('hidden');
         if (archiveUserStatusText) archiveUserStatusText.textContent = '💡 카카오 로그인 시 Supabase 클라우드에 안전하게 영구 보관됩니다.';
+        if (openCalendarNavBtn) openCalendarNavBtn.classList.add('hidden');
+        if (calendarModal) calendarModal.classList.add('hidden');
       }
     }
   };
@@ -726,6 +745,299 @@ document.addEventListener('DOMContentLoaded', () => {
   window.deleteArchiveItem = function(cardId) {
     if (confirm('이 데이트 초대장을 보관함에서 삭제하시겠습니까?')) {
       ArchiveService.delete(cardId);
+      if (CalendarService) CalendarService.render();
+    }
+  };
+
+  // ====================================================
+  // DATE CALENDAR SERVICE (±2 MONTHS, DYNAMIC, STORY LINK)
+  // ====================================================
+  const CalendarService = {
+    baseYear: new Date().getFullYear(),
+    baseMonth: new Date().getMonth(), // 0 ~ 11
+    viewYear: new Date().getFullYear(),
+    viewMonth: new Date().getMonth(),
+    selectedDateKey: null, // 'YYYY-MM-DD'
+
+    init() {
+      if (calPrevBtn) {
+        calPrevBtn.addEventListener('click', () => this.changeMonth(-1));
+      }
+      if (calNextBtn) {
+        calNextBtn.addEventListener('click', () => this.changeMonth(1));
+      }
+      if (openCalendarNavBtn) {
+        openCalendarNavBtn.addEventListener('click', () => this.open());
+      }
+      if (closeCalendarModalBtn) {
+        closeCalendarModalBtn.addEventListener('click', () => this.close());
+      }
+      if (closeCalendarBottomBtn) {
+        closeCalendarBottomBtn.addEventListener('click', () => this.close());
+      }
+    },
+
+    open() {
+      // 캘린더 열 때 오늘 기준으로 뷰 초기화
+      const today = new Date();
+      this.baseYear = today.getFullYear();
+      this.baseMonth = today.getMonth();
+      this.viewYear = this.baseYear;
+      this.viewMonth = this.baseMonth;
+      
+      const todayKey = this.formatDateKey(today);
+      this.selectedDateKey = todayKey;
+
+      if (calendarModal) calendarModal.classList.remove('hidden');
+      this.render();
+    },
+
+    close() {
+      if (calendarModal) calendarModal.classList.add('hidden');
+    },
+
+    getMonthOffset(y, m) {
+      return (y - this.baseYear) * 12 + (m - this.baseMonth);
+    },
+
+    changeMonth(delta) {
+      let nextM = this.viewMonth + delta;
+      let nextY = this.viewYear;
+      if (nextM < 0) {
+        nextM = 11;
+        nextY--;
+      } else if (nextM > 11) {
+        nextM = 0;
+        nextY++;
+      }
+
+      const offset = this.getMonthOffset(nextY, nextM);
+      if (offset < -2 || offset > 2) return; // 최대 ±2개월 제한
+
+      this.viewYear = nextY;
+      this.viewMonth = nextM;
+      this.render();
+    },
+
+    formatDateKey(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    },
+
+    parseDateKey(dateStr) {
+      if (!dateStr) return null;
+      // 2026-09-09 or 2026년 9월 9일 등
+      const m = dateStr.match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
+      if (m) {
+        const y = m[1];
+        const month = String(parseInt(m[2], 10)).padStart(2, '0');
+        const day = String(parseInt(m[3], 10)).padStart(2, '0');
+        return `${y}-${month}-${day}`;
+      }
+      return null;
+    },
+
+    getEventsMap() {
+      const allArchives = ArchiveService.getAll();
+      const eventsMap = new Map(); // key: 'YYYY-MM-DD', value: Array of items
+
+      const currentUid = AuthService.currentUser ? AuthService.currentUser.id : '';
+      const currentNickname = AuthService.currentUser ? (AuthService.currentUser.nickname || '').trim().toLowerCase() : '';
+
+      allArchives.forEach(item => {
+        const dateKey = this.parseDateKey(item.date);
+        if (!dateKey) return;
+
+        // 판별: 내가 보낸 카드 vs 내가 받은 카드
+        const sName = (item.senderName || '').trim().toLowerCase();
+        const rName = (item.receiverName || '').trim().toLowerCase();
+        
+        let isSentByMe = false;
+        if (item.userId && currentUid && item.userId === currentUid) {
+          isSentByMe = true;
+        } else if (currentNickname && sName === currentNickname) {
+          isSentByMe = true;
+        } else if (!item.userId || item.userId === 'guest') {
+          isSentByMe = true;
+        }
+
+        const eventItem = {
+          raw: item,
+          dateKey,
+          isSentByMe,
+          partnerName: isSentByMe ? item.receiverName : item.senderName,
+          title: isSentByMe ? `To. ${item.receiverName} 데이트` : `From. ${item.senderName} 데이트`,
+          area: item.area || '지역 미정',
+          time: (item.courses && item.courses[0] && item.courses[0].t) || '시간 미정',
+          coursesSummary: (item.courses || []).map((c, i) => `${i+1}차: ${c.n}`).join(' ➔ ') || '코스 정보',
+          shareUrl: item.shareUrl
+        };
+
+        if (!eventsMap.has(dateKey)) {
+          eventsMap.set(dateKey, []);
+        }
+        eventsMap.get(dateKey).push(eventItem);
+      });
+
+      return eventsMap;
+    },
+
+    render() {
+      if (!calendarDaysGrid || !calMonthTitle) return;
+
+      // 1. 헤더 연월 타이틀 및 네비 버튼 활성/비활성 제어 (±2개월)
+      calMonthTitle.textContent = `${this.viewYear}년 ${this.viewMonth + 1}월`;
+      
+      const currentOffset = this.getMonthOffset(this.viewYear, this.viewMonth);
+      if (calPrevBtn) calPrevBtn.disabled = currentOffset <= -2;
+      if (calNextBtn) calNextBtn.disabled = currentOffset >= 2;
+
+      // 2. 이벤트 맵 로드
+      const eventsMap = this.getEventsMap();
+
+      // 3. 오늘 날짜 키
+      const today = new Date();
+      const todayKey = this.formatDateKey(today);
+
+      calendarDaysGrid.innerHTML = '';
+
+      const firstDayOfWeek = new Date(this.viewYear, this.viewMonth, 1).getDay(); // 0(일) ~ 6(토)
+      const totalDaysInMonth = new Date(this.viewYear, this.viewMonth + 1, 0).getDate();
+      const prevMonthLastDate = new Date(this.viewYear, this.viewMonth, 0).getDate();
+
+      // 이전 달 빈 칸 채우기
+      for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+        const d = prevMonthLastDate - i;
+        const cell = document.createElement('div');
+        cell.className = 'cal-day-box other-month';
+        cell.innerHTML = `<span class="cal-day-num">${d}</span>`;
+        calendarDaysGrid.appendChild(cell);
+      }
+
+      // 이번 달 날짜 채우기
+      for (let day = 1; day <= totalDaysInMonth; day++) {
+        const cell = document.createElement('div');
+        const dayOfWeek = new Date(this.viewYear, this.viewMonth, day).getDay();
+        const dStr = String(day).padStart(2, '0');
+        const mStr = String(this.viewMonth + 1).padStart(2, '0');
+        const dateKey = `${this.viewYear}-${mStr}-${dStr}`;
+
+        let classNames = ['cal-day-box'];
+        if (dayOfWeek === 0) classNames.push('sun');
+        if (dayOfWeek === 6) classNames.push('sat');
+        if (dateKey === todayKey) classNames.push('is-today');
+        if (dateKey === this.selectedDateKey) classNames.push('is-selected');
+
+        cell.className = classNames.join(' ');
+        cell.setAttribute('data-date', dateKey);
+
+        let chipsHtml = '';
+        const dayEvents = eventsMap.get(dateKey) || [];
+        if (dayEvents.length > 0) {
+          chipsHtml = `<div class="cal-events-container">`;
+          dayEvents.slice(0, 2).forEach(ev => {
+            if (ev.isSentByMe) {
+              chipsHtml += `
+                <div class="cal-event-chip chip-sent" title="내가 보낸 데이트 (To. ${ev.partnerName})">
+                  <span class="chip-tag">[보냄]</span> ${ev.partnerName} 💌
+                </div>`;
+            } else {
+              chipsHtml += `
+                <div class="cal-event-chip chip-received" title="내가 받은 초대 (From. ${ev.partnerName})">
+                  <span class="chip-tag">[초대]</span> ${ev.partnerName} 🎁
+                </div>`;
+            }
+          });
+          if (dayEvents.length > 2) {
+            chipsHtml += `<div class="cal-more-events" style="font-size:0.65rem; color:var(--text-muted); font-weight:700;">+${dayEvents.length - 2}개 더</div>`;
+          }
+          chipsHtml += `</div>`;
+        }
+
+        cell.innerHTML = `
+          <span class="cal-day-num">${day}</span>
+          ${chipsHtml}
+        `;
+
+        cell.addEventListener('click', () => {
+          this.selectedDateKey = dateKey;
+          document.querySelectorAll('.cal-day-box').forEach(c => c.classList.remove('is-selected'));
+          cell.classList.add('is-selected');
+          this.renderSelectedDetails(dateKey, dayEvents);
+        });
+
+        calendarDaysGrid.appendChild(cell);
+      }
+
+      // 다음 달 잔여 빈 칸 채우기 (행 완성)
+      const renderedTotal = firstDayOfWeek + totalDaysInMonth;
+      const remaining = (7 - (renderedTotal % 7)) % 7;
+      for (let day = 1; day <= remaining; day++) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-day-box other-month';
+        cell.innerHTML = `<span class="cal-day-num">${day}</span>`;
+        calendarDaysGrid.appendChild(cell);
+      }
+
+      // 선택된 날짜 상세 뷰 갱신
+      const initialEvents = eventsMap.get(this.selectedDateKey) || [];
+      this.renderSelectedDetails(this.selectedDateKey || todayKey, initialEvents);
+    },
+
+    renderSelectedDetails(dateKey, events = []) {
+      if (!calSelectedDateLabel || !calSelectedEventsList || !calSelectedCountBadge) return;
+
+      const dateParts = dateKey.split('-');
+      const y = dateParts[0];
+      const m = parseInt(dateParts[1], 10);
+      const d = parseInt(dateParts[2], 10);
+      const dObj = new Date(y, m - 1, d);
+      const KOR_DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+      const dow = KOR_DAYS[dObj.getDay()];
+
+      calSelectedDateLabel.textContent = `${y}년 ${m}월 ${d}일 (${dow}) 데이트 일정`;
+      calSelectedCountBadge.textContent = `${events.length}개`;
+
+      if (events.length === 0) {
+        calSelectedEventsList.innerHTML = `<div class="cal-no-events">이 날짜에 등록된 데이트 일정이 없습니다 🌿</div>`;
+        return;
+      }
+
+      calSelectedEventsList.innerHTML = '';
+      events.forEach(ev => {
+        const card = document.createElement('div');
+        const typeClass = ev.isSentByMe ? 'type-sent' : 'type-received';
+        const typeBadgeText = ev.isSentByMe ? '💌 내가 보낸 데이트 약속' : '🎁 내가 초대받은 데이트 약속';
+        const partnerDesc = ev.isSentByMe ? `To. <strong>${ev.partnerName}</strong>` : `From. <strong>${ev.partnerName}</strong>`;
+
+        card.className = `cal-detail-card ${typeClass}`;
+        card.innerHTML = `
+          <div class="cal-detail-main">
+            <div class="cal-detail-badge-row">
+              <span class="cal-detail-type-badge">${typeBadgeText}</span>
+              <span style="font-size:0.84rem; color:var(--text-muted);">${partnerDesc}</span>
+            </div>
+            <div class="cal-detail-title">${ev.title}</div>
+            <div class="cal-detail-meta">
+              <span><i class="fa-regular fa-clock"></i> ${ev.time}</span>
+              <span><i class="fa-solid fa-location-dot"></i> ${ev.area}</span>
+              <span><i class="fa-solid fa-route"></i> ${ev.coursesSummary}</span>
+            </div>
+          </div>
+          <div class="cal-detail-action">
+            <span>스토리 열기</span> <i class="fa-solid fa-arrow-right"></i>
+          </div>
+        `;
+
+        card.addEventListener('click', () => {
+          CalendarService.close();
+          openCardFromShareUrl(ev.shareUrl);
+        });
+
+        calSelectedEventsList.appendChild(card);
+      });
     }
   };
 
@@ -764,6 +1076,44 @@ document.addEventListener('DOMContentLoaded', () => {
   if (closeArchiveBottomBtn) {
     closeArchiveBottomBtn.addEventListener('click', () => {
       if (archiveModal) archiveModal.classList.add('hidden');
+    });
+  }
+
+  // Initialize Calendar Service
+  CalendarService.init();
+
+  // Save Story Card to Calendar & Archive Handler
+  if (saveStoryCardBtn) {
+    saveStoryCardBtn.addEventListener('click', async () => {
+      if (!recipientData) {
+        showToast('저장할 데이트 카드 데이터를 찾을 수 없습니다.', true);
+        return;
+      }
+
+      const cardPayload = {
+        id: recipientData.id || recipientData.cardId || ('card_' + Date.now()),
+        s: recipientData.s,
+        r: recipientData.r,
+        d: recipientData.d,
+        a: recipientData.a,
+        b: recipientData.b,
+        m: recipientData.m,
+        tm: recipientData.tm,
+        c: recipientData.c || [],
+        isAccepted: recipientData.isAccepted || false
+      };
+
+      const shareUrl = window.location.href;
+      await ArchiveService.save(cardPayload, shareUrl);
+
+      saveStoryCardBtn.classList.add('saved');
+      saveStoryCardBtn.innerHTML = '<i class="fa-solid fa-check"></i> 캘린더 & 보관함 저장 완료 💖';
+
+      showToast('🎉 내 캘린더와 보관함에 데이트 일정이 쏙 담겼습니다! 📅');
+
+      if (CalendarService) {
+        CalendarService.render();
+      }
     });
   }
 
@@ -2147,6 +2497,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (acceptBtn) acceptBtn.classList.add('hidden');
       if (feedbackBtn) feedbackBtn.classList.add('hidden');
       if (downloadCardBtn) downloadCardBtn.classList.remove('hidden');
+      if (saveStoryCardBtn) saveStoryCardBtn.classList.add('hidden');
 
       if (isAccepted) {
         if (acceptedStatusBanner) {
@@ -2178,6 +2529,25 @@ document.addEventListener('DOMContentLoaded', () => {
       if (acceptBtn) acceptBtn.classList.remove('hidden');
       if (feedbackBtn) feedbackBtn.classList.remove('hidden');
       if (downloadCardBtn) downloadCardBtn.classList.remove('hidden');
+    }
+
+    // Save to Calendar & Archive Button State
+    if (saveStoryCardBtn) {
+      saveStoryCardBtn.classList.remove('hidden');
+      const isSaved = ArchiveService.findDuplicate({
+        senderName: data.s,
+        receiverName: data.r,
+        date: data.d,
+        area: data.a,
+        courses: data.c
+      });
+      if (isSaved) {
+        saveStoryCardBtn.classList.add('saved');
+        saveStoryCardBtn.innerHTML = '<i class="fa-solid fa-check"></i> 캘린더에 저장된 데이트 💖';
+      } else {
+        saveStoryCardBtn.classList.remove('saved');
+        saveStoryCardBtn.innerHTML = '<i class="fa-solid fa-calendar-plus"></i> 스토리 카드 저장하기 (내 캘린더 담기)';
+      }
     }
 
     // Cloud Verification with Supabase

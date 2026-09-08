@@ -2948,3 +2948,507 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
   pointer-events: none !important;
 }
 
+/* ==========================================================================
+   DATE CALENDAR & STORY SAVE COMPONENT STYLES
+   ========================================================================== */
+
+/* 1. Global Nav Calendar Button */
+.nav-btn-calendar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #FFFFFF;
+  border: 1.5px solid #F5CDD4;
+  border-radius: var(--radius-pill);
+  padding: 8px 15px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--coral-main);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(224, 122, 95, 0.08);
+}
+
+.nav-btn-calendar i {
+  font-size: 1rem;
+}
+
+.nav-btn-calendar:hover {
+  background: #FFF5F7;
+  border-color: var(--coral-main);
+  box-shadow: 0 4px 14px rgba(224, 122, 95, 0.22);
+  transform: translateY(-1.5px);
+}
+
+/* 2. Story Card Save Button in Story Viewer */
+.btn-save-calendar {
+  background: linear-gradient(135deg, #FF6B81, #E07A5F);
+  color: #FFFFFF !important;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(224, 122, 95, 0.32);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-save-calendar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(224, 122, 95, 0.42);
+  filter: brightness(1.04);
+}
+
+.btn-save-calendar.saved {
+  background: linear-gradient(135deg, #2EC4B6, #20A497) !important;
+  box-shadow: 0 4px 14px rgba(46, 196, 182, 0.35);
+}
+
+/* 3. Calendar Modal Container */
+.calendar-modal-card {
+  max-width: 820px !important;
+  width: 95vw;
+  max-height: 92vh;
+  overflow-y: auto;
+  border-radius: 26px;
+  padding: 26px 28px;
+}
+
+/* Calendar Month Nav Controls */
+.calendar-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FDF9F7;
+  border: 1.5px solid #F5EAE5;
+  border-radius: 18px;
+  padding: 10px 18px;
+  margin-bottom: 14px;
+}
+
+.cal-nav-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #F0DFD8;
+  background: #FFFFFF;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.cal-nav-btn:hover:not(:disabled) {
+  background: var(--coral-main);
+  color: #FFFFFF;
+  border-color: var(--coral-main);
+  transform: scale(1.08);
+}
+
+.cal-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: #F5F5F5;
+  border-color: #E8E8E8;
+  color: #BBB;
+}
+
+.cal-current-month-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.cal-month-title {
+  font-family: 'Outfit', 'Pretendard', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  letter-spacing: -0.5px;
+}
+
+.cal-range-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--coral-main);
+  background: #FFEFEA;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+/* Visual Distinction Legend Bar */
+.calendar-legend-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #FFFFFF;
+  border: 1px dashed #F2DFD7;
+  border-radius: 12px;
+  padding: 8px 14px;
+  margin-bottom: 16px;
+}
+
+.cal-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.legend-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  line-height: 1.3;
+}
+
+.badge-sent {
+  background: #FFE8EC;
+  color: #D63031;
+  border: 1px solid #FFAEB9;
+}
+
+.badge-received {
+  background: #EAE6FF;
+  color: #5B44E6;
+  border: 1px solid #C4B9FC;
+}
+
+.badge-today {
+  background: #FFF0D6;
+  color: #D35400;
+  border: 1px solid #FAD7A0;
+}
+
+/* Calendar Week Header */
+.calendar-board {
+  background: #FFFFFF;
+  border: 1.5px solid #F0E6E1;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+  margin-bottom: 20px;
+}
+
+.calendar-week-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #FAF5F2;
+  border-bottom: 1.5px solid #EFE4DF;
+  text-align: center;
+}
+
+.cal-col-header {
+  padding: 10px 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.cal-col-header.sun {
+  color: #E74C3C;
+}
+
+.cal-col-header.sat {
+  color: #2980B9;
+}
+
+/* Calendar Days Grid */
+.calendar-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: #EFE4DF;
+}
+
+.cal-day-box {
+  background: #FFFFFF;
+  min-height: 86px;
+  padding: 8px 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.cal-day-box:hover {
+  background: #FFFBF9;
+}
+
+.cal-day-box.is-selected {
+  background: #FFF7F4 !important;
+  box-shadow: inset 0 0 0 2px var(--coral-main);
+}
+
+.cal-day-box.is-today {
+  background: #FFFBF2;
+}
+
+.cal-day-box.is-today::after {
+  content: '오늘';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  background: #FF6B81;
+  color: #FFFFFF;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.cal-day-box.other-month {
+  background: #FAF8F6;
+  opacity: 0.45;
+}
+
+.cal-day-num {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.cal-day-box.sun .cal-day-num {
+  color: #E74C3C;
+}
+
+.cal-day-box.sat .cal-day-num {
+  color: #2980B9;
+}
+
+.cal-events-container {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+}
+
+/* Event Mini Chips inside Date Cell */
+.cal-event-chip {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 5px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: transform 0.15s ease;
+}
+
+.cal-event-chip:hover {
+  transform: scale(1.03);
+}
+
+/* SENT CHIP (내가 보낸 데이트) - 로맨틱 핑크/코랄 */
+.cal-event-chip.chip-sent {
+  background: #FFE8EC;
+  border-left: 3px solid #FF6B81;
+  color: #C0392B;
+}
+
+/* RECEIVED CHIP (내가 초대받은 데이트) - 바이올렛/퍼플 */
+.cal-event-chip.chip-received {
+  background: #EAE6FF;
+  border-left: 3px solid #6C5CE7;
+  color: #4834D4;
+}
+
+.cal-event-chip .chip-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+/* Selected Day Events List Section */
+.calendar-selected-section {
+  background: #FDF9F7;
+  border: 1.5px solid #F5EAE5;
+  border-radius: 18px;
+  padding: 16px 20px;
+}
+
+.cal-selected-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #EFE4DF;
+}
+
+.cal-selected-header h4 {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.cal-no-events {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  padding: 18px 0;
+}
+
+.cal-selected-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Detailed Event Card (Clickable to jump to Story Viewer) */
+.cal-detail-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 14px 18px;
+  border: 1.5px solid #F0E5DF;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.cal-detail-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--coral-main);
+  box-shadow: 0 8px 20px rgba(224, 122, 95, 0.18);
+}
+
+.cal-detail-card.type-sent {
+  border-left: 5px solid #FF6B81;
+}
+
+.cal-detail-card.type-received {
+  border-left: 5px solid #6C5CE7;
+}
+
+.cal-detail-main {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cal-detail-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cal-detail-type-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.type-sent .cal-detail-type-badge {
+  background: #FFE8EC;
+  color: #D63031;
+}
+
+.type-received .cal-detail-type-badge {
+  background: #EAE6FF;
+  color: #5B44E6;
+}
+
+.cal-detail-title {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.cal-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.cal-detail-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cal-detail-action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--coral-main);
+  padding: 8px 14px;
+  background: #FFF4EF;
+  border-radius: var(--radius-pill);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.cal-detail-card:hover .cal-detail-action {
+  background: var(--coral-main);
+  color: #FFFFFF;
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 600px) {
+  .calendar-modal-card {
+    padding: 18px 14px;
+    border-radius: 20px;
+  }
+  .cal-day-box {
+    min-height: 66px;
+    padding: 5px 3px;
+  }
+  .cal-day-num {
+    font-size: 0.78rem;
+  }
+  .cal-event-chip {
+    font-size: 0.64rem;
+    padding: 2px 3px;
+  }
+  .cal-legend-bar {
+    gap: 8px;
+    padding: 6px 10px;
+  }
+  .cal-legend-item {
+    font-size: 0.72rem;
+  }
+  .cal-month-title {
+    font-size: 1.15rem;
+  }
+  .cal-detail-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .cal-detail-action {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+

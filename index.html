@@ -47,6 +47,12 @@
       </div>
 
       <div class="nav-actions">
+        <!-- DATE CALENDAR BUTTON (로그인 시에만 노출되도록 hidden 기본 적용) -->
+        <button type="button" id="openCalendarNavBtn" class="nav-btn-calendar hidden" title="데이트 캘린더">
+          <i class="fa-regular fa-calendar-days"></i>
+          <span class="nav-btn-text">캘린더</span>
+        </button>
+
         <!-- MY ARCHIVE BUTTON -->
         <button type="button" id="openArchiveBtn" class="nav-btn-archive" title="내 데이트 보관함">
           <i class="fa-solid fa-box-archive"></i>
@@ -425,6 +431,11 @@
           <i class="fa-solid fa-heart-circle-check"></i> 데이트 코스 완벽해! 수락하기
         </button>
 
+        <!-- Save Story Card to Calendar & Archive -->
+        <button type="button" id="saveStoryCardBtn" class="btn-primary btn-block btn-save-calendar">
+          <i class="fa-solid fa-calendar-plus"></i> 스토리 카드 저장하기 (내 캘린더 등록)
+        </button>
+
         <!-- Download Card Image (Always shown) -->
         <button type="button" id="downloadCardBtn" class="btn-secondary btn-block btn-download">
           <i class="fa-solid fa-camera"></i> 스토리 카드 이미지로 저장하기
@@ -596,6 +607,78 @@
 
         <div class="modal-actions-row">
           <button type="button" id="closeArchiveBottomBtn" class="btn-secondary">닫기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL: DATE CALENDAR ==================== -->
+    <div id="calendarModal" class="modal-overlay hidden">
+      <div class="modal-card modal-card-large calendar-modal-card">
+        <div class="modal-header-row">
+          <div class="modal-title-group">
+            <div class="modal-icon" style="background: #FFF0F3; color: #E07A5F;">
+              <i class="fa-regular fa-calendar-days"></i>
+            </div>
+            <div class="modal-title-text">
+              <h3>우리의 데이트 캘린더 💕</h3>
+              <p class="modal-subtitle">등록된 데이트 일정을 확인하고 클릭하여 스토리를 바로 열어보세요.</p>
+            </div>
+          </div>
+          <button type="button" id="closeCalendarModalBtn" class="modal-close-icon-btn" title="닫기">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="calendar-modal-body">
+          <!-- CALENDAR CONTROLS (최대 2달 전 ~ 2달 후) -->
+          <div class="calendar-nav-bar">
+            <button type="button" id="calPrevBtn" class="cal-nav-btn" title="이전 달">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div class="cal-current-month-wrap">
+              <span id="calMonthTitle" class="cal-month-title">2026년 9월</span>
+              <span id="calRangeBadge" class="cal-range-badge">최대 ±2개월 범위</span>
+            </div>
+            <button type="button" id="calNextBtn" class="cal-nav-btn" title="다음 달">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <!-- CALENDAR LEGEND (구분 가이드 - 시각적 구분 강화) -->
+          <div class="calendar-legend-bar">
+            <span class="cal-legend-item legend-sent"><span class="legend-badge badge-sent">보낸 약속</span> 내가 초대한 데이트</span>
+            <span class="cal-legend-item legend-received"><span class="legend-badge badge-received">받은 초대</span> 내가 초대받은 데이트</span>
+            <span class="cal-legend-item legend-today"><span class="legend-badge badge-today">오늘</span> Today</span>
+          </div>
+
+          <!-- CALENDAR GRID -->
+          <div class="calendar-board">
+            <div class="calendar-week-header">
+              <div class="cal-col-header sun">일</div>
+              <div class="cal-col-header">월</div>
+              <div class="cal-col-header">화</div>
+              <div class="cal-col-header">수</div>
+              <div class="cal-col-header">목</div>
+              <div class="cal-col-header">금</div>
+              <div class="cal-col-header sat">토</div>
+            </div>
+            <div id="calendarDaysGrid" class="calendar-days-grid"></div>
+          </div>
+
+          <!-- SELECTED DAY EVENTS DETAIL LIST -->
+          <div class="calendar-selected-section">
+            <div class="cal-selected-header">
+              <h4 id="calSelectedDateLabel">선택한 날짜의 데이트 일정</h4>
+              <span id="calSelectedCountBadge" class="badge-count">0개</span>
+            </div>
+            <div id="calSelectedEventsList" class="cal-selected-events-list">
+              <div class="cal-no-events">날짜를 클릭하여 등록된 데이트 코스를 확인하세요 🌿</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions-row">
+          <button type="button" id="closeCalendarBottomBtn" class="btn-secondary">닫기</button>
         </div>
       </div>
     </div>
