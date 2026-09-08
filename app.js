@@ -1197,7 +1197,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const maxDim = 600;
+        const maxDim = 420;
         let width = img.width;
         let height = img.height;
 
@@ -1217,7 +1217,8 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        // 경량 썸네일로 압축하여 URL 해시 및 클라우드 보관 최적화
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
         callback(compressedDataUrl);
       };
       img.src = e.target.result;
@@ -1402,17 +1403,8 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('LocalStorage save warning:', e);
     }
 
-    // URL 공유용 payload: 사진 DataURL을 제외하여 URL 길이 초과 방지
-    // 사진은 localStorage에만 보관되며, 수신자는 사진 없이 코스 정보를 확인
-    const payloadForUrl = {
-      ...payload,
-      c: payload.c.map(course => {
-        const { p, ...rest } = course;
-        return rest;
-      })
-    };
-
-    const encodedToken = encodePayload(payloadForUrl);
+    // URL 해시(#card=)는 서버로 전송되지 않으므로 사진 데이터를 포함하여 인코딩
+    const encodedToken = encodePayload(payload);
 
     let baseUrl = window.location.origin + window.location.pathname;
     // Fallback file:// local testing to the registered GitHub Pages domain for Kakao API compatibility
@@ -1569,14 +1561,92 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (data) {
+      // 로컬 스토리지 또는 보관함에서 사진 데이터 복원
+      data = hydrateCardPhotos(data);
       recipientData = data;
       renderStoryViewer(data);
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Supabase 클라우드 DB에서 사진이 있을 경우 비동기 보강
+      fetchCloudPhotosIfMissing(data);
       return true;
     } else {
       showToast('초대장 데이터를 불러올 수 없습니다. 새 초대장을 작성해 주세요.', true);
       landingMode.classList.remove('hidden');
       return false;
+    }
+  }
+
+  // 카드 내 누락된 사진 데이터 로컬/보관함 복원 함수
+  function hydrateCardPhotos(cardData) {
+    if (!cardData || !Array.isArray(cardData.c)) return cardData;
+
+    const hasAnyPhoto = cardData.c.some(c => c.p && Array.isArray(c.p) && c.p.length > 0);
+    if (hasAnyPhoto) return cardData;
+
+    // 1) 로컬 스토리지 원본에서 복원
+    if (cardData.id) {
+      try {
+        const localRaw = localStorage.getItem(cardData.id);
+        if (localRaw) {
+          const localParsed = JSON.parse(localRaw);
+          if (localParsed && Array.isArray(localParsed.c)) {
+            cardData.c.forEach((c, i) => {
+              if ((!c.p || c.p.length === 0) && localParsed.c[i] && localParsed.c[i].p) {
+                c.p = localParsed.c[i].p;
+              }
+            });
+            return cardData;
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 2) 보관함(ArchiveService)에서 복원
+    const archiveList = ArchiveService.getAll();
+    const archiveMatch = archiveList.find(item =>
+      item.id === cardData.id ||
+      (item.senderName === cardData.s && item.receiverName === cardData.r && item.date === cardData.d && item.area === cardData.a)
+    );
+    if (archiveMatch && Array.isArray(archiveMatch.courses)) {
+      cardData.c.forEach((c, i) => {
+        if ((!c.p || c.p.length === 0) && archiveMatch.courses[i] && archiveMatch.courses[i].p) {
+          c.p = archiveMatch.courses[i].p;
+        }
+      });
+    }
+
+    return cardData;
+  }
+
+  // Supabase 클라우드에서 사진 비동기 보강
+  async function fetchCloudPhotosIfMissing(cardData) {
+    if (!supabaseClient || !cardData || !cardData.id) return;
+    const hasAnyPhoto = cardData.c && cardData.c.some(c => c.p && Array.isArray(c.p) && c.p.length > 0);
+    if (hasAnyPhoto) return;
+
+    try {
+      const { data, error } = await supabaseClient
+        .from('date_cards')
+        .select('courses')
+        .eq('id', cardData.id)
+        .maybeSingle();
+
+      if (!error && data && Array.isArray(data.courses)) {
+        let updated = false;
+        cardData.c.forEach((c, i) => {
+          if ((!c.p || c.p.length === 0) && data.courses[i] && data.courses[i].p && data.courses[i].p.length > 0) {
+            c.p = data.courses[i].p;
+            updated = true;
+          }
+        });
+
+        if (updated) {
+          courseData = cardData.c;
+          updateStoryPage();
+        }
+      }
+    } catch (e) {
+      console.warn('Cloud photo fetch notice:', e);
     }
   }
 
@@ -1702,8 +1772,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       let galleryHtml = '';
       if (item.p && Array.isArray(item.p) && item.p.length > 0) {
+        const count = item.p.length;
         const photoImgs = item.p.map(src => `<img src="${src}" class="gallery-photo-item" alt="분위기 사진">`).join('');
-        galleryHtml = `<div class="story-photo-gallery">${photoImgs}</div>`;
+        galleryHtml = `<div class="story-photo-gallery count-${count}">${photoImgs}</div>`;
       }
 
       const linkBox = item.u ? `

@@ -1226,12 +1226,35 @@ input:focus, select:focus, textarea:focus {
   color: var(--coral-main);
 }
 
-/* 3-COLUMN GALLERY GRID IN STORY CARD */
+/* RESPONSIVE GALLERY GRID IN STORY CARD */
 .story-photo-gallery {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   margin-bottom: 18px;
+  width: 100%;
+}
+
+.story-photo-gallery.count-1 {
+  grid-template-columns: 1fr;
+}
+.story-photo-gallery.count-1 .gallery-photo-item {
+  height: 220px;
+  border-radius: var(--radius-lg);
+}
+
+.story-photo-gallery.count-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+.story-photo-gallery.count-2 .gallery-photo-item {
+  height: 160px;
+}
+
+.story-photo-gallery.count-3,
+.story-photo-gallery {
+  grid-template-columns: repeat(3, 1fr);
+}
+.story-photo-gallery.count-3 .gallery-photo-item {
+  height: 130px;
 }
 
 .gallery-photo-item {
@@ -1241,11 +1264,12 @@ input:focus, select:focus, textarea:focus {
   object-fit: cover;
   box-shadow: 0 4px 12px rgba(0,0,0,0.06);
   border: 1px solid var(--card-border);
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .gallery-photo-item:hover {
-  transform: scale(1.03);
+  transform: scale(1.02);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
 }
 
 .story-tip-box {
