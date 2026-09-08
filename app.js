@@ -99,6 +99,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const dupOpenArchiveBtn = document.getElementById('dupOpenArchiveBtn');
   const closeDupModalBtn = document.getElementById('closeDupModalBtn');
 
+  // Image Lightbox Elements
+  const imageLightboxModal = document.getElementById('imageLightboxModal');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const closeLightboxBtn = document.getElementById('closeLightboxBtn');
+
+  window.openImageZoom = function(src) {
+    if (!imageLightboxModal || !lightboxImg) return;
+    lightboxImg.src = src;
+    imageLightboxModal.classList.remove('hidden');
+  };
+
+  if (closeLightboxBtn) {
+    closeLightboxBtn.addEventListener('click', () => {
+      if (imageLightboxModal) imageLightboxModal.classList.add('hidden');
+    });
+  }
+
+  if (imageLightboxModal) {
+    imageLightboxModal.addEventListener('click', (e) => {
+      if (e.target === imageLightboxModal) {
+        imageLightboxModal.classList.add('hidden');
+      }
+    });
+  }
+
   let isCreatingCard = false;
   let generatedShareUrl = '';
 
@@ -1773,7 +1798,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let galleryHtml = '';
       if (item.p && Array.isArray(item.p) && item.p.length > 0) {
         const count = item.p.length;
-        const photoImgs = item.p.map(src => `<img src="${src}" class="gallery-photo-item" alt="분위기 사진">`).join('');
+        const photoImgs = item.p.map((src, idx) => `<img src="${src}" class="gallery-photo-item" alt="분위기 사진" title="클릭하여 원본 크게 보기" onclick="window.openImageZoom('${src}')">`).join('');
         galleryHtml = `<div class="story-photo-gallery count-${count}">${photoImgs}</div>`;
       }
 
