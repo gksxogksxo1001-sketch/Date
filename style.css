@@ -684,6 +684,268 @@ select.custom-select, select.course-type {
   transform: translateY(-1px);
 }
 
+/* ==========================================================================
+   CUSTOM ROMANTIC TIMEPICKER
+   ========================================================================== */
+.custom-timepicker-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.timepicker-input-box {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 0 16px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  user-select: none;
+}
+
+.timepicker-input-box:hover {
+  border-color: var(--coral-main);
+  background: #FFFDFD;
+}
+
+.timepicker-input-box.open {
+  border-color: var(--coral-main);
+  box-shadow: 0 0 0 4px var(--coral-light);
+  background: #FFFFFF;
+}
+
+.timepicker-lead-icon {
+  color: var(--coral-main);
+  font-size: 1.05rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.timepicker-input-box input.course-time-display {
+  border: none;
+  background: transparent;
+  padding: 13px 0;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+  width: 100%;
+  outline: none;
+}
+
+.timepicker-arrow-icon {
+  color: var(--coral-main);
+  font-size: 0.85rem;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.timepicker-input-box.open .timepicker-arrow-icon {
+  transform: rotate(180deg);
+}
+
+/* TIMEPICKER POPUP MODAL */
+.custom-timepicker-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 320px;
+  max-width: 95vw;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid var(--card-border);
+  border-radius: 20px;
+  box-shadow: 0 20px 45px rgba(224, 122, 95, 0.22), 0 4px 16px rgba(0, 0, 0, 0.06);
+  padding: 18px;
+  z-index: 550;
+  animation: calPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top right;
+}
+
+/* 상단 헤더: AM/PM 토글 & 현재 선택된 시간 프리뷰 */
+.tp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #F5EAE5;
+}
+
+.tp-ampm-switch {
+  display: flex;
+  background: #F5EFE9;
+  border-radius: var(--radius-pill);
+  padding: 3px;
+  gap: 2px;
+}
+
+.tp-ampm-btn {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tp-ampm-btn.active {
+  background: linear-gradient(135deg, #E07A5F, #FF6B81);
+  color: #FFFFFF;
+  box-shadow: 0 3px 10px rgba(224, 122, 95, 0.35);
+}
+
+.tp-preview-text {
+  font-family: 'Outfit', 'Pretendard', sans-serif;
+  font-size: 1.22rem;
+  font-weight: 700;
+  color: var(--coral-main);
+  letter-spacing: -0.3px;
+}
+
+/* 시(Hour) 선택 그리드 (1~12) */
+.tp-section-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tp-hours-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.tp-hour-chip {
+  padding: 9px 4px;
+  border-radius: 12px;
+  background: #FDF9F6;
+  border: 1px solid #F2E8E1;
+  color: var(--text-dark);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.tp-hour-chip:hover {
+  background: #FFF0EB;
+  border-color: var(--coral-main);
+  color: var(--coral-main);
+  transform: scale(1.04);
+}
+
+.tp-hour-chip.active {
+  background: linear-gradient(135deg, #E07A5F, #FF6B81) !important;
+  color: #FFFFFF !important;
+  font-weight: 700;
+  border-color: transparent !important;
+  box-shadow: 0 4px 12px rgba(224, 122, 95, 0.35);
+}
+
+/* 분(Minute) 선택 칩 (00, 10, 15, 20, 30, 40, 45, 50) */
+.tp-minutes-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.tp-minute-chip {
+  padding: 8px 4px;
+  border-radius: 10px;
+  background: #FDF9F6;
+  border: 1px solid #F2E8E1;
+  color: var(--text-dark);
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.tp-minute-chip:hover {
+  background: #FFF0EB;
+  border-color: var(--coral-main);
+  color: var(--coral-main);
+  transform: scale(1.04);
+}
+
+.tp-minute-chip.active {
+  background: var(--coral-main) !important;
+  color: #FFFFFF !important;
+  font-weight: 700;
+  border-color: transparent !important;
+  box-shadow: 0 3px 10px rgba(224, 122, 95, 0.3);
+}
+
+/* 데이트 추천 빠른 시간 프리셋 */
+.tp-quick-section {
+  padding-top: 12px;
+  border-top: 1px solid #F5EAE5;
+  margin-bottom: 12px;
+}
+
+.tp-quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.tp-quick-chip {
+  padding: 5px 10px;
+  background: #FFF4EF;
+  border: 1px solid #FFDFD3;
+  color: var(--coral-main);
+  font-size: 0.76rem;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tp-quick-chip:hover {
+  background: var(--coral-main);
+  color: #FFFFFF;
+  border-color: var(--coral-main);
+  transform: scale(1.03);
+}
+
+.tp-footer-btn {
+  width: 100%;
+  padding: 11px;
+  background: linear-gradient(135deg, #E07A5F, #FF6B81);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(224, 122, 95, 0.3);
+  transition: var(--transition-fast);
+}
+
+.tp-footer-btn:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
 /* ===================================================
    BEAUTIFUL CUSTOM DROPDOWN COMPONENT (COURSE TYPE)
    =================================================== */
@@ -2519,6 +2781,17 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
     max-width: 320px !important;
     padding: 14px 10px;
     border-radius: 16px;
+  }
+
+  /* CUSTOM TIMEPICKER POPUP: Perfectly centered on screen with zero overflow */
+  .custom-timepicker-popup {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: calc(100vw - 28px) !important;
+    max-width: 320px !important;
+    padding: 16px 12px;
+    border-radius: 18px;
   }
   .cal-popup-header {
     margin-bottom: 10px;

@@ -899,6 +899,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function openCalendar() {
+      // Close open timepickers
+      document.querySelectorAll('.custom-timepicker-popup').forEach(p => p.classList.add('hidden'));
+      document.querySelectorAll('.timepicker-input-box').forEach(b => b.classList.remove('open'));
+
       if (calSelectedDate) {
         calCurrentYear = calSelectedDate.getFullYear();
         calCurrentMonth = calSelectedDate.getMonth();
@@ -978,6 +982,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', (e) => {
       if (wrapper && !wrapper.contains(e.target)) {
         closeCalendar();
+      }
+      if (!e.target.closest('.custom-timepicker-wrapper')) {
+        document.querySelectorAll('.custom-timepicker-popup').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('.timepicker-input-box').forEach(b => b.classList.remove('open'));
       }
     });
 
@@ -1118,8 +1126,46 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
         <div class="form-group">
-          <label>약속 시간</label>
-          <input type="time" class="course-time" value="${timeVal}" required>
+          <label><i class="fa-regular fa-clock"></i> 약속 시간</label>
+          <div class="custom-timepicker-wrapper">
+            <div class="timepicker-input-box" tabindex="0">
+              <i class="fa-regular fa-clock timepicker-lead-icon"></i>
+              <input type="text" class="course-time-display" placeholder="약속 시간 선택 ⏰" readonly required>
+              <i class="fa-solid fa-chevron-down timepicker-arrow-icon"></i>
+            </div>
+            <!-- Hidden input maintaining HH:MM format for 100% compatibility -->
+            <input type="hidden" class="course-time" value="${timeVal}" required>
+
+            <!-- CUSTOM TIMEPICKER POPUP -->
+            <div class="custom-timepicker-popup hidden">
+              <div class="tp-header">
+                <div class="tp-ampm-switch">
+                  <button type="button" class="tp-ampm-btn active" data-ampm="PM">오후</button>
+                  <button type="button" class="tp-ampm-btn" data-ampm="AM">오전</button>
+                </div>
+                <div class="tp-preview-text">오후 06:00</div>
+              </div>
+
+              <div class="tp-section-label"><i class="fa-regular fa-clock"></i> 시간 선택</div>
+              <div class="tp-hours-grid"></div>
+
+              <div class="tp-section-label"><i class="fa-solid fa-hourglass-half"></i> 분 선택</div>
+              <div class="tp-minutes-grid"></div>
+
+              <div class="tp-quick-section">
+                <div class="tp-section-label">✨ 데이트 추천 시간</div>
+                <div class="tp-quick-chips">
+                  <button type="button" class="tp-quick-chip" data-time="12:30">☕ 점심 12:30</button>
+                  <button type="button" class="tp-quick-chip" data-time="15:00">🍰 카페 15:00</button>
+                  <button type="button" class="tp-quick-chip" data-time="18:00">🍽️ 저녁 18:00</button>
+                  <button type="button" class="tp-quick-chip" data-time="19:30">🍷 와인 19:30</button>
+                  <button type="button" class="tp-quick-chip" data-time="21:00">🌙 산책 21:00</button>
+                </div>
+              </div>
+
+              <button type="button" class="tp-footer-btn">시간 설정 완료 💖</button>
+            </div>
+          </div>
         </div>
       </div>
       <div class="form-group">
@@ -1193,9 +1239,178 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
+    // Bind custom time picker for this card
+    bindCustomTimePicker(card, timeVal);
+
     courseList.appendChild(card);
     renderThumbs(index);
     updateRemoveButtons();
+  }
+
+  // CUSTOM TIMEPICKER BINDING FUNCTION
+  function bindCustomTimePicker(card, initialTimeStr = '18:00') {
+    const wrapper = card.querySelector('.custom-timepicker-wrapper');
+    if (!wrapper) return;
+
+    const triggerBox = wrapper.querySelector('.timepicker-input-box');
+    const displayInput = wrapper.querySelector('.course-time-display');
+    const hiddenInput = wrapper.querySelector('.course-time');
+    const popup = wrapper.querySelector('.custom-timepicker-popup');
+    const ampmBtns = popup.querySelectorAll('.tp-ampm-btn');
+    const previewText = popup.querySelector('.tp-preview-text');
+    const hoursGrid = popup.querySelector('.tp-hours-grid');
+    const minutesGrid = popup.querySelector('.tp-minutes-grid');
+    const quickChips = popup.querySelectorAll('.tp-quick-chip');
+    const confirmBtn = popup.querySelector('.tp-footer-btn');
+
+    let currentAmPm = 'PM';
+    let currentHour12 = 6;
+    let currentMinute = '00';
+
+    if (initialTimeStr && initialTimeStr.includes(':')) {
+      const parts = initialTimeStr.split(':');
+      let h24 = parseInt(parts[0], 10);
+      let m = (parts[1] || '00').padStart(2, '0');
+      if (isNaN(h24)) h24 = 18;
+      currentAmPm = h24 >= 12 ? 'PM' : 'AM';
+      currentHour12 = h24 === 0 ? 12 : (h24 > 12 ? h24 - 12 : h24);
+      currentMinute = m;
+    }
+
+    // 1~12 Hour Chips
+    hoursGrid.innerHTML = '';
+    for (let h = 1; h <= 12; h++) {
+      const chip = document.createElement('div');
+      chip.className = `tp-hour-chip ${h === currentHour12 ? 'active' : ''}`;
+      chip.textContent = `${h}시`;
+      chip.setAttribute('data-hour', h);
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentHour12 = h;
+        hoursGrid.querySelectorAll('.tp-hour-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        syncValues();
+      });
+      hoursGrid.appendChild(chip);
+    }
+
+    // Minute Chips
+    const MINUTE_OPTIONS = ['00', '10', '15', '20', '30', '40', '45', '50'];
+    minutesGrid.innerHTML = '';
+    MINUTE_OPTIONS.forEach(minStr => {
+      const chip = document.createElement('div');
+      chip.className = `tp-minute-chip ${minStr === currentMinute ? 'active' : ''}`;
+      chip.textContent = `${minStr}분`;
+      chip.setAttribute('data-min', minStr);
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentMinute = minStr;
+        minutesGrid.querySelectorAll('.tp-minute-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        syncValues();
+      });
+      minutesGrid.appendChild(chip);
+    });
+
+    // AM/PM Buttons
+    ampmBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentAmPm = btn.getAttribute('data-ampm');
+        ampmBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        syncValues();
+      });
+    });
+
+    // Quick presets
+    quickChips.forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const timeVal24 = chip.getAttribute('data-time');
+        if (timeVal24) {
+          const parts = timeVal24.split(':');
+          let h24 = parseInt(parts[0], 10);
+          let m = parts[1];
+          currentAmPm = h24 >= 12 ? 'PM' : 'AM';
+          currentHour12 = h24 === 0 ? 12 : (h24 > 12 ? h24 - 12 : h24);
+          currentMinute = m;
+
+          ampmBtns.forEach(b => {
+            if (b.getAttribute('data-ampm') === currentAmPm) b.classList.add('active');
+            else b.classList.remove('active');
+          });
+          hoursGrid.querySelectorAll('.tp-hour-chip').forEach(c => {
+            if (parseInt(c.getAttribute('data-hour'), 10) === currentHour12) c.classList.add('active');
+            else c.classList.remove('active');
+          });
+          minutesGrid.querySelectorAll('.tp-minute-chip').forEach(c => {
+            if (c.getAttribute('data-min') === currentMinute) c.classList.add('active');
+            else c.classList.remove('active');
+          });
+
+          syncValues();
+          closePopup();
+        }
+      });
+    });
+
+    function syncValues() {
+      let h24 = currentHour12;
+      if (currentAmPm === 'AM') {
+        if (h24 === 12) h24 = 0;
+      } else {
+        if (h24 < 12) h24 += 12;
+      }
+      const h24Str = String(h24).padStart(2, '0');
+      const time24 = `${h24Str}:${currentMinute}`;
+      hiddenInput.value = time24;
+
+      const ampmLabel = currentAmPm === 'PM' ? '오후' : '오전';
+      const h12Pad = String(currentHour12).padStart(2, '0');
+      const displayText = `${ampmLabel} ${h12Pad}:${currentMinute}`;
+
+      displayInput.value = displayText;
+      if (previewText) previewText.textContent = displayText;
+    }
+
+    function openPopup() {
+      document.querySelectorAll('.custom-timepicker-popup').forEach(p => {
+        if (p !== popup) p.classList.add('hidden');
+      });
+      document.querySelectorAll('.timepicker-input-box').forEach(b => {
+        if (b !== triggerBox) b.classList.remove('open');
+      });
+      const calPopup = document.getElementById('customCalendarPopup');
+      if (calPopup) calPopup.classList.add('hidden');
+
+      popup.classList.remove('hidden');
+      triggerBox.classList.add('open');
+    }
+
+    function closePopup() {
+      popup.classList.add('hidden');
+      triggerBox.classList.remove('open');
+    }
+
+    triggerBox.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (popup.classList.contains('hidden')) {
+        openPopup();
+      } else {
+        closePopup();
+      }
+    });
+
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        syncValues();
+        closePopup();
+      });
+    }
+
+    syncValues();
   }
 
   // Handle Local Gallery Image File Upload with Image Compression
