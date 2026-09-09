@@ -6,13 +6,13 @@ import { ENV } from './env.js';
 
 export const CONFIG = {
   // Kakao SDK
-  KAKAO_JS_KEY: ENV.KAKAO_JS_KEY,
-  KAKAO_REST_KEY: ENV.KAKAO_REST_KEY,
-  KAKAO_APP_KEY: ENV.KAKAO_JS_KEY,
+  KAKAO_JS_KEY: (typeof ENV !== 'undefined' && ENV.KAKAO_JS_KEY) ? ENV.KAKAO_JS_KEY : 'd26b232de6dfcbfa561ff1fd2c6afd54',
+  KAKAO_REST_KEY: (typeof ENV !== 'undefined' && ENV.KAKAO_REST_KEY) ? ENV.KAKAO_REST_KEY : 'f943d3d735eddc5934ec0b5363a38532',
+  KAKAO_APP_KEY: (typeof ENV !== 'undefined' && ENV.KAKAO_JS_KEY) ? ENV.KAKAO_JS_KEY : 'd26b232de6dfcbfa561ff1fd2c6afd54',
 
   // Supabase
-  SUPABASE_URL: ENV.SUPABASE_URL,
-  SUPABASE_KEY: ENV.SUPABASE_KEY,
+  SUPABASE_URL: (typeof ENV !== 'undefined' && ENV.SUPABASE_URL) ? ENV.SUPABASE_URL : 'https://cmxcazjrasptkspomyyo.supabase.co',
+  SUPABASE_KEY: (typeof ENV !== 'undefined' && ENV.SUPABASE_KEY) ? ENV.SUPABASE_KEY : 'sb_publishable_XSJgAV4bPOhoWbG6DO0M7w_Fibr9uer',
 
   // Service URLs
   BASE_URL: 'https://gksxogksxo1001-sketch.github.io/Date/',
