@@ -21,17 +21,17 @@
   <!-- Pretendard (공식 CDN - Google Fonts 미등록 폰트) -->
   <link rel="stylesheet" as="style" crossorigin
     href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
-  <!-- Outfit (Google Fonts) -->
+  <!-- Google Fonts (Outfit & Playfair Display & Cormorant Garamond for Boutique Editorial Mood) -->
   <link
-    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
     rel="stylesheet">
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Canvas Confetti & html2canvas & Kakao SDK v2 & Supabase SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Canvas Confetti & html2canvas & Kakao SDK v2 & Supabase SDK (defer for performance) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script defer src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -670,7 +670,6 @@
             <div class="cal-current-month-wrap">
               <span id="calMonthTitle" class="cal-month-title">2026년 9월</span>
               <div class="cal-range-meta">
-                <span id="calRangeBadge" class="cal-range-badge">최대 ±2개월 범위</span>
                 <button type="button" id="calTodayQuickBtn" class="cal-today-quick-btn" title="오늘 날짜로 이동">오늘 바로가기 🎯</button>
               </div>
             </div>
@@ -686,7 +685,7 @@
               <span class="cal-legend-item legend-received"><span class="legend-badge badge-received">받은 초대</span> 내가 초대받은 데이트</span>
               <span class="cal-legend-item legend-today"><span class="legend-badge badge-today">오늘</span> Today</span>
             </div>
-            <span class="cal-drag-hint"><i class="fa-solid fa-arrows-left-right"></i> 좌우 드래그로 달 넘기기</span>
+
           </div>
 
           <!-- CALENDAR GRID -->
@@ -745,7 +744,7 @@
     </div>
   </main>
 
-  <script src="app.js"></script>
+  <script type="module" src="js/app.js"></script>
 </body>
 
 </html>

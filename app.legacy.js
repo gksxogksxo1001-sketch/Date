@@ -953,12 +953,17 @@ document.addEventListener('DOMContentLoaded', () => {
           isSentByMe = true;
         }
 
+        const chipTitle = (item.courses && item.courses[0] && item.courses[0].n)
+          ? item.courses[0].n
+          : (item.area || '데이트');
+
         const eventItem = {
           raw: item,
           dateKey,
           isSentByMe,
           partnerName: isSentByMe ? item.receiverName : item.senderName,
           title: isSentByMe ? `To. ${item.receiverName} 데이트` : `From. ${item.senderName} 데이트`,
+          chipTitle,
           area: item.area || '지역 미정',
           time: (item.courses && item.courses[0] && item.courses[0].t) || '시간 미정',
           coursesSummary: (item.courses || []).map((c, i) => `${i+1}차: ${c.n}`).join(' ➔ ') || '코스 정보',
@@ -1032,17 +1037,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dayEvents.length > 0) {
           chipsHtml = `<div class="cal-events-container">`;
           dayEvents.slice(0, 2).forEach(ev => {
-            if (ev.isSentByMe) {
-              chipsHtml += `
-                <div class="cal-event-chip chip-sent" title="내가 보낸 데이트 (To. ${ev.partnerName})">
-                  <span class="chip-tag">[보냄]</span> ${ev.partnerName} 💌
+            const chipClass = ev.isSentByMe ? 'chip-sent' : 'chip-received';
+            chipsHtml += `
+                <div class="cal-event-chip ${chipClass}" title="${ev.isSentByMe ? '내가 보낸 데이트' : '내가 받은 초대'}">
+                  ${ev.chipTitle}
                 </div>`;
-            } else {
-              chipsHtml += `
-                <div class="cal-event-chip chip-received" title="내가 받은 초대 (From. ${ev.partnerName})">
-                  <span class="chip-tag">[초대]</span> ${ev.partnerName} 🎁
-                </div>`;
-            }
           });
           if (dayEvents.length > 2) {
             chipsHtml += `<div class="cal-more-events" style="font-size:0.65rem; color:var(--text-muted); font-weight:700;">+${dayEvents.length - 2}개 더</div>`;
