@@ -1268,40 +1268,35 @@ input:focus, select:focus, textarea:focus {
   font-size: 1rem;
 }
 
-/* COURSE FORM PAGINATION NAV (화살표 넘기기 & 코스 추가) */
+/* COURSE FORM PAGINATION NAV (스토리 뷰어와 동일한 세련된 에디토리얼 네비게이션 스타일) */
 .course-form-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: 14px;
-  padding: 10px 14px;
-  background: var(--att-ivory, #FAF8F5);
-  border: 1px solid var(--att-line);
-  border-radius: 4px;
+  gap: 14px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--att-line);
+  background: transparent;
   flex-wrap: wrap;
-}
-
-.course-pager-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .btn-course-nav {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 10px 18px;
   background: #FFFFFF;
   border: 1px solid var(--att-line-dark);
   border-radius: 2px;
   color: var(--att-charcoal);
-  font-size: 0.84rem;
+  font-size: 0.85rem;
   font-weight: 600;
+  letter-spacing: 0.5px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: var(--transition-fast);
   user-select: none;
+  box-shadow: none;
 }
 
 .btn-course-nav:hover:not(:disabled) {
@@ -1311,27 +1306,36 @@ input:focus, select:focus, textarea:focus {
 }
 
 .btn-course-nav:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
   border-color: var(--att-line);
-  background: #FAFAFA;
+  background: #FFFFFF;
 }
 
 .course-step-indicator {
-  padding: 6px 14px;
-  background: #FFFFFF;
-  border: 1px solid var(--att-line);
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--att-charcoal);
-  letter-spacing: 0.5px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: var(--att-muted);
   white-space: nowrap;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .course-step-indicator .active-step-num {
-  color: var(--att-rosewood);
-  font-size: 0.95rem;
+  color: var(--att-charcoal);
+  font-weight: 700;
+}
+
+.course-step-indicator .total-step-num {
+  color: var(--att-muted);
+  font-weight: 600;
 }
 
 .btn-add-course-compact {
@@ -1339,12 +1343,12 @@ input:focus, select:focus, textarea:focus {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 16px;
+  padding: 9px 16px;
   background: var(--sage-light);
   color: var(--sage-accent);
   border: 1px dashed var(--sage-accent);
   border-radius: 2px;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1359,31 +1363,26 @@ input:focus, select:focus, textarea:focus {
 
 @media (max-width: 540px) {
   .course-form-nav {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    padding: 8px 10px;
-  }
-  .course-pager-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     justify-content: space-between;
-    width: 100%;
-    gap: 6px;
+    gap: 10px;
+    padding-top: 12px;
   }
   .btn-course-nav {
-    padding: 7px 10px;
-    font-size: 0.78rem;
+    padding: 8px 14px;
+    font-size: 0.8rem;
   }
   .course-step-indicator {
-    padding: 5px 10px;
-    font-size: 0.78rem;
-  }
-  .course-step-indicator .active-step-num {
-    font-size: 0.88rem;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
   }
   .btn-add-course-compact {
     width: 100%;
     margin-left: 0;
-    padding: 9px 12px;
+    margin-top: 4px;
+    padding: 10px 14px;
     font-size: 0.82rem;
   }
 }
