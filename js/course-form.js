@@ -724,6 +724,10 @@ window.handleGalleryUpload = function(event, index) {
       if (coursePhotosMap[index].length < maxPhotos) {
         coursePhotosMap[index].push(dataUrl);
         renderThumbs(index);
+        const mockupImgPreview = document.getElementById('mockupImgPreview');
+        if (mockupImgPreview && index === 0) {
+          mockupImgPreview.style.backgroundImage = `url('${dataUrl}')`;
+        }
       }
     });
   });
@@ -733,6 +737,15 @@ window.deleteThumb = function(courseIdx, photoIdx) {
   if (coursePhotosMap[courseIdx]) {
     coursePhotosMap[courseIdx].splice(photoIdx, 1);
     renderThumbs(courseIdx);
+    const mockupImgPreview = document.getElementById('mockupImgPreview');
+    if (mockupImgPreview && courseIdx === 0) {
+      const remaining = coursePhotosMap[0] || [];
+      if (remaining.length > 0) {
+        mockupImgPreview.style.backgroundImage = `url('${remaining[0]}')`;
+      } else {
+        mockupImgPreview.style.backgroundImage = "url('assets/restaurant.jpg')";
+      }
+    }
   }
 };
 

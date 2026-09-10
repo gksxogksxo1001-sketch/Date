@@ -5,9 +5,19 @@ import { formatDateString } from './utils.js';
 import { coursePhotosMap } from './course-form.js';
 
 export const LivePreview = {
+  _rafId: null,
+
   init() {
     this.bindEvents();
-    this.update();
+    this.scheduleUpdate();
+  },
+
+  scheduleUpdate() {
+    if (this._rafId) cancelAnimationFrame(this._rafId);
+    this._rafId = requestAnimationFrame(() => {
+      this.update();
+      this._rafId = null;
+    });
   },
 
   bindEvents() {
@@ -19,8 +29,8 @@ export const LivePreview = {
     inputs.forEach(id => {
       const el = document.getElementById(id);
       if (el) {
-        el.addEventListener('input', () => this.update());
-        el.addEventListener('change', () => this.update());
+        el.addEventListener('input', () => this.scheduleUpdate());
+        el.addEventListener('change', () => this.scheduleUpdate());
       }
     });
 
@@ -28,22 +38,22 @@ export const LivePreview = {
     const themePicker = document.getElementById('themePicker');
     if (themePicker) {
       themePicker.addEventListener('click', () => {
-        setTimeout(() => this.update(), 60);
+        setTimeout(() => this.scheduleUpdate(), 40);
       });
     }
 
     // Course list changes (delegated listener on container)
     const courseList = document.getElementById('courseList');
     if (courseList) {
-      courseList.addEventListener('input', () => this.update());
-      courseList.addEventListener('change', () => this.update());
+      courseList.addEventListener('input', () => this.scheduleUpdate());
+      courseList.addEventListener('change', () => this.scheduleUpdate());
     }
 
     // Add course button clicks
     const addCourseBtn = document.getElementById('addCourseBtn');
     if (addCourseBtn) {
       addCourseBtn.addEventListener('click', () => {
-        setTimeout(() => this.update(), 60);
+        setTimeout(() => this.scheduleUpdate(), 40);
       });
     }
   },
