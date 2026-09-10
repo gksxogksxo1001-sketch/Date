@@ -251,21 +251,86 @@ export function checkAndLoadCardFromUrl() {
 }
 
 /**
- * 네이버 / 카카오 / T맵 길찾기 딥링크 및 검색 URL 생성
+ * 네이버 / 카카오 / T맵 길찾기 딥링크 및 지능형 검색 URL 생성
  */
-export function getMapSearchLinks(placeName, area) {
-  const query = `${area ? area + ' ' : ''}${placeName || ''}`.trim();
+export function getMapSearchLinks(courseItem, area) {
+  const actualPlace = (courseItem.pl || courseItem.n || '').trim();
+  const query = `${area ? area + ' ' : ''}${actualPlace}`.trim();
   const encodedQuery = encodeURIComponent(query);
 
+  let directUrl = courseItem.u || '';
+  let naverUrl = `https://map.naver.com/p/search/${encodedQuery}`;
+  let kakaoUrl = `https://map.kakao.com/link/search/${encodedQuery}`;
+  let tmapUrl = `https://map.naver.com/p/search/${encodedQuery}`;
+
+  // 직접 첨부한 링크가 네이버 지도인 경우
+  if (directUrl && (directUrl.includes('naver.me') || directUrl.includes('map.naver.com'))) {
+    naverUrl = directUrl;
+  }
+  // 직접 첨부한 링크가 카카오맵인 경우
+  if (directUrl && (directUrl.includes('kko.to') || directUrl.includes('map.kakao.com'))) {
+    kakaoUrl = directUrl;
+  }
+
   return {
-    naver: `https://map.naver.com/p/search/${encodedQuery}`,
-    kakao: `https://map.kakao.com/link/search/${encodedQuery}`,
-    tmap: `https://map.naver.com/p/search/${encodedQuery}` // T맵 fallback 겸용
+    query,
+    directUrl,
+    naver: naverUrl,
+    kakao: kakaoUrl,
+    tmap: tmapUrl,
+    tmapApp: `tmap://search?name=${encodedQuery}`
   };
 }
 
 /**
- * D-Day 실시간 카운트다운 타이머 구동
+ * 길찾기 바텀시트 모달 열기
+ */
+window.openMapRouteSheet = function(courseIndex) {
+  if (!courseData || !courseData[courseIndex]) return;
+  const item = courseData[courseIndex];
+  const modal = document.getElementById('mapRouteModal');
+  if (!modal) return;
+
+  const titleEl = document.getElementById('mapModalPlaceTitle');
+  const subEl = document.getElementById('mapModalPlaceSub');
+  const btnDirect = document.getElementById('btnDirectMapUrl');
+  const btnNaver = document.getElementById('btnNaverMapRoute');
+  const btnKakao = document.getElementById('btnKakaoMapRoute');
+  const btnTmap = document.getElementById('btnTmapRoute');
+
+  const links = getMapSearchLinks(item, recipientData ? recipientData.a : '');
+  const displayName = item.pl || item.n || '코스 장소';
+
+  if (titleEl) titleEl.textContent = `${displayName} 길찾기`;
+  if (subEl) {
+    subEl.textContent = item.pl && item.pl !== item.n
+      ? `"${item.n}" (상호명: ${item.pl})`
+      : `${item.t || '데이트 코스'} · ${recipientData ? recipientData.a : ''}`;
+  }
+
+  if (btnDirect) {
+    if (links.directUrl) {
+      btnDirect.classList.remove('hidden');
+      btnDirect.href = links.directUrl;
+    } else {
+      btnDirect.classList.add('hidden');
+    }
+  }
+
+  if (btnNaver) btnNaver.href = links.naver;
+  if (btnKakao) btnKakao.href = links.kakao;
+  if (btnTmap) {
+    btnTmap.href = links.naver;
+    btnTmap.onclick = () => {
+      window.location.href = links.tmapApp;
+    };
+  }
+
+  modal.classList.remove('hidden');
+};
+
+/**
+ * D-Day 실시간 카운트다운 타이머 (지난 데이트 시 부자연스러운 D+1 제거)
  */
 export function startDdayCountdown(dateStr) {
   if (ddayTimerInterval) {
@@ -275,12 +340,15 @@ export function startDdayCountdown(dateStr) {
 
   const ddayBadge = document.getElementById('ddayBadge');
   const ddayText = document.getElementById('ddayText');
+  const ddayCalendarBtn = document.getElementById('ddayCalendarBtn');
   if (!ddayBadge || !ddayText) return;
 
   function update() {
     if (!dateStr) {
+      ddayBadge.className = 'dday-badge';
       ddayBadge.textContent = 'D-DAY';
       ddayText.textContent = '설레는 데이트 약속 💖';
+      if (ddayCalendarBtn) ddayCalendarBtn.classList.remove('hidden');
       return;
     }
 
@@ -302,21 +370,29 @@ export function startDdayCountdown(dateStr) {
     const dayDiff = Math.round((targetDateOnly.getTime() - todayOnly.getTime()) / (1000 * 60 * 60 * 24));
 
     if (exactDiffMs > 0) {
+      // 미래 일정: 설레는 카운트다운
       const days = Math.floor(exactDiffMs / (1000 * 60 * 60 * 24));
       const hours = Math.floor((exactDiffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const mins = Math.floor((exactDiffMs % (1000 * 60 * 60)) / (1000 * 60));
       const secs = Math.floor((exactDiffMs % (1000 * 60)) / 1000);
 
+      ddayBadge.className = 'dday-badge';
       ddayBadge.textContent = days === 0 ? 'D-DAY' : `D-${days}`;
       const dayPrefix = days > 0 ? `${days}일 ` : '';
-      ddayText.textContent = `${dayPrefix}${hours}시간 ${mins}분 ${secs}초 남음 💖`;
+      ddayText.textContent = `만날 때까지 ${dayPrefix}${hours}시간 ${mins}분 ${secs}초 💖`;
+      if (ddayCalendarBtn) ddayCalendarBtn.classList.remove('hidden');
     } else if (dayDiff === 0) {
-      ddayBadge.textContent = 'D-DAY';
-      ddayText.textContent = '오늘이 바로 설레는 만남의 날! 🎉';
+      // 당일 일정
+      ddayBadge.className = 'dday-badge';
+      ddayBadge.textContent = 'D-DAY 🎉';
+      ddayText.textContent = '오늘이 바로 설레는 만남의 날이에요! 💕';
+      if (ddayCalendarBtn) ddayCalendarBtn.classList.remove('hidden');
     } else {
-      const pastDays = Math.abs(dayDiff);
-      ddayBadge.textContent = `D+${pastDays}`;
-      ddayText.textContent = `함께한 지 ${pastDays}일째 🌿`;
+      // 지난 일정: 어색한 'D+1 함께한 지 1일째' 대신 따뜻한 추억 뱃지로 전환
+      ddayBadge.className = 'dday-badge badge-memory';
+      ddayBadge.textContent = '추억 🌿';
+      ddayText.textContent = '소중한 추억으로 남은 데이트 💖';
+      if (ddayCalendarBtn) ddayCalendarBtn.classList.add('hidden');
     }
   }
 
@@ -445,32 +521,24 @@ export function updateStoryPage() {
       galleryHtml = `<div class="story-photo-gallery count-${count}">${photoImgs}</div>`;
     }
 
-    const linkBox = item.u ? `
-      <div class="story-link-box">
-        <a href="${item.u}" target="_blank" rel="noopener noreferrer" class="btn-story-link">
-          <i class="fa-solid fa-arrow-up-right-from-square"></i> 추천 소개 링크 보러가기
-        </a>
-      </div>
-    ` : '';
+    // 미니멀하고 감성적인 길찾기 한 줄 칩 바 (터치 시 바텀시트 오픈)
+    const actualPlaceName = item.pl || item.n || '장소 확인';
+    const locationSubtitle = item.pl && item.pl !== item.n
+      ? `${item.pl} (길찾기 & 위치 안내)`
+      : `${item.m ? item.m + ' · ' : ''}길찾기 & 지도 위치 확인`;
 
-    // 3대 지도(네이버/카카오/T맵) 길찾기 딥링크 칩
-    const mapLinks = getMapSearchLinks(item.n, recipientData.a);
-    const mapLinksHtml = `
-      <div class="story-map-links">
-        <div class="map-links-header">
-          <i class="fa-solid fa-location-dot"></i> <span>빠른 길찾기 & 지도 위치 확인</span>
+    const mapBarHtml = `
+      <div class="story-location-chip-bar" onclick="window.openMapRouteSheet(${currentStoryIndex})">
+        <div class="location-chip-left">
+          <i class="fa-solid fa-location-dot location-pin-icon"></i>
+          <div class="location-chip-text">
+            <span class="location-name">${actualPlaceName}</span>
+            <span class="location-hint">${locationSubtitle}</span>
+          </div>
         </div>
-        <div class="map-chips-grid">
-          <a href="${mapLinks.naver}" target="_blank" rel="noopener noreferrer" class="btn-map-chip map-naver" title="네이버 지도로 장소 확인 및 길찾기">
-            <i class="fa-solid fa-location-arrow"></i> <span>네이버 지도</span>
-          </a>
-          <a href="${mapLinks.kakao}" target="_blank" rel="noopener noreferrer" class="btn-map-chip map-kakao" title="카카오맵으로 장소 확인 및 길찾기">
-            <i class="fa-solid fa-map-pin"></i> <span>카카오맵</span>
-          </a>
-          <a href="${mapLinks.naver}" onclick="window.location.href='tmap://search?name=' + encodeURIComponent('${item.n || ''}');" target="_blank" rel="noopener noreferrer" class="btn-map-chip map-tmap" title="T맵 앱으로 바로 길안내">
-            <i class="fa-solid fa-car"></i> <span>T맵 길찾기</span>
-          </a>
-        </div>
+        <button type="button" class="btn-open-route">
+          <span>길찾기</span> <i class="fa-solid fa-chevron-right"></i>
+        </button>
       </div>
     `;
 
@@ -483,8 +551,7 @@ export function updateStoryPage() {
       </div>
       ${galleryHtml}
       ${tipBox}
-      ${linkBox}
-      ${mapLinksHtml}
+      ${mapBarHtml}
     `;
   } else {
     // Final Summary Slide
@@ -900,6 +967,25 @@ export function bindStoryViewerEvents() {
   }
   if (closeExternalCalBottomBtn && externalCalendarModal) {
     closeExternalCalBottomBtn.addEventListener('click', () => externalCalendarModal.classList.add('hidden'));
+  }
+
+  // Map Route Bottom Sheet Modal Handling
+  const mapRouteModal = document.getElementById('mapRouteModal');
+  const closeMapRouteBtn = document.getElementById('closeMapRouteBtn');
+  const closeMapRouteBottomBtn = document.getElementById('closeMapRouteBottomBtn');
+
+  if (closeMapRouteBtn && mapRouteModal) {
+    closeMapRouteBtn.addEventListener('click', () => mapRouteModal.classList.add('hidden'));
+  }
+  if (closeMapRouteBottomBtn && mapRouteModal) {
+    closeMapRouteBottomBtn.addEventListener('click', () => mapRouteModal.classList.add('hidden'));
+  }
+  if (mapRouteModal) {
+    mapRouteModal.addEventListener('click', (e) => {
+      if (e.target === mapRouteModal) {
+        mapRouteModal.classList.add('hidden');
+      }
+    });
   }
 
   if (sendAcceptKakaoBtn) {

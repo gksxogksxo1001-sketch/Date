@@ -4374,79 +4374,192 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
 }
 
 
+.dday-badge.badge-memory {
+  background: linear-gradient(135deg, #81B29A, #588157) !important;
+  box-shadow: 0 2px 6px rgba(88, 129, 87, 0.35) !important;
+}
+
+
 /* ====================================================
-   MAP DEEPLINKS (네이버 / 카카오 / T맵)
+   MINIMAL LOCATION CHIP BAR & MAP ROUTE MODAL
    ==================================================== */
-.story-map-links {
+.story-location-chip-bar {
   margin-top: 14px;
-  padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.7);
+  padding: 11px 15px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(224, 122, 95, 0.3);
   border-radius: 12px;
-  border: 1px dashed rgba(224, 122, 95, 0.3);
-}
-
-.theme-midnight .story-map-links {
-  background: rgba(35, 41, 56, 0.7);
-  border-color: rgba(212, 175, 55, 0.3);
-}
-
-.map-links-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: #5C4D47;
-  margin-bottom: 8px;
-}
-.theme-midnight .map-links-header { color: #CBD5E1; }
-
-.map-chips-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-.btn-map-chip {
+.story-location-chip-bar:hover {
+  background: #FFFFFF;
+  border-color: #E07A5F;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(224, 122, 95, 0.16);
+}
+
+.theme-rose .story-location-chip-bar {
+  border-color: rgba(255, 107, 139, 0.35);
+}
+.theme-rose .story-location-chip-bar:hover {
+  border-color: #FF6B8B;
+  box-shadow: 0 4px 14px rgba(255, 107, 139, 0.2);
+}
+
+.theme-midnight .story-location-chip-bar {
+  background: rgba(35, 41, 56, 0.85);
+  border-color: rgba(212, 175, 55, 0.35);
+}
+.theme-midnight .story-location-chip-bar:hover {
+  background: #232938;
+  border-color: #D4AF37;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.location-chip-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.location-pin-icon {
+  color: #E07A5F;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+.theme-rose .location-pin-icon { color: #FF6B8B; }
+.theme-midnight .location-pin-icon { color: #E5C07B; }
+
+.location-chip-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.location-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #2D2725;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.theme-midnight .location-name { color: #FFFFFF; }
+
+.location-hint {
+  font-size: 0.74rem;
+  color: #8C7B75;
+}
+.theme-midnight .location-hint { color: #94A3B8; }
+
+.btn-open-route {
+  background: #FFF5F2;
+  border: 1px solid rgba(224, 122, 95, 0.35);
+  color: #E07A5F;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+.theme-rose .btn-open-route {
+  background: #FFF0F4;
+  border-color: rgba(255, 107, 139, 0.35);
+  color: #FF6B8B;
+}
+.theme-midnight .btn-open-route {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.4);
+  color: #E5C07B;
+}
+
+/* Map Route Bottom Sheet Options */
+.map-app-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.map-app-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.map-app-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  border-color: #E07A5F;
+}
+
+.map-opt-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  padding: 8px 6px;
-  border-radius: 8px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  font-weight: 800;
 }
 
-.btn-map-chip.map-naver {
-  background: #03C75A;
-  color: #FFFFFF;
-}
-.btn-map-chip.map-naver:hover {
-  background: #02B150;
-  transform: translateY(-1px);
+.map-icon-direct { background: #FFF4E5; color: #FF9800; font-size: 1.25rem; }
+.map-icon-naver { background: #03C75A; color: #FFFFFF; }
+.map-icon-kakao { background: #FEE500; color: #191919; }
+.map-icon-tmap { background: #0064FF; color: #FFFFFF; }
+
+.map-opt-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
-.btn-map-chip.map-kakao {
-  background: #FEE500;
-  color: #191919;
-}
-.btn-map-chip.map-kakao:hover {
-  background: #FADA0A;
-  transform: translateY(-1px);
+.map-opt-name {
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: #2D2725;
 }
 
-.btn-map-chip.map-tmap {
-  background: #0064FF;
-  color: #FFFFFF;
+.map-opt-desc {
+  font-size: 0.77rem;
+  color: #8C7B75;
 }
-.btn-map-chip.map-tmap:hover {
-  background: #0052D4;
-  transform: translateY(-1px);
+
+.map-opt-arrow {
+  color: #B5A8A3;
+  font-size: 0.85rem;
+  transition: transform 0.2s ease;
+}
+
+.map-app-option:hover .map-opt-arrow {
+  transform: translateX(3px);
+  color: #E07A5F;
 }
 
 

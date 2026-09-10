@@ -869,6 +869,72 @@
       </div>
     </div>
 
+    <!-- ==================== MODAL: MAP ROUTE BOTTOM SHEET ==================== -->
+    <div id="mapRouteModal" class="modal-overlay hidden">
+      <div class="modal-card modal-card-bottom-sheet">
+        <div class="modal-header-row">
+          <div class="modal-title-group">
+            <div class="modal-icon" style="background: rgba(3, 199, 90, 0.15); color: #03C75A;">
+              <i class="fa-solid fa-diamond-turn-right"></i>
+            </div>
+            <div class="modal-title-text">
+              <h3 id="mapModalPlaceTitle">길찾기 & 장소 안내</h3>
+              <p class="modal-subtitle" id="mapModalPlaceSub">어떤 지도 앱으로 길안내를 시작할까요?</p>
+            </div>
+          </div>
+          <button type="button" id="closeMapRouteBtn" class="modal-close-icon-btn" title="닫기">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="map-app-options-list margin-top-md">
+          <!-- Direct Target Map Link (If user pasted direct map link) -->
+          <a id="btnDirectMapUrl" href="#" target="_blank" rel="noopener noreferrer" class="map-app-option option-direct hidden">
+            <div class="map-opt-icon map-icon-direct"><i class="fa-solid fa-star"></i></div>
+            <div class="map-opt-text">
+              <span class="map-opt-name" id="directMapUrlTitle">작성자가 직접 첨부한 매장 링크</span>
+              <span class="map-opt-desc">상세 정보 및 예약 페이지로 바로 이동</span>
+            </div>
+            <i class="fa-solid fa-arrow-up-right-from-square map-opt-arrow"></i>
+          </a>
+
+          <!-- Naver Map -->
+          <a id="btnNaverMapRoute" href="#" target="_blank" rel="noopener noreferrer" class="map-app-option option-naver">
+            <div class="map-opt-icon map-icon-naver"><strong>N</strong></div>
+            <div class="map-opt-text">
+              <span class="map-opt-name">네이버 지도 (Naver Map)</span>
+              <span class="map-opt-desc">네이버 지도 앱 및 웹에서 빠른 길찾기</span>
+            </div>
+            <i class="fa-solid fa-chevron-right map-opt-arrow"></i>
+          </a>
+
+          <!-- Kakao Map -->
+          <a id="btnKakaoMapRoute" href="#" target="_blank" rel="noopener noreferrer" class="map-app-option option-kakao">
+            <div class="map-opt-icon map-icon-kakao"><i class="fa-solid fa-location-dot"></i></div>
+            <div class="map-opt-text">
+              <span class="map-opt-name">카카오맵 (Kakao Map)</span>
+              <span class="map-opt-desc">카카오맵 앱 및 웹에서 대중교통/도보 길찾기</span>
+            </div>
+            <i class="fa-solid fa-chevron-right map-opt-arrow"></i>
+          </a>
+
+          <!-- T Map -->
+          <a id="btnTmapRoute" href="#" target="_blank" rel="noopener noreferrer" class="map-app-option option-tmap">
+            <div class="map-opt-icon map-icon-tmap"><i class="fa-solid fa-car"></i></div>
+            <div class="map-opt-text">
+              <span class="map-opt-name">T맵 (TMAP 내비)</span>
+              <span class="map-opt-desc">스마트폰 T맵 앱으로 실시간 자동차 길안내</span>
+            </div>
+            <i class="fa-solid fa-chevron-right map-opt-arrow"></i>
+          </a>
+        </div>
+
+        <div class="modal-actions-row margin-top-md">
+          <button type="button" id="closeMapRouteBottomBtn" class="btn-secondary">닫기</button>
+        </div>
+      </div>
+    </div>
+
     <!-- TOAST NOTIFICATION -->
     <div id="toast" class="toast hidden">
       <i class="fa-solid fa-check"></i> <span id="toastMsg">링크가 복사되었습니다!</span>

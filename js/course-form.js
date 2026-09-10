@@ -277,7 +277,7 @@ export function initBudgetChips() {
 // 4. Course Item Creation & Management
 export function addCourseItem(
   typeVal = '🍽️ 맛집/식사', timeVal = '18:00', nameVal = '', urlVal = '', moveVal = '', tipVal = '',
-  photosVal = []
+  photosVal = [], placeVal = ''
 ) {
   const courseList = document.getElementById('courseList');
   if (!courseList) return;
@@ -365,9 +365,15 @@ export function addCourseItem(
         </div>
       </div>
     </div>
-    <div class="form-group">
-      <label>장소/가게 이름</label>
-      <input type="text" class="course-name" value="${nameVal}" placeholder="예: 가게 이름 또는 장소 입력" required>
+    <div class="form-row dual-row">
+      <div class="form-group">
+        <label><i class="fa-solid fa-pen-fancy"></i> 코스 제목 / 감성 문구</label>
+        <input type="text" class="course-name" value="${nameVal}" placeholder="예: 성수동 분위기 끝판왕 와인바 🍷" required>
+      </div>
+      <div class="form-group">
+        <label><i class="fa-solid fa-location-dot"></i> 길찾기용 실제 상호명 (선택)</label>
+        <input type="text" class="course-place" value="${placeVal}" placeholder="예: 어니언 성수 (비워두면 위 코스명으로 검색)">
+      </div>
     </div>
     <div class="form-row dual-row">
       <div class="form-group">
@@ -380,8 +386,8 @@ export function addCourseItem(
       </div>
     </div>
     <div class="form-group">
-      <label>가게/지도 링크 (선택)</label>
-      <input type="url" class="course-url" value="${urlVal}" placeholder="예: 네이버지도 / 카카오맵 링크">
+      <label><i class="fa-solid fa-link"></i> 가게/지도 링크 (선택)</label>
+      <input type="url" class="course-url" value="${urlVal}" placeholder="예: 네이버지도 / 카카오맵 공유 링크 붙여넣기">
     </div>
 
     <!-- LOCAL GALLERY FILE UPLOAD SECTION -->
@@ -766,7 +772,7 @@ export function initCourseForm() {
   }
 
   // Initial clean empty course (1st course)
-  addCourseItem('🍽️ 맛집/식사', '18:00', '', '', '', '', []);
+  addCourseItem('🍽️ 맛집/식사', '18:00', '', '', '', '', [], '');
 }
 
 // 8. Extract & Validate Form Data
@@ -793,6 +799,7 @@ export function getFormData() {
     const type = card.querySelector('.course-type')?.value || '';
     const time = card.querySelector('.course-time')?.value || '';
     const name = (card.querySelector('.course-name')?.value || '').trim();
+    const place = (card.querySelector('.course-place')?.value || '').trim();
     const move = (card.querySelector('.course-move')?.value || '').trim();
     const tip = (card.querySelector('.course-tip')?.value || '').trim();
     let url = (card.querySelector('.course-url')?.value || '').trim();
@@ -805,7 +812,7 @@ export function getFormData() {
       url = 'https://' + url;
     }
 
-    courses.push({ t: type, tm: time, n: name, m: move, tp: tip, u: url, p: photos });
+    courses.push({ t: type, tm: time, n: name, pl: place, m: move, tp: tip, u: url, p: photos });
   });
 
   if (!isValid || courses.length === 0) {
