@@ -393,11 +393,21 @@ export const ArchiveService = {
       const cardEl = document.createElement('div');
       cardEl.className = `archive-card-item theme-${item.theme || 'cozy'} ${item.isAccepted ? 'is-accepted' : ''}`;
 
-      const courseSummary = (item.courses || []).map((c, i) => `${i + 1}차: ${c.n}`).join(' ➔ ') || '코스 정보 없음';
-      const createdDateStr = new Date(item.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-      const targetDateStr = formatDateString(item.date);
+      const receiverDisplay = (item.receiverName || '소중한 분').trim();
+      const senderDisplay = (item.senderName || '익명').trim();
+      const courseSummary = (item.courses || []).map((c, i) => `${i + 1}차: ${c.n || '장소'}`).join(' ➔ ') || '코스 정보 없음';
+      const createdDateStr = item.createdAt ? new Date(item.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '최근 생성';
+      const targetDateStr = item.date ? formatDateString(item.date) : '날짜 미정';
+      const areaDisplay = item.area ? item.area : '데이트 장소';
+      const budgetDisplay = item.budget ? item.budget : '예산 미정';
       const themeLabel = item.theme === 'rose' ? '🌹 Romantic Rose' : (item.theme === 'midnight' ? '🌙 Midnight Navy' : '🌿 Warm Cozy');
       const acceptBadge = item.isAccepted ? `<div class="archive-status-badge accepted"><i class="fa-solid fa-heart"></i> 상대방 수락 완료!</div>` : '';
+
+      // 안전한 공유 URL 확보 (너무 길거나 없을 시 ID 기반 fallback)
+      let safeShareUrl = item.shareUrl;
+      if (!safeShareUrl || safeShareUrl.length > 1500) {
+        safeShareUrl = `${CONFIG.BASE_URL}#card=${item.id}`;
+      }
 
       cardEl.innerHTML = `
         <div class="archive-card-header">
@@ -408,21 +418,21 @@ export const ArchiveService = {
           <span class="archive-date-tag">${createdDateStr} 생성</span>
         </div>
         <div class="archive-card-body">
-          <h4 class="archive-card-title">To. <strong>${item.receiverName}</strong> <span style="font-weight:400; font-size:0.88rem; color:var(--text-muted);">(From. ${item.senderName})</span></h4>
+          <h4 class="archive-card-title">To. <strong>${receiverDisplay}</strong> <span style="font-weight:400; font-size:0.88rem; color:var(--text-muted);">(From. ${senderDisplay})</span></h4>
           <div class="archive-meta">
             <span><i class="fa-regular fa-calendar-check"></i> ${targetDateStr}</span>
-            <span><i class="fa-solid fa-location-dot"></i> ${item.area}</span>
-            <span><i class="fa-solid fa-wallet"></i> ${item.budget}</span>
+            <span><i class="fa-solid fa-location-dot"></i> ${areaDisplay}</span>
+            <span><i class="fa-solid fa-wallet"></i> ${budgetDisplay}</span>
           </div>
           <div class="archive-courses-preview">
             <i class="fa-solid fa-route"></i> <span>${courseSummary}</span>
           </div>
         </div>
         <div class="archive-card-actions">
-          <button type="button" class="btn-archive-action btn-view" title="스토리 초대장 열기" onclick="window.viewArchiveCard('${item.shareUrl}')">
+          <button type="button" class="btn-archive-action btn-view" title="스토리 초대장 열기" onclick="window.viewArchiveCard('${safeShareUrl}')">
             <i class="fa-solid fa-eye"></i> 열기
           </button>
-          <button type="button" class="btn-archive-action btn-copy" title="공유 링크 복사" onclick="window.copyArchiveLink('${item.shareUrl}')">
+          <button type="button" class="btn-archive-action btn-copy" title="공유 링크 복사" onclick="window.copyArchiveLink('${safeShareUrl}')">
             <i class="fa-solid fa-link"></i> 링크복사
           </button>
           <button type="button" class="btn-archive-action btn-kakao" title="카카오톡 재전송" onclick="window.shareArchiveKakao('${item.id}')">
