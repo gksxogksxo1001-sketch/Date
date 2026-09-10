@@ -481,11 +481,16 @@
     <!-- RIGHT COLUMN: STICKY SMARTPHONE LIVE PREVIEW (PC 전용 실시간 목업) -->
     <aside class="create-preview-column" id="createPreviewColumn">
       <div class="sticky-preview-wrapper">
-        <div class="preview-mockup-header">
+        <div class="preview-mockup-header" id="previewDragHandle" title="여기를 마우스로 드래그하여 원하는 위치로 자유롭게 이동할 수 있습니다">
           <div class="preview-badge-pill">
             <span class="pulse-indicator"></span> 실시간 미리보기
           </div>
-          <span class="preview-hint">스마트폰 뷰</span>
+          <div class="preview-header-actions">
+            <span class="preview-drag-hint"><i class="fa-solid fa-up-down-left-right"></i> 드래그 이동</span>
+            <button type="button" class="preview-reset-btn hidden" id="previewResetPosBtn" title="원래 위치로 복귀">
+              <i class="fa-solid fa-rotate-left"></i>
+            </button>
+          </div>
         </div>
 
         <!-- SMARTPHONE DEVICE MOCKUP FRAME -->
