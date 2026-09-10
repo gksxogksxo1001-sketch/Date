@@ -1029,6 +1029,34 @@
         </div>
 
         <div class="map-app-options-list margin-top-md">
+          <!-- GPS Current Location Quick Route Card -->
+          <div class="map-gps-banner" id="mapGpsBanner">
+            <div class="map-gps-content">
+              <div class="map-gps-icon-wrap">
+                <i class="fa-solid fa-crosshairs pulse-gps"></i>
+              </div>
+              <div class="map-gps-info">
+                <div class="map-gps-title-row">
+                  <span class="map-gps-title">내 현재 위치에서 찾아가기</span>
+                  <span class="map-gps-badge" id="mapGpsStatusBadge">실시간 GPS</span>
+                </div>
+                <p class="map-gps-desc" id="mapGpsDesc">지금 내 위치에서 이 장소까지 소요 시간 & 경로를 확인합니다</p>
+              </div>
+            </div>
+            <div class="map-gps-actions">
+              <button type="button" class="btn-gps-route naver" id="btnGpsNaver" title="네이버 지도로 내 위치에서 길찾기">
+                <strong>N</strong> 네이버 빠른 길찾기
+              </button>
+              <button type="button" class="btn-gps-route kakao" id="btnGpsKakao" title="카카오맵으로 내 위치에서 길찾기">
+                <i class="fa-solid fa-location-dot"></i> 카카오맵 길찾기
+              </button>
+            </div>
+          </div>
+
+          <div class="map-section-divider">
+            <span>또는 지도 앱으로 장소 검색 & 상세 보기</span>
+          </div>
+
           <!-- Direct Target Map Link (If user pasted direct map link) -->
           <a id="btnDirectMapUrl" href="#" target="_blank" rel="noopener noreferrer" class="map-app-option option-direct hidden">
             <div class="map-opt-icon map-icon-direct"><i class="fa-solid fa-star"></i></div>

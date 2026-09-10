@@ -326,6 +326,67 @@ window.openMapRouteSheet = function(courseIndex) {
     };
   }
 
+  // GPS 내 위치 기반 원클릭 빠른 길찾기 핸들러
+  const btnGpsNaver = document.getElementById('btnGpsNaver');
+  const btnGpsKakao = document.getElementById('btnGpsKakao');
+  const gpsDesc = document.getElementById('mapGpsDesc');
+
+  const areaPrefix = recipientData && recipientData.a ? recipientData.a.trim() + ' ' : '';
+  const actualTarget = `${areaPrefix}${item.pl || item.n || ''}`.trim();
+  const encodedDest = encodeURIComponent(actualTarget);
+
+  // 기본 목적지 길찾기 URL (좌표 없을 때의 안정적인 fallback)
+  let naverRouteUrl = `https://map.naver.com/p/directions/-/,,/${encodedDest}/-/transit?c=15.00,0,0,0,dh`;
+  let kakaoRouteUrl = `https://map.kakao.com/link/to/${encodedDest}`;
+
+  const launchGpsRoute = (platform) => {
+    if (gpsDesc) gpsDesc.textContent = '현재 위치(GPS)를 감지하여 지도 앱으로 연결 중... 🛰️';
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          if (gpsDesc) gpsDesc.textContent = '현재 위치 확인 완료! 길안내를 시작합니다.';
+
+          if (platform === 'naver') {
+            // 네이버 지도 내 위치 -> 목적지 길찾기
+            const url = `https://map.naver.com/p/directions/${lng},${lat},내위치,/${encodedDest}/-/transit?c=15.00,0,0,0,dh`;
+            window.open(url, '_blank');
+          } else {
+            // 카카오맵 내 위치 -> 목적지 길찾기
+            const url = `https://map.kakao.com/link/to/${encodedDest}`;
+            window.open(url, '_blank');
+          }
+        },
+        () => {
+          // 위치 권한 거부 또는 실패 시 목적지 기준 길찾기 바로 오픈
+          if (gpsDesc) gpsDesc.textContent = '지도 앱에서 바로 내 위치를 출발지로 지정합니다.';
+          const url = platform === 'naver' ? naverRouteUrl : kakaoRouteUrl;
+          window.open(url, '_blank');
+        },
+        { timeout: 4000, enableHighAccuracy: true }
+      );
+    } else {
+      const url = platform === 'naver' ? naverRouteUrl : kakaoRouteUrl;
+      window.open(url, '_blank');
+    }
+  };
+
+  if (btnGpsNaver) {
+    btnGpsNaver.onclick = (e) => {
+      e.preventDefault();
+      launchGpsRoute('naver');
+    };
+  }
+
+  if (btnGpsKakao) {
+    btnGpsKakao.onclick = (e) => {
+      e.preventDefault();
+      launchGpsRoute('kakao');
+    };
+  }
+
   modal.classList.remove('hidden');
 };
 
@@ -563,37 +624,10 @@ export function updateStoryPage() {
         const linkBadge = hasUrl ? `<span class="route-link-badge" title="가게 링크 등록됨"><i class="fa-solid fa-link"></i></span>` : '';
         
         let legRouteHtml = '';
-        // 1차 -> 2차, 2차 -> 3차 등 다음 코스로 이동하는 구간 길찾기
         if (i < courseData.length - 1) {
-          const nextCourse = courseData[i + 1];
-          const startName = (c.pl || c.n || '').trim();
-          const endName = (nextCourse.pl || nextCourse.n || '').trim();
-          const areaPrefix = recipientData && recipientData.a ? recipientData.a.trim() + ' ' : '';
-
-          const startQuery = encodeURIComponent(`${areaPrefix}${startName}`.trim());
-          const endQuery = encodeURIComponent(`${areaPrefix}${endName}`.trim());
-
-          // 1대1 길찾기 URL (출발지, 도착지)
-          const naverLegUrl = `https://map.naver.com/p/directions/${startQuery}/,/${endQuery}/-/transit?c=15.00,0,0,0,dh`;
-          const kakaoLegUrl = `https://map.kakao.com/link/to/${endQuery}`;
-
           legRouteHtml = `
-            <div class="route-leg-bridge">
-              <div class="route-leg-line-wrap">
-                <span class="route-leg-line"></span>
-                <span class="route-leg-pill">
-                  <i class="fa-solid fa-person-walking"></i> ${i + 1}차 ➔ ${i + 2}차 이동
-                </span>
-                <span class="route-leg-line"></span>
-              </div>
-              <div class="route-leg-actions">
-                <a href="${naverLegUrl}" target="_blank" rel="noopener noreferrer" class="btn-leg-nav naver" title="${startName}에서 ${endName}까지 네이버 길찾기">
-                  <i class="fa-solid fa-diamond-turn-right"></i> 네이버 길찾기
-                </a>
-                <a href="${kakaoLegUrl}" target="_blank" rel="noopener noreferrer" class="btn-leg-nav kakao" title="${endName} 도착 카카오맵 길찾기">
-                  <i class="fa-solid fa-location-arrow"></i> 카카오 길찾기
-                </a>
-              </div>
+            <div class="route-timeline-connector">
+              <i class="fa-solid fa-angles-down"></i>
             </div>
           `;
         }
