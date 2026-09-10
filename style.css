@@ -3423,16 +3423,15 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
     order: 1;
     display: flex;
     justify-content: flex-end;
-    width: 100%;
   }
-  /* 하단: 왼쪽 캘린더, 오른쪽 보관함 (동일한 1:1 너비 및 프로필 너비 정렬) */
+  /* 하단: 왼쪽 캘린더, 오른쪽 보관함 */
   .nav-tools-group {
     order: 2;
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 6px;
-    width: 100%;
+    gap: 8px;
+    position: relative;
   }
 
   /* 캘린더, 보관함 텍스트 이름 숨김 (아이콘 및 뱃지만 심플하게 노출) */
@@ -3441,20 +3440,21 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
     display: none !important;
   }
 
-  /* 왼쪽 캘린더 버튼 & 오른쪽 보관함 버튼: 좌우 길이 1:1 완벽 대칭 */
+  /* 왼쪽 캘린더 버튼 & 오른쪽 보관함 버튼: 완벽한 정사각/정규 대칭 규격 */
   .nav-btn-calendar,
   .nav-btn-archive {
-    flex: 1 1 0%;
-    min-width: 0;
-    padding: 5px 0;
-    font-size: 0.85rem;
-    height: 28px;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 30px;
+    padding: 0;
+    font-size: 0.9rem;
     border-radius: 2px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
     box-sizing: border-box;
+    position: relative;
+    overflow: visible;
   }
 
   .nav-btn-calendar {
@@ -3465,10 +3465,26 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
     order: 2;
   }
 
-  .badge-count {
-    font-size: 0.68rem;
+  /* 보관함 숫자 뱃지: 버튼 내부를 밀어내지 않고 우상단에 콤팩트한 핀 알림으로 띄움 */
+  .nav-btn-archive .badge-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
     padding: 0 4px;
-    margin-left: 2px;
+    border-radius: 10px;
+    background: var(--att-rosewood);
+    color: #FFFFFF;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    border: 1.5px solid #FFFFFF;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    margin: 0;
   }
 
   .nav-kakao-login-btn {
@@ -3481,16 +3497,14 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
     padding: 3px 8px 3px 5px;
     height: 28px;
     gap: 6px;
-    width: 100%;
     box-sizing: border-box;
-    justify-content: space-between;
   }
   .nav-avatar {
     width: 22px;
     height: 22px;
   }
   .nav-nickname {
-    max-width: 65px;
+    max-width: 70px;
     font-size: 0.78rem;
   }
   .nav-logout-btn {
