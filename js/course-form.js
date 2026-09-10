@@ -371,23 +371,19 @@ export function addCourseItem(
         <input type="text" class="course-name" value="${nameVal}" placeholder="예: 성수동 분위기 끝판왕 와인바 🍷" required>
       </div>
       <div class="form-group">
-        <label><i class="fa-solid fa-location-dot"></i> 길찾기용 실제 상호명 (선택)</label>
+        <label><i class="fa-solid fa-location-dot"></i> 가는 곳 상호명 (선택)</label>
         <input type="text" class="course-place" value="${placeVal}" placeholder="예: 어니언 성수 (비워두면 위 코스명으로 검색)">
       </div>
     </div>
     <div class="form-row dual-row">
       <div class="form-group">
-        <label>이동 팁 (선택)</label>
-        <input type="text" class="course-move" value="${moveVal}" placeholder="예: 도보 3분 / 차로 10분">
-      </div>
-      <div class="form-group">
-        <label>센스 메모 (선택)</label>
+        <label><i class="fa-regular fa-note-sticky"></i> 메모 (선택)</label>
         <input type="text" class="course-tip" value="${tipVal}" placeholder="예: 창가 자리 예약 완료!">
       </div>
-    </div>
-    <div class="form-group">
-      <label><i class="fa-solid fa-link"></i> 가게/지도 링크 (선택)</label>
-      <input type="url" class="course-url" value="${urlVal}" placeholder="예: 네이버지도 / 카카오맵 공유 링크 붙여넣기">
+      <div class="form-group">
+        <label><i class="fa-solid fa-link"></i> 가게/지도 링크 (선택)</label>
+        <input type="url" class="course-url" value="${urlVal}" placeholder="예: 네이버지도 / 카카오맵 공유 링크 붙여넣기">
+      </div>
     </div>
 
     <!-- LOCAL GALLERY FILE UPLOAD SECTION -->

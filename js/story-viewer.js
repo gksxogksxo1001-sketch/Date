@@ -509,8 +509,8 @@ export function updateStoryPage() {
     const moveBadge = item.m ? `<span><i class="fa-solid fa-person-walking"></i> ${item.m}</span>` : '';
     const tipBox = item.tp ? `
       <div class="story-tip-box">
-        <i class="fa-regular fa-lightbulb"></i>
-        <div><strong>남친 Tip:</strong> ${item.tp}</div>
+        <i class="fa-regular fa-note-sticky"></i>
+        <div><strong>메모:</strong> ${item.tp}</div>
       </div>
     ` : '';
 
@@ -524,7 +524,7 @@ export function updateStoryPage() {
     // 미니멀하고 감성적인 길찾기 한 줄 칩 바 (터치 시 바텀시트 오픈)
     const actualPlaceName = item.pl || item.n || '장소 확인';
     const locationSubtitle = item.pl && item.pl !== item.n
-      ? `${item.pl} (길찾기 & 위치 안내)`
+      ? `${item.pl} (길찾기 & 지도 안내)`
       : `${item.m ? item.m + ' · ' : ''}길찾기 & 지도 위치 확인`;
 
     const mapBarHtml = `
@@ -554,7 +554,56 @@ export function updateStoryPage() {
       ${mapBarHtml}
     `;
   } else {
-    // Final Summary Slide
+    // Final Summary Slide (전체 데이트 코스 이동 동선 & 총 코스 연결 뷰 포함)
+    let courseFlowHtml = '';
+    if (courseData && courseData.length > 0) {
+      const stopsHtml = courseData.map((c, i) => {
+        const placeName = c.pl || c.n || `코스 ${i + 1}`;
+        const hasUrl = Boolean(c.u);
+        const linkBadge = hasUrl ? `<span class="route-link-badge" title="가게 링크 등록됨"><i class="fa-solid fa-link"></i></span>` : '';
+        return `
+          <div class="route-timeline-node" onclick="window.openMapRouteSheet(${i})">
+            <div class="route-node-badge">${i + 1}차</div>
+            <div class="route-node-content">
+              <div class="route-node-name">${placeName} ${linkBadge}</div>
+              <div class="route-node-meta">${c.tm || ''} · ${c.t || ''}</div>
+            </div>
+            <button type="button" class="route-node-btn" title="길찾기">
+              <i class="fa-solid fa-location-arrow"></i>
+            </button>
+          </div>
+        `;
+      }).join('<div class="route-timeline-connector"><i class="fa-solid fa-angles-down"></i></div>');
+
+      const allPlacesQuery = encodeURIComponent(
+        courseData.map(c => c.pl || c.n).filter(Boolean).join(' ')
+      );
+      const naverMultiRouteUrl = `https://map.naver.com/p/search/${allPlacesQuery}`;
+      const kakaoMultiRouteUrl = `https://map.kakao.com/link/search/${allPlacesQuery}`;
+
+      courseFlowHtml = `
+        <div class="summary-route-card">
+          <div class="summary-route-header">
+            <div class="route-header-title">
+              <i class="fa-solid fa-route"></i>
+              <span>전체 데이트 동선 & 코스 요약 (총 ${courseData.length}곳)</span>
+            </div>
+          </div>
+          <div class="summary-route-timeline">
+            ${stopsHtml}
+          </div>
+          <div class="summary-route-actions">
+            <a href="${naverMultiRouteUrl}" target="_blank" rel="noopener noreferrer" class="btn-route-map naver">
+              <i class="fa-solid fa-map-location-dot"></i> 네이버 지도로 전체 경로 보기
+            </a>
+            <a href="${kakaoMultiRouteUrl}" target="_blank" rel="noopener noreferrer" class="btn-route-map kakao">
+              <i class="fa-solid fa-location-dot"></i> 카카오맵으로 전체 경로 보기
+            </a>
+          </div>
+        </div>
+      `;
+    }
+
     slide.innerHTML = `
       <span class="story-header-tag">💌 데이트 약속 최종 요약</span>
       <h2 class="story-place-title">${recipientData.r}아, 나와 데이트할래?</h2>
@@ -567,6 +616,7 @@ export function updateStoryPage() {
         <i class="fa-solid fa-quote-left" style="color: #E07A5F;"></i>
         <div style="white-space: pre-wrap; font-size: 1rem; line-height: 1.6;">${recipientData.m}</div>
       </div>
+      ${courseFlowHtml}
     `;
   }
 
