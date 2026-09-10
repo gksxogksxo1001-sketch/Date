@@ -561,25 +561,54 @@ export function updateStoryPage() {
         const placeName = c.pl || c.n || `코스 ${i + 1}`;
         const hasUrl = Boolean(c.u);
         const linkBadge = hasUrl ? `<span class="route-link-badge" title="가게 링크 등록됨"><i class="fa-solid fa-link"></i></span>` : '';
+        
+        let legRouteHtml = '';
+        // 1차 -> 2차, 2차 -> 3차 등 다음 코스로 이동하는 구간 길찾기
+        if (i < courseData.length - 1) {
+          const nextCourse = courseData[i + 1];
+          const startName = (c.pl || c.n || '').trim();
+          const endName = (nextCourse.pl || nextCourse.n || '').trim();
+          const areaPrefix = recipientData && recipientData.a ? recipientData.a.trim() + ' ' : '';
+
+          const startQuery = encodeURIComponent(`${areaPrefix}${startName}`.trim());
+          const endQuery = encodeURIComponent(`${areaPrefix}${endName}`.trim());
+
+          // 1대1 길찾기 URL (출발지, 도착지)
+          const naverLegUrl = `https://map.naver.com/p/directions/${startQuery}/,/${endQuery}/-/transit?c=15.00,0,0,0,dh`;
+          const kakaoLegUrl = `https://map.kakao.com/link/to/${endQuery}`;
+
+          legRouteHtml = `
+            <div class="route-leg-bridge">
+              <div class="route-leg-line-wrap">
+                <span class="route-leg-line"></span>
+                <span class="route-leg-pill">
+                  <i class="fa-solid fa-person-walking"></i> ${i + 1}차 ➔ ${i + 2}차 이동
+                </span>
+                <span class="route-leg-line"></span>
+              </div>
+              <div class="route-leg-actions">
+                <a href="${naverLegUrl}" target="_blank" rel="noopener noreferrer" class="btn-leg-nav naver" title="${startName}에서 ${endName}까지 네이버 길찾기">
+                  <i class="fa-solid fa-diamond-turn-right"></i> 네이버 길찾기
+                </a>
+                <a href="${kakaoLegUrl}" target="_blank" rel="noopener noreferrer" class="btn-leg-nav kakao" title="${endName} 도착 카카오맵 길찾기">
+                  <i class="fa-solid fa-location-arrow"></i> 카카오 길찾기
+                </a>
+              </div>
+            </div>
+          `;
+        }
+
         return `
-          <div class="route-timeline-node" onclick="window.openMapRouteSheet(${i})">
+          <div class="route-timeline-node" onclick="window.openMapRouteSheet(${i})" title="클릭하여 ${placeName} 지도 및 상세 링크 보기">
             <div class="route-node-badge">${i + 1}차</div>
             <div class="route-node-content">
               <div class="route-node-name">${placeName} ${linkBadge}</div>
               <div class="route-node-meta">${c.tm || ''} · ${c.t || ''}</div>
             </div>
-            <button type="button" class="route-node-btn" title="길찾기">
-              <i class="fa-solid fa-location-arrow"></i>
-            </button>
           </div>
+          ${legRouteHtml}
         `;
-      }).join('<div class="route-timeline-connector"><i class="fa-solid fa-angles-down"></i></div>');
-
-      const allPlacesQuery = encodeURIComponent(
-        courseData.map(c => c.pl || c.n).filter(Boolean).join(' ')
-      );
-      const naverMultiRouteUrl = `https://map.naver.com/p/search/${allPlacesQuery}`;
-      const kakaoMultiRouteUrl = `https://map.kakao.com/link/search/${allPlacesQuery}`;
+      }).join('');
 
       courseFlowHtml = `
         <div class="summary-route-card">
@@ -591,14 +620,6 @@ export function updateStoryPage() {
           </div>
           <div class="summary-route-timeline">
             ${stopsHtml}
-          </div>
-          <div class="summary-route-actions">
-            <a href="${naverMultiRouteUrl}" target="_blank" rel="noopener noreferrer" class="btn-route-map naver">
-              <i class="fa-solid fa-map-location-dot"></i> 네이버 지도로 전체 경로 보기
-            </a>
-            <a href="${kakaoMultiRouteUrl}" target="_blank" rel="noopener noreferrer" class="btn-route-map kakao">
-              <i class="fa-solid fa-location-dot"></i> 카카오맵으로 전체 경로 보기
-            </a>
           </div>
         </div>
       `;

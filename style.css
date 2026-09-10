@@ -2981,12 +2981,13 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
     transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
-  /* Centered Story Viewer on PC */
+  /* Wide and Balanced Story Viewer on PC */
   #viewMode.main-card {
-    max-width: 460px;
+    max-width: 740px;
     margin: 0 auto;
-    box-shadow: 0 24px 64px -8px rgba(35, 36, 38, 0.16), 0 0 0 1px var(--att-line);
-    border-radius: 20px;
+    box-shadow: 0 24px 64px -8px rgba(35, 36, 38, 0.12), 0 0 0 1px var(--att-line);
+    border-radius: 12px;
+    padding: 36px 40px;
   }
 }
 
@@ -5923,14 +5924,13 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
   display: flex;
   flex-direction: column;
   gap: 0;
-  margin-bottom: 16px;
 }
 
 .route-timeline-node {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: var(--att-linen);
   border: 1px solid var(--att-line);
   border-radius: 4px;
@@ -5948,9 +5948,9 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
 .route-node-badge {
   background: var(--att-rosewood);
   color: #FFFFFF;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  padding: 3px 7px;
+  padding: 4px 8px;
   border-radius: 3px;
   flex-shrink: 0;
 }
@@ -5961,7 +5961,7 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
 }
 
 .route-node-name {
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--att-charcoal);
   white-space: nowrap;
@@ -5974,88 +5974,102 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
 
 .route-link-badge {
   color: #03C75A;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
 }
 
 .route-node-meta {
-  font-size: 0.76rem;
-  color: var(--att-muted);
-  margin-top: 1px;
-}
-
-.route-node-btn {
-  background: #FFFFFF;
-  border: 1px solid var(--att-line-dark);
-  color: var(--att-charcoal);
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.route-timeline-node:hover .route-node-btn {
-  background: var(--att-rosewood);
-  color: #FFFFFF;
-  border-color: var(--att-rosewood);
-}
-
-.route-timeline-connector {
-  text-align: center;
-  padding: 4px 0;
-  color: var(--att-muted);
   font-size: 0.78rem;
-  line-height: 1;
+  color: var(--att-muted);
+  margin-top: 2px;
 }
 
-.summary-route-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+/* 1차 -> 2차, 2차 -> 3차 구간 연결 브릿지 & 길찾기 */
+.route-leg-bridge {
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
-.btn-route-map {
+.route-leg-line-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.route-leg-line {
+  flex: 1;
+  height: 1px;
+  background: var(--att-line);
+}
+
+.route-leg-pill {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--att-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  background: #FFFFFF;
+  border: 1px solid var(--att-line);
+  border-radius: 12px;
+}
+
+.route-leg-pill i {
+  color: var(--att-rosewood);
+  font-size: 0.75rem;
+}
+
+.route-leg-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-leg-nav {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 10px 12px;
-  border-radius: 4px;
-  font-size: 0.8rem;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.76rem;
   font-weight: 600;
   text-decoration: none;
   transition: all 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
-.btn-route-map.naver {
+.btn-leg-nav.naver {
   background: #E8F8EE;
   color: #03C75A;
-  border: 1px solid rgba(3, 199, 90, 0.3);
+  border: 1px solid rgba(3, 199, 90, 0.35);
 }
 
-.btn-route-map.naver:hover {
+.btn-leg-nav.naver:hover {
   background: #03C75A;
   color: #FFFFFF;
+  transform: translateY(-1px);
 }
 
-.btn-route-map.kakao {
+.btn-leg-nav.kakao {
   background: #FFFDE6;
   color: #3C1E1E;
-  border: 1px solid rgba(254, 229, 0, 0.8);
+  border: 1px solid rgba(254, 229, 0, 0.85);
 }
 
-.btn-route-map.kakao:hover {
+.btn-leg-nav.kakao:hover {
   background: #FEE500;
   color: #191919;
+  transform: translateY(-1px);
 }
 
 @media (max-width: 480px) {
-  .summary-route-actions {
-    grid-template-columns: 1fr;
+  .btn-leg-nav {
+    flex: 1;
+    font-size: 0.72rem;
+    padding: 6px 8px;
   }
 }
