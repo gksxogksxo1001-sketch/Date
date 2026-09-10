@@ -7,10 +7,13 @@ import { sendKakaoFeed } from './kakao-share.js';
 import { getSupabaseClient } from './supabase-client.js';
 import { ArchiveService } from './archive-service.js';
 import { AuthService } from './auth-service.js';
+import { EnvelopeOpening } from './envelope-opening.js';
+import { generateGoogleCalendarUrl, generateNaverCalendarUrl, downloadICalendarFile } from './external-calendar.js';
 
 export let courseData = [];
 export let currentStoryIndex = 0;
 export let recipientData = null;
+let ddayTimerInterval = null;
 
 // Lightbox / Image Zoom Viewer
 window.openImageZoom = function(src) {
@@ -121,9 +124,34 @@ export function loadCardByToken(token) {
   if (data) {
     data = hydrateCardPhotos(data);
     recipientData = data;
-    renderStoryViewer(data);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    fetchCloudPhotosIfMissing(data);
+
+    // 봉투 오프닝 표시 여부 체크 (세션당 1회 또는 새로고침 시 자연스럽게)
+    const sessionKey = `opened_envelope_${token}`;
+    const alreadyOpened = sessionStorage.getItem(sessionKey);
+
+    const onFinishOpen = () => {
+      renderStoryViewer(data);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      fetchCloudPhotosIfMissing(data);
+    };
+
+    if (!alreadyOpened && data.s && data.r) {
+      sessionStorage.setItem(sessionKey, 'true');
+      renderStoryViewer(data); // 백그라운드에 렌더링 준비
+      EnvelopeOpening.show({
+        sender: data.s,
+        receiver: data.r,
+        date: formatDateString(data.d),
+        theme: data.tm || 'cozy',
+        onOpened: () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          fetchCloudPhotosIfMissing(data);
+        }
+      });
+    } else {
+      onFinishOpen();
+    }
+
     return true;
   } else {
     showToast('초대장 데이터를 불러올 수 없습니다. 새 초대장을 작성해 주세요.', true);
@@ -222,6 +250,80 @@ export function checkAndLoadCardFromUrl() {
   }
 }
 
+/**
+ * 네이버 / 카카오 / T맵 길찾기 딥링크 및 검색 URL 생성
+ */
+export function getMapSearchLinks(placeName, area) {
+  const query = `${area ? area + ' ' : ''}${placeName || ''}`.trim();
+  const encodedQuery = encodeURIComponent(query);
+
+  return {
+    naver: `https://map.naver.com/p/search/${encodedQuery}`,
+    kakao: `https://map.kakao.com/link/search/${encodedQuery}`,
+    tmap: `https://map.naver.com/p/search/${encodedQuery}` // T맵 fallback 겸용
+  };
+}
+
+/**
+ * D-Day 실시간 카운트다운 타이머 구동
+ */
+export function startDdayCountdown(dateStr) {
+  if (ddayTimerInterval) {
+    clearInterval(ddayTimerInterval);
+    ddayTimerInterval = null;
+  }
+
+  const ddayBadge = document.getElementById('ddayBadge');
+  const ddayText = document.getElementById('ddayText');
+  if (!ddayBadge || !ddayText) return;
+
+  function update() {
+    if (!dateStr) {
+      ddayBadge.textContent = 'D-DAY';
+      ddayText.textContent = '설레는 데이트 약속 💖';
+      return;
+    }
+
+    const now = new Date();
+    let startTimeStr = '12:00';
+    if (courseData && courseData.length > 0 && courseData[0] && courseData[0].tm) {
+      startTimeStr = courseData[0].tm;
+    }
+
+    const [h, m] = startTimeStr.split(':').map(Number);
+    const targetExact = new Date(dateStr);
+    targetExact.setHours(h || 12, m || 0, 0, 0);
+
+    const exactDiffMs = targetExact.getTime() - now.getTime();
+
+    const targetDateOnly = new Date(dateStr);
+    targetDateOnly.setHours(0, 0, 0, 0);
+    const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dayDiff = Math.round((targetDateOnly.getTime() - todayOnly.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (exactDiffMs > 0) {
+      const days = Math.floor(exactDiffMs / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((exactDiffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((exactDiffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((exactDiffMs % (1000 * 60)) / 1000);
+
+      ddayBadge.textContent = days === 0 ? 'D-DAY' : `D-${days}`;
+      const dayPrefix = days > 0 ? `${days}일 ` : '';
+      ddayText.textContent = `${dayPrefix}${hours}시간 ${mins}분 ${secs}초 남음 💖`;
+    } else if (dayDiff === 0) {
+      ddayBadge.textContent = 'D-DAY';
+      ddayText.textContent = '오늘이 바로 설레는 만남의 날! 🎉';
+    } else {
+      const pastDays = Math.abs(dayDiff);
+      ddayBadge.textContent = `D+${pastDays}`;
+      ddayText.textContent = `함께한 지 ${pastDays}일째 🌿`;
+    }
+  }
+
+  update();
+  ddayTimerInterval = setInterval(update, 1000);
+}
+
 export function renderStoryViewer(data) {
   const landingMode = document.getElementById('landingMode');
   const appHeader = document.getElementById('appHeader');
@@ -241,6 +343,11 @@ export function renderStoryViewer(data) {
 
   courseData = data.c || [];
   currentStoryIndex = 0;
+
+  // D-Day 실시간 타이머 시작
+  if (data.d) {
+    startDdayCountdown(data.d);
+  }
 
   const totalPages = courseData.length + 1;
   if (storyProgress) {
@@ -341,10 +448,31 @@ export function updateStoryPage() {
     const linkBox = item.u ? `
       <div class="story-link-box">
         <a href="${item.u}" target="_blank" rel="noopener noreferrer" class="btn-story-link">
-          <i class="fa-solid fa-map-location-dot"></i> 가게/지도 정보 보러가기 (새창)
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> 추천 소개 링크 보러가기
         </a>
       </div>
     ` : '';
+
+    // 3대 지도(네이버/카카오/T맵) 길찾기 딥링크 칩
+    const mapLinks = getMapSearchLinks(item.n, recipientData.a);
+    const mapLinksHtml = `
+      <div class="story-map-links">
+        <div class="map-links-header">
+          <i class="fa-solid fa-location-dot"></i> <span>빠른 길찾기 & 지도 위치 확인</span>
+        </div>
+        <div class="map-chips-grid">
+          <a href="${mapLinks.naver}" target="_blank" rel="noopener noreferrer" class="btn-map-chip map-naver" title="네이버 지도로 장소 확인 및 길찾기">
+            <i class="fa-solid fa-location-arrow"></i> <span>네이버 지도</span>
+          </a>
+          <a href="${mapLinks.kakao}" target="_blank" rel="noopener noreferrer" class="btn-map-chip map-kakao" title="카카오맵으로 장소 확인 및 길찾기">
+            <i class="fa-solid fa-map-pin"></i> <span>카카오맵</span>
+          </a>
+          <a href="${mapLinks.naver}" onclick="window.location.href='tmap://search?name=' + encodeURIComponent('${item.n || ''}');" target="_blank" rel="noopener noreferrer" class="btn-map-chip map-tmap" title="T맵 앱으로 바로 길안내">
+            <i class="fa-solid fa-car"></i> <span>T맵 길찾기</span>
+          </a>
+        </div>
+      </div>
+    `;
 
     slide.innerHTML = `
       <span class="story-header-tag">${currentStoryIndex + 1}차 코스 · ${item.t}</span>
@@ -356,6 +484,7 @@ export function updateStoryPage() {
       ${galleryHtml}
       ${tipBox}
       ${linkBox}
+      ${mapLinksHtml}
     `;
   } else {
     // Final Summary Slide
@@ -431,10 +560,13 @@ export function updateViewerActionUI(data) {
 
   if (actionDropdownWrapper) actionDropdownWrapper.classList.remove('hidden');
 
+  const acceptChoiceContainer = document.getElementById('acceptChoiceContainer');
+
   if (isCreator) {
     if (creatorNoticeBanner) creatorNoticeBanner.classList.remove('hidden');
     if (creatorShareAgainBtn) creatorShareAgainBtn.classList.remove('hidden');
     if (acceptBtn) acceptBtn.classList.add('hidden');
+    if (acceptChoiceContainer) acceptChoiceContainer.classList.add('hidden');
     if (feedbackBtn) feedbackBtn.classList.add('hidden');
     if (downloadCardBtn) downloadCardBtn.classList.remove('hidden');
     if (saveStoryCardBtn) saveStoryCardBtn.classList.remove('hidden');
@@ -462,12 +594,14 @@ export function updateViewerActionUI(data) {
       acceptedStatusBanner.innerHTML = '<i class="fa-solid fa-heart-circle-check"></i> <span>데이트 약속을 수락하셨습니다! (확정됨 💖)</span>';
     }
     if (acceptBtn) acceptBtn.classList.add('hidden');
+    if (acceptChoiceContainer) acceptChoiceContainer.classList.add('hidden');
     if (feedbackBtn) feedbackBtn.classList.add('hidden');
     if (downloadCardBtn) downloadCardBtn.classList.remove('hidden');
     if (saveStoryCardBtn) saveStoryCardBtn.classList.remove('hidden');
   } else {
     if (acceptedStatusBanner) acceptedStatusBanner.classList.add('hidden');
-    if (acceptBtn) acceptBtn.classList.remove('hidden');
+    if (acceptBtn) acceptBtn.classList.add('hidden'); // use choice container instead
+    if (acceptChoiceContainer) acceptChoiceContainer.classList.remove('hidden');
     if (feedbackBtn) feedbackBtn.classList.remove('hidden');
     if (downloadCardBtn) downloadCardBtn.classList.remove('hidden');
     if (saveStoryCardBtn) saveStoryCardBtn.classList.remove('hidden');
@@ -496,19 +630,20 @@ export function updateViewerActionUI(data) {
   }
 }
 
-export function sendAcceptKakaoMessage(isAuto = false) {
+export function sendAcceptKakaoMessage(isAuto = false, choiceTitle = '') {
   const sender = recipientData ? recipientData.s : '신청자';
   const recipient = recipientData ? recipientData.r : '그대';
   const targetDate = recipientData ? formatDateString(recipientData.d) : '특별한 날';
   const currentUrl = window.location.href;
+  const reactionText = choiceTitle || '갈게! 너무 마음에 들어 🌿';
 
   sendKakaoFeed({
     title: `💖 [데이트 수락] ${recipient}님이 데이트 코스를 수락했어요!`,
-    description: `${sender}아! 네가 정성껏 보내준 데이트 코스 너무 마음에 들어 🌿\n📅 데이트 약속: ${targetDate}\n설레는 마음으로 그날 만나요 ✨`,
+    description: `${sender}아! "${reactionText}"\n📅 데이트 약속: ${targetDate}\n설레는 마음으로 그날 만나요 ✨`,
     imageUrl: CONFIG.DEFAULT_OG_IMAGE,
     webUrl: currentUrl,
     buttonTitle: '확정된 데이트 코스 보기 💖',
-    fallbackText: `[DatePlanner 데이트 수락 💖]\n${sender}아! 정성껏 보내준 데이트 코스 너무 완벽해! 기쁜 마음으로 수락할게 🌿\n\n📅 데이트 날짜: ${targetDate}\n✨ 확정 코스 보기: ${currentUrl}`,
+    fallbackText: `[DatePlanner 데이트 수락 💖]\n${sender}아! "${reactionText}"\n\n📅 데이트 날짜: ${targetDate}\n✨ 확정 코스 보기: ${currentUrl}`,
     toastMsg: '카카오톡으로 수락 답장 창이 열렸습니다! 💖',
     isAuto: isAuto
   });
@@ -669,42 +804,102 @@ export function bindStoryViewerEvents() {
     });
   }
 
-  // Accept Button
+  // Dual Accept Choices Handling
+  const acceptBtnChoice1 = document.getElementById('acceptBtnChoice1');
+  const acceptBtnChoice2 = document.getElementById('acceptBtnChoice2');
+  const acceptChoiceContainer = document.getElementById('acceptChoiceContainer');
+
+  const processAccept = async (choiceTitle, isEnthusiastic = false) => {
+    const sender = recipientData ? recipientData.s : '신청자';
+    const cardId = recipientData ? (recipientData.id || recipientData.cardId) : null;
+
+    if (cardId) {
+      try {
+        const acceptedList = JSON.parse(localStorage.getItem(CONFIG.STORAGE_ACCEPTED || 'dateplanner_accepted_cards') || '[]');
+        if (!acceptedList.includes(cardId)) {
+          acceptedList.push(cardId);
+          localStorage.setItem(CONFIG.STORAGE_ACCEPTED || 'dateplanner_accepted_cards', JSON.stringify(acceptedList));
+        }
+      } catch (e) {}
+      ArchiveService.markCardAccepted(cardId);
+    }
+
+    if (acceptBtn) acceptBtn.classList.add('hidden');
+    if (acceptChoiceContainer) acceptChoiceContainer.classList.add('hidden');
+    if (feedbackBtn) feedbackBtn.classList.add('hidden');
+
+    const acceptedStatusBanner = document.getElementById('acceptedStatusBanner');
+    if (acceptedStatusBanner) {
+      acceptedStatusBanner.classList.remove('hidden');
+      acceptedStatusBanner.innerHTML = `<i class="fa-solid fa-heart-circle-check"></i> <span>"${choiceTitle}" 데이트 약속이 확정되었습니다! 💖</span>`;
+    }
+    if (downloadCardBtn) downloadCardBtn.classList.remove('hidden');
+
+    triggerRomanticConfetti();
+    if (isEnthusiastic) {
+      setTimeout(() => triggerRomanticConfetti(), 400);
+    }
+
+    if (acceptModalTitle) acceptModalTitle.textContent = `🎉 "${choiceTitle}" 수락 완료!`;
+    if (acceptModalDesc) {
+      acceptModalDesc.textContent = `${sender}님과의 설레는 데이트 약속이 확정되었습니다! 아래 버튼을 눌러 ${sender}님께 카카오톡으로 수락 답장을 전송해 보세요 💖`;
+    }
+    if (acceptOverlay) acceptOverlay.classList.remove('hidden');
+
+    sendAcceptKakaoMessage(true, choiceTitle);
+  };
+
+  if (acceptBtnChoice1) {
+    acceptBtnChoice1.addEventListener('click', () => processAccept('갈게! 💖', false));
+  }
+  if (acceptBtnChoice2) {
+    acceptBtnChoice2.addEventListener('click', () => processAccept('당연히 가야지! 무조건! 🥰', true));
+  }
   if (acceptBtn) {
-    acceptBtn.addEventListener('click', async () => {
-      const sender = recipientData ? recipientData.s : '신청자';
-      const cardId = recipientData ? (recipientData.id || recipientData.cardId) : null;
+    acceptBtn.addEventListener('click', () => processAccept('데이트 코스 완벽해! 수락하기 💖', false));
+  }
 
-      if (cardId) {
-        try {
-          const acceptedList = JSON.parse(localStorage.getItem(CONFIG.STORAGE_ACCEPTED || 'dateplanner_accepted_cards') || '[]');
-          if (!acceptedList.includes(cardId)) {
-            acceptedList.push(cardId);
-            localStorage.setItem(CONFIG.STORAGE_ACCEPTED || 'dateplanner_accepted_cards', JSON.stringify(acceptedList));
-          }
-        } catch (e) {}
-        ArchiveService.markCardAccepted(cardId);
-      }
+  // External Calendar Modal Handling
+  const externalCalendarModal = document.getElementById('externalCalendarModal');
+  const ddayCalendarBtn = document.getElementById('ddayCalendarBtn');
+  const openExternalCalFromMenuBtn = document.getElementById('openExternalCalFromMenuBtn');
+  const closeExternalCalBtn = document.getElementById('closeExternalCalBtn');
+  const closeExternalCalBottomBtn = document.getElementById('closeExternalCalBottomBtn');
+  const btnGoogleCalendar = document.getElementById('btnGoogleCalendar');
+  const btnNaverCalendar = document.getElementById('btnNaverCalendar');
+  const btnAppleCalendar = document.getElementById('btnAppleCalendar');
 
-      if (acceptBtn) acceptBtn.classList.add('hidden');
-      if (feedbackBtn) feedbackBtn.classList.add('hidden');
-      const acceptedStatusBanner = document.getElementById('acceptedStatusBanner');
-      if (acceptedStatusBanner) {
-        acceptedStatusBanner.classList.remove('hidden');
-        acceptedStatusBanner.innerHTML = '<i class="fa-solid fa-heart-circle-check"></i> <span>데이트 약속을 수락하셨습니다! (확정됨 💖)</span>';
-      }
-      if (downloadCardBtn) downloadCardBtn.classList.remove('hidden');
+  const openExternalCalendarModal = () => {
+    if (!recipientData || !externalCalendarModal) return;
 
-      triggerRomanticConfetti();
+    if (btnGoogleCalendar) {
+      btnGoogleCalendar.href = generateGoogleCalendarUrl(recipientData);
+    }
+    if (btnNaverCalendar) {
+      btnNaverCalendar.href = generateNaverCalendarUrl(recipientData);
+    }
+    if (btnAppleCalendar) {
+      btnAppleCalendar.onclick = (e) => {
+        e.preventDefault();
+        downloadICalendarFile(recipientData);
+        showToast('애플/스마트폰 캘린더 파일(.ics)이 다운로드되었습니다! 📅');
+      };
+    }
 
-      if (acceptModalTitle) acceptModalTitle.textContent = '🎉 데이트 약속을 수락하셨습니다!';
-      if (acceptModalDesc) {
-        acceptModalDesc.textContent = `${sender}님과의 설레는 데이트 약속이 확정되었습니다! 아래 버튼을 눌러 ${sender}님께 카카오톡으로 수락 답장을 전송해 보세요 💖`;
-      }
-      if (acceptOverlay) acceptOverlay.classList.remove('hidden');
+    externalCalendarModal.classList.remove('hidden');
+  };
 
-      sendAcceptKakaoMessage(true);
-    });
+  if (ddayCalendarBtn) {
+    ddayCalendarBtn.addEventListener('click', openExternalCalendarModal);
+  }
+  if (openExternalCalFromMenuBtn) {
+    openExternalCalFromMenuBtn.addEventListener('click', openExternalCalendarModal);
+  }
+  if (closeExternalCalBtn && externalCalendarModal) {
+    closeExternalCalBtn.addEventListener('click', () => externalCalendarModal.classList.add('hidden'));
+  }
+  if (closeExternalCalBottomBtn && externalCalendarModal) {
+    closeExternalCalBottomBtn.addEventListener('click', () => externalCalendarModal.classList.add('hidden'));
   }
 
   if (sendAcceptKakaoBtn) {

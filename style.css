@@ -3906,4 +3906,721 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
   }
 }
 
+/* ====================================================
+   INTERACTIVE ENVELOPE OPENING & WAX SEAL
+   ==================================================== */
+.envelope-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background: radial-gradient(circle at center, rgba(30, 26, 24, 0.88), rgba(15, 12, 10, 0.96));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+.envelope-overlay.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.envelope-top-bar {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 4px;
+}
+
+.envelope-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #F4EBE2;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.5px;
+}
+
+.envelope-brand i {
+  color: #E07A5F;
+}
+
+.btn-envelope-skip {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #F4EBE2;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+}
+
+.btn-envelope-skip:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateX(2px);
+  color: #FFFFFF;
+}
+
+.envelope-stage {
+  perspective: 1200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  width: 100%;
+  max-width: 420px;
+  margin: auto 0;
+}
+
+/* 3D Envelope Wrapper */
+.envelope-wrapper {
+  position: relative;
+  width: 330px;
+  height: 220px;
+  background: #FDF9F5;
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(224, 122, 95, 0.2);
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: envelopeFloat 3.6s ease-in-out infinite alternate;
+}
+
+@keyframes envelopeFloat {
+  0% { transform: translateY(0px) rotate(0deg); }
+  100% { transform: translateY(-8px) rotate(0.4deg); }
+}
+
+/* Theme variations for envelope */
+.envelope-wrapper.theme-rose {
+  background: #FFF5F7;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(235, 110, 137, 0.25);
+}
+.envelope-wrapper.theme-midnight {
+  background: #232938;
+  color: #E2E8F0;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(212, 175, 55, 0.3);
+}
+
+/* Envelope Back Side */
+.envelope-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #F4EBE1;
+  border-radius: 12px;
+  z-index: 1;
+}
+.theme-rose .envelope-back { background: #FFE8ED; }
+.theme-midnight .envelope-back { background: #1B212D; }
+
+/* Inside Letter */
+.envelope-letter {
+  position: absolute;
+  top: 8px;
+  left: 14px;
+  right: 14px;
+  bottom: 8px;
+  background: #FFFFFF;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  z-index: 2;
+  transform: translateY(0);
+  transition: transform 0.65s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.65s ease;
+}
+
+.theme-midnight .envelope-letter {
+  background: #2C3446;
+  color: #F8FAFC;
+}
+
+.letter-heart {
+  font-size: 1.6rem;
+  color: #E07A5F;
+  margin-bottom: 6px;
+  animation: heartPulse 1.6s ease-in-out infinite;
+}
+
+.letter-greeting {
+  font-size: 0.78rem;
+  color: #8C7B75;
+  margin-bottom: 2px;
+  font-weight: 500;
+}
+
+.letter-title {
+  font-family: 'Playfair Display', 'Pretendard', serif;
+  font-size: 1.15rem;
+  color: #2D2725;
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+.theme-midnight .letter-title { color: #FFFFFF; }
+
+.letter-preview-text {
+  font-size: 0.75rem;
+  color: #A0938E;
+  margin: 0;
+}
+
+/* Letter slides out when opened */
+.envelope-wrapper.letter-rise .envelope-letter {
+  transform: translateY(-90px) scale(1.04);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+  z-index: 7;
+}
+
+/* Envelope Front Side (Fold effect with clip-path) */
+.envelope-front {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(to top, #EFE4D8 0%, #FDF9F5 100%);
+  clip-path: polygon(0% 0%, 50% 50%, 100% 0%, 100% 100%, 0% 100%);
+}
+
+.theme-rose .envelope-front {
+  background: linear-gradient(to top, #FBDCE4 0%, #FFF5F7 100%);
+}
+.theme-midnight .envelope-front {
+  background: linear-gradient(to top, #191E2A 0%, #232938 100%);
+}
+
+/* Envelope Top Flap (3D Flip) */
+.envelope-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 52%;
+  background: linear-gradient(to bottom, #EAD7C6 0%, #F5EAE0 100%);
+  clip-path: polygon(0 0, 50% 100%, 100% 0);
+  transform-origin: top center;
+  transform: rotateX(0deg);
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 5;
+}
+
+.theme-rose .envelope-flap {
+  background: linear-gradient(to bottom, #F8CCD8 0%, #FFEBF0 100%);
+}
+.theme-midnight .envelope-flap {
+  background: linear-gradient(to bottom, #151A24 0%, #262D3E 100%);
+}
+
+/* When envelope opened */
+.envelope-wrapper.is-open .envelope-flap {
+  transform: rotateX(180deg);
+  z-index: 1;
+}
+
+/* Sealing Wax Stamp Button */
+.envelope-wax-seal {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #E65A68, #9E1F2C);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 6px 18px rgba(158, 31, 44, 0.5), inset 0 2px 5px rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+  outline: none;
+}
+
+.envelope-wax-seal:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+  box-shadow: 0 8px 24px rgba(158, 31, 44, 0.65), inset 0 2px 6px rgba(255, 255, 255, 0.6);
+}
+
+.wax-seal-inner {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(255, 230, 230, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seal-icon {
+  font-size: 1.25rem;
+  color: #FFE6E6;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+
+.wax-seal-pulse {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid #E07A5F;
+  animation: sealPulse 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes sealPulse {
+  0% { transform: scale(1); opacity: 0.9; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.envelope-wrapper.is-open .envelope-wax-seal {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.6);
+}
+
+/* Address Card on Envelope Front */
+.envelope-address-card {
+  position: absolute;
+  bottom: 14px;
+  left: 18px;
+  right: 18px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-family: 'Playfair Display', 'Pretendard', sans-serif;
+  color: #3E322E;
+  pointer-events: none;
+}
+
+.theme-midnight .envelope-address-card {
+  color: #D1D5DB;
+}
+
+.address-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.addr-label {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #A08C84;
+}
+
+.addr-name {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.address-row.to-row .addr-name {
+  color: #E07A5F;
+  font-size: 1.08rem;
+}
+.theme-rose .address-row.to-row .addr-name { color: #FF6B8B; }
+.theme-midnight .address-row.to-row .addr-name { color: #E5C07B; }
+
+.address-date {
+  font-size: 0.72rem;
+  color: #8E7C75;
+  margin-top: 2px;
+}
+
+.envelope-guide-hint {
+  margin-top: 26px;
+  color: #F4EBE2;
+  font-size: 0.92rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: hintBlink 1.8s ease-in-out infinite;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.envelope-guide-hint i {
+  color: #E07A5F;
+  font-size: 1rem;
+}
+
+@keyframes hintBlink {
+  0%, 100% { opacity: 0.75; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-3px); }
+}
+
+
+/* ====================================================
+   D-DAY REALTIME COUNTDOWN BANNER
+   ==================================================== */
+.story-dday-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(224, 122, 95, 0.12), rgba(244, 241, 238, 0.85));
+  border: 1px solid rgba(224, 122, 95, 0.25);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.theme-rose .story-dday-banner {
+  background: linear-gradient(135deg, rgba(255, 107, 139, 0.12), rgba(255, 245, 247, 0.9));
+  border-color: rgba(255, 107, 139, 0.3);
+}
+
+.theme-midnight .story-dday-banner {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(35, 41, 56, 0.9));
+  border-color: rgba(212, 175, 55, 0.3);
+  color: #F1F5F9;
+}
+
+.dday-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.dday-badge {
+  background: linear-gradient(135deg, #E07A5F, #C94C4C);
+  color: #FFFFFF;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(224, 122, 95, 0.35);
+}
+
+.theme-rose .dday-badge {
+  background: linear-gradient(135deg, #FF6B8B, #E83E8C);
+}
+
+.theme-midnight .dday-badge {
+  background: linear-gradient(135deg, #D4AF37, #AA820A);
+  color: #121824;
+}
+
+.dday-text {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #2D2725;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.theme-midnight .dday-text { color: #FFFFFF; }
+
+.btn-dday-calendar {
+  background: #FFFFFF;
+  border: 1px solid rgba(224, 122, 95, 0.3);
+  color: #E07A5F;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+}
+
+.btn-dday-calendar:hover {
+  background: #E07A5F;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(224, 122, 95, 0.3);
+}
+
+
+/* ====================================================
+   MAP DEEPLINKS (네이버 / 카카오 / T맵)
+   ==================================================== */
+.story-map-links {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  border: 1px dashed rgba(224, 122, 95, 0.3);
+}
+
+.theme-midnight .story-map-links {
+  background: rgba(35, 41, 56, 0.7);
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.map-links-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #5C4D47;
+  margin-bottom: 8px;
+}
+.theme-midnight .map-links-header { color: #CBD5E1; }
+
+.map-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.btn-map-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 6px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-map-chip.map-naver {
+  background: #03C75A;
+  color: #FFFFFF;
+}
+.btn-map-chip.map-naver:hover {
+  background: #02B150;
+  transform: translateY(-1px);
+}
+
+.btn-map-chip.map-kakao {
+  background: #FEE500;
+  color: #191919;
+}
+.btn-map-chip.map-kakao:hover {
+  background: #FADA0A;
+  transform: translateY(-1px);
+}
+
+.btn-map-chip.map-tmap {
+  background: #0064FF;
+  color: #FFFFFF;
+}
+.btn-map-chip.map-tmap:hover {
+  background: #0052D4;
+  transform: translateY(-1px);
+}
+
+
+/* ====================================================
+   DUAL ACCEPT CHOICE BUTTONS
+   ==================================================== */
+.accept-choice-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.btn-accept-choice {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 14px;
+  font-size: 1.02rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  outline: none;
+  border: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.btn-accept-choice:active {
+  transform: scale(0.97);
+}
+
+/* Choice 1: Standard Romantic */
+.btn-accept-choice.choice-standard {
+  background: #FFFFFF;
+  color: #E07A5F;
+  border: 1.5px solid #E07A5F;
+}
+
+.btn-accept-choice.choice-standard:hover {
+  background: #FFF5F2;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(224, 122, 95, 0.25);
+}
+
+/* Choice 2: Enthusiastic Hero */
+.btn-accept-choice.choice-enthusiastic {
+  background: linear-gradient(135deg, #FF6B8B 0%, #E07A5F 100%);
+  color: #FFFFFF;
+  box-shadow: 0 6px 20px rgba(224, 122, 95, 0.4);
+}
+
+.btn-accept-choice.choice-enthusiastic:hover {
+  background: linear-gradient(135deg, #FF5277 0%, #D8684C 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(224, 122, 95, 0.5);
+}
+
+
+/* ====================================================
+   EXTERNAL CALENDAR MODAL
+   ==================================================== */
+.external-cal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.external-cal-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.external-cal-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  border-color: #E07A5F;
+}
+
+.cal-item-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.cal-google .cal-item-icon {
+  background: #E8F0FE;
+  color: #4285F4;
+}
+
+.cal-naver .cal-item-icon {
+  background: #E5F9ED;
+  color: #03C75A;
+}
+
+.cal-apple .cal-item-icon {
+  background: #F5F5F7;
+  color: #1D1D1F;
+}
+
+.cal-item-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cal-item-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #2D2725;
+}
+
+.cal-item-sub {
+  font-size: 0.78rem;
+  color: #8C7B75;
+}
+
+.cal-arrow {
+  color: #B5A8A3;
+  font-size: 0.9rem;
+  transition: transform 0.2s ease;
+}
+
+.external-cal-item:hover .cal-arrow {
+  transform: translateX(3px);
+  color: #E07A5F;
+}
+
+/* Mobile Responsiveness for Envelope & Features */
+@media (max-width: 480px) {
+  .envelope-wrapper {
+    width: 290px;
+    height: 195px;
+  }
+  .envelope-wax-seal {
+    width: 52px;
+    height: 52px;
+  }
+  .wax-seal-inner {
+    width: 36px;
+    height: 36px;
+  }
+  .letter-title {
+    font-size: 1.05rem;
+  }
+  .btn-accept-choice {
+    font-size: 0.94rem;
+    padding: 12px 14px;
+  }
+  .map-chips-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
+
 

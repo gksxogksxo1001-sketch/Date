@@ -21,6 +21,7 @@ import {
   formatDateString,
   getHashParam
 } from './utils.js';
+import { EnvelopeOpening } from './envelope-opening.js';
 
 let generatedShareUrl = '';
 let isCreatingCard = false;
@@ -50,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ArchiveService.updateCountBadge();
   initCourseForm();
   bindStoryViewerEvents();
+  EnvelopeOpening.init();
 
   // 4. Global Nav & Auth Event Handlers
   const navBrandBtn = document.getElementById('navBrandBtn');
