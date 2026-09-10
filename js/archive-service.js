@@ -457,13 +457,24 @@ window.shareArchiveKakao = function(cardId) {
   const item = ArchiveService.getAll().find(c => c.id === cardId);
   if (!item) return;
 
+  const sender = (item.senderName || '누군가').trim();
+  const receiver = (item.receiverName || '너').trim();
+  const areaStr = (item.area || '우리만의 특별한 장소').trim();
+  const dateStr = item.date ? formatDateString(item.date) : '설레는 날';
+
+  // URL 길이가 너무 길거나(Base64 이미지 포함 등) 유효하지 않은 경우 안전한 ID 기반 URL 사용
+  let targetUrl = item.shareUrl;
+  if (!targetUrl || targetUrl.length > 1500) {
+    targetUrl = `${CONFIG.BASE_URL}#card=${item.id}`;
+  }
+
   sendKakaoFeed({
-    title: `💌 ${item.senderName}님이 보낸 감성 데이트 초대장 💖`,
-    description: `${item.receiverName}야! ${formatDateString(item.date)}에 ${item.area}에서 만나자! 🌿`,
+    title: `💌 ${sender}님이 보낸 감성 데이트 초대장 💖`,
+    description: `${receiver}야! ${dateStr}에 ${areaStr}에서 만나자! 🌿`,
     imageUrl: CONFIG.DEFAULT_OG_IMAGE,
-    webUrl: item.shareUrl,
+    webUrl: targetUrl,
     buttonTitle: '스토리 초대장 확인하기 💖',
-    fallbackText: `[DateCard 초대장 💌]\n${item.senderName}님이 보낸 데이트 초대장:\n${item.shareUrl}`,
+    fallbackText: `[DateCard 초대장 💌]\n${sender}님이 보낸 데이트 초대장:\n${targetUrl}`,
     toastMsg: '카카오톡 공유창이 열렸습니다! 💬'
   });
 };

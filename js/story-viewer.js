@@ -120,6 +120,39 @@ export function loadCardByToken(token) {
     }
   }
 
+  // Supabase 클라우드에서 비동기 조회 (토큰이 card_ ID이고 로컬에 없는 경우)
+  if (!data && token.startsWith('card_')) {
+    const supabaseClient = getSupabaseClient();
+    if (supabaseClient) {
+      supabaseClient
+        .from('date_cards')
+        .select('*')
+        .eq('id', token)
+        .maybeSingle()
+        .then(({ data: cloudRow, error }) => {
+          if (!error && cloudRow) {
+            const cloudData = {
+              id: cloudRow.id,
+              creatorId: cloudRow.user_id,
+              s: cloudRow.sender_name,
+              r: cloudRow.receiver_name,
+              d: cloudRow.date_val,
+              a: cloudRow.area,
+              b: cloudRow.budget,
+              m: cloudRow.message,
+              tm: cloudRow.theme,
+              c: cloudRow.courses || [],
+              ts: new Date(cloudRow.created_at).getTime()
+            };
+            recipientData = cloudData;
+            renderStoryViewer(cloudData);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        })
+        .catch(e => console.warn('Supabase token fetch fallback:', e));
+    }
+  }
+
   const landingMode = document.getElementById('landingMode');
   if (data) {
     data = hydrateCardPhotos(data);
