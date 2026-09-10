@@ -48,6 +48,10 @@ export const EnvelopeOpening = {
       envelopeWrapper.classList.remove('is-open', 'letter-rise');
     }
 
+    if (this.waxSealBtn) {
+      this.waxSealBtn.classList.remove('is-cracking');
+    }
+
     this.overlayEl.classList.remove('hidden', 'fade-out');
   },
 
@@ -58,41 +62,66 @@ export const EnvelopeOpening = {
     if (this.isOpening) return;
     this.isOpening = true;
 
-    const envelopeWrapper = document.getElementById('envelopeWrapper');
+    // 1. 실링 왁스 깨짐 햅틱/애니메이션 트리거
+    if (this.waxSealBtn) {
+      this.waxSealBtn.classList.add('is-cracking');
+    }
 
-    // 1. 실링 왁스 파열 파티클 효과 (버건디 & 골드 왁스 조각 느낌)
+    // 진동 피드백 (모바일 지원 브라우저)
+    if (navigator.vibrate) {
+      navigator.vibrate([35, 60, 45]);
+    }
+
+    // 2. 2단계 입체 파티클 연출 (1단계: 미세 왁스 파편 폭발, 2단계: 골드/하트 글리터)
     if (window.confetti && this.waxSealBtn) {
       const rect = this.waxSealBtn.getBoundingClientRect();
       const originX = (rect.left + rect.width / 2) / window.innerWidth;
       const originY = (rect.top + rect.height / 2) / window.innerHeight;
 
-      // 미세 왁스 조각 확산
+      // 1단계: 왁스 파열 파편 (버건디 & 앤틱 골드)
       window.confetti({
-        particleCount: 35,
-        spread: 60,
-        startVelocity: 25,
+        particleCount: 45,
+        spread: 70,
+        startVelocity: 30,
         origin: { x: originX, y: originY },
-        colors: ['#A32835', '#C84B58', '#E6A868', '#F5D0A9', '#7C1A22'],
-        ticks: 120,
-        gravity: 1.2,
-        scalar: 0.8,
+        colors: ['#8B3A36', '#A85A56', '#5C1D1B', '#D4AF37', '#F5D0A9', '#FFE5E0'],
+        ticks: 140,
+        gravity: 1.1,
+        scalar: 0.85,
         shapes: ['circle']
       });
+
+      // 2단계: 0.15초 뒤 설레는 골드 & 로맨틱 스파클링 버스트
+      setTimeout(() => {
+        window.confetti({
+          particleCount: 30,
+          spread: 90,
+          startVelocity: 35,
+          origin: { x: originX, y: originY },
+          colors: ['#FF6B8B', '#E07A5F', '#FFD166', '#FFFFFF'],
+          ticks: 160,
+          gravity: 0.9,
+          scalar: 0.95
+        });
+      }, 150);
     }
 
-    // 2. 봉투 플랩 열림 및 편지지 상승 애니메이션
+    // 3. 플랩 3D 회전 및 편지지 자연스러운 슬라이드업
     if (envelopeWrapper) {
-      envelopeWrapper.classList.add('is-open');
+      // 살짝 봉투가 열리면서 펼쳐지는 타이밍
+      setTimeout(() => {
+        envelopeWrapper.classList.add('is-open');
+      }, 180);
 
       setTimeout(() => {
         envelopeWrapper.classList.add('letter-rise');
-      }, 350);
+      }, 480);
     }
 
-    // 3. 완료 후 부드러운 페이드아웃 및 뷰어로 전환
+    // 4. 완료 후 뷰어로 부드럽게 크로스페이드
     setTimeout(() => {
       this.finishAndClose();
-    }, 1100);
+    }, 1300);
   },
 
   /**
