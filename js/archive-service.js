@@ -27,6 +27,68 @@ export const ArchiveService = {
     }
   },
 
+  // 로그인된 현재 사용자의 카드만 반환 (미로그인 시 빈 배열 반환하여 타인 데이터 및 캐시 누출 방지)
+  getUserCards() {
+    if (!AuthService.currentUser || !AuthService.currentUser.id) {
+      return [];
+    }
+    const currentUid = AuthService.currentUser.id;
+    const all = this.getAll();
+    return all.filter(item => item.userId === currentUid);
+  },
+
+  // 미로그인 상태에서 작성된 게스트 카드를 현재 로그인한 계정으로 소유권 이전 및 Supabase 동기화
+  async claimGuestCards(userId) {
+    if (!userId) return;
+    const list = this.getAll();
+    let updated = false;
+    const claimedItems = [];
+
+    list.forEach(item => {
+      if (!item.userId || item.userId === 'guest') {
+        item.userId = userId;
+        updated = true;
+        claimedItems.push(item);
+      }
+    });
+
+    if (updated) {
+      try {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(list));
+      } catch (e) {
+        console.warn('LocalStorage save error:', e);
+      }
+
+      // Supabase 클라우드에 소유권 이전된 카드 동기화
+      const supabaseClient = getSupabaseClient();
+      if (supabaseClient && claimedItems.length > 0) {
+        for (const item of claimedItems) {
+          try {
+            const dbRow = {
+              id: item.id,
+              user_id: userId,
+              sender_name: item.senderName,
+              receiver_name: item.receiverName,
+              date_val: item.date,
+              area: item.area,
+              budget: item.budget,
+              message: item.message,
+              theme: item.theme,
+              courses: item.courses,
+              share_url: item.shareUrl,
+              created_at: new Date(item.createdAt || Date.now()).toISOString(),
+              is_accepted: !!item.isAccepted,
+              accepted_at: item.acceptedAt ? new Date(item.acceptedAt).toISOString() : null
+            };
+            await supabaseClient.from('date_cards').upsert(dbRow);
+          } catch (err) {
+            console.warn('Failed to upsert claimed card to Supabase:', err);
+          }
+        }
+      }
+    }
+  },
+
   findDuplicate({ senderName, receiverName, date, area, courses }) {
     const list = this.getAll();
     const normalize = (str) => (str || '').trim().toLowerCase();
@@ -179,32 +241,36 @@ export const ArchiveService = {
         .eq('user_id', AuthService.currentUser.id)
         .order('created_at', { ascending: false });
 
-      if (!error && Array.isArray(data) && data.length > 0) {
-        const cloudCards = data.map(row => ({
-          id: row.id,
-          senderName: row.sender_name,
-          receiverName: row.receiver_name,
-          date: row.date_val,
-          area: row.area,
-          budget: row.budget,
-          message: row.message,
-          theme: row.theme,
-          courses: row.courses || [],
-          shareUrl: row.share_url,
-          createdAt: new Date(row.created_at).getTime(),
-          userId: row.user_id
-        }));
+      if (!error && Array.isArray(data)) {
+        if (data.length > 0) {
+          const cloudCards = data.map(row => ({
+            id: row.id,
+            senderName: row.sender_name,
+            receiverName: row.receiver_name,
+            date: row.date_val,
+            area: row.area,
+            budget: row.budget,
+            message: row.message,
+            theme: row.theme,
+            courses: row.courses || [],
+            shareUrl: row.share_url,
+            createdAt: new Date(row.created_at).getTime(),
+            userId: row.user_id,
+            isAccepted: !!row.is_accepted,
+            acceptedAt: row.accepted_at ? new Date(row.accepted_at).getTime() : null
+          }));
 
-        const localList = this.getAll();
-        const mergedMap = new Map();
-        cloudCards.forEach(c => mergedMap.set(c.id, c));
-        localList.forEach(c => {
-          if (!mergedMap.has(c.id)) mergedMap.set(c.id, c);
-        });
+          const localList = this.getAll();
+          const mergedMap = new Map();
+          cloudCards.forEach(c => mergedMap.set(c.id, c));
+          localList.forEach(c => {
+            if (!mergedMap.has(c.id)) mergedMap.set(c.id, c);
+          });
 
-        const mergedList = Array.from(mergedMap.values());
-        mergedList.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(mergedList));
+          const mergedList = Array.from(mergedMap.values());
+          mergedList.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(mergedList));
+        }
         this.loadAndRender();
       }
     } catch (e) {
@@ -264,7 +330,14 @@ export const ArchiveService = {
   updateCountBadge() {
     const archiveCountBadge = document.getElementById('archiveCountBadge');
     if (!archiveCountBadge) return;
-    const list = this.getAll();
+
+    // 미로그인 시 타인의 캐시나 게스트 데이터가 뱃지에 노출되지 않도록 완전 숨김
+    if (!AuthService.currentUser) {
+      archiveCountBadge.classList.add('hidden');
+      return;
+    }
+
+    const list = this.getUserCards();
     if (list.length > 0) {
       archiveCountBadge.textContent = list.length;
       archiveCountBadge.classList.remove('hidden');
@@ -278,9 +351,35 @@ export const ArchiveService = {
     this.updateCountBadge();
     const archiveCardsGrid = document.getElementById('archiveCardsGrid');
     const archiveEmptyState = document.getElementById('archiveEmptyState');
+    const archiveLoginRequiredState = document.getElementById('archiveLoginRequiredState');
+    const archiveUserStatusText = document.getElementById('archiveUserStatusText');
     if (!archiveCardsGrid || !archiveEmptyState) return;
 
-    const list = this.getAll();
+    // 1. 미로그인 상태인 경우: 타인의 로컬 캐시 카드 절대 노출 방지 & 로그인 필요 화면 렌더링
+    if (!AuthService.currentUser) {
+      archiveCardsGrid.innerHTML = '';
+      archiveCardsGrid.classList.add('hidden');
+      archiveEmptyState.classList.add('hidden');
+      if (archiveLoginRequiredState) {
+        archiveLoginRequiredState.classList.remove('hidden');
+      }
+      if (archiveUserStatusText) {
+        archiveUserStatusText.textContent = '카카오 로그인 후 내 데이트 보관함을 이용하실 수 있습니다.';
+      }
+      return;
+    }
+
+    // 2. 로그인된 경우: 로그인 안내 숨김 & 내 유저 전용 카드 렌더링
+    if (archiveLoginRequiredState) {
+      archiveLoginRequiredState.classList.add('hidden');
+    }
+    archiveCardsGrid.classList.remove('hidden');
+
+    if (archiveUserStatusText) {
+      archiveUserStatusText.innerHTML = `<span class="badge-online">●</span> <strong>${AuthService.currentUser.nickname}</strong>님의 Supabase 클라우드에 안전하게 보관 중입니다.`;
+    }
+
+    const list = this.getUserCards();
     if (list.length === 0) {
       archiveCardsGrid.innerHTML = '';
       archiveEmptyState.classList.remove('hidden');

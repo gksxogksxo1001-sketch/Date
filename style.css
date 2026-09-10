@@ -150,6 +150,19 @@ body {
   gap: 8px;
 }
 
+.nav-tools-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  order: 1;
+}
+
+.nav-auth-container {
+  display: flex;
+  align-items: center;
+  order: 2;
+}
+
 /* Date Calendar Nav Button */
 .nav-btn-calendar {
   display: inline-flex;
@@ -2140,6 +2153,71 @@ input:focus, select:focus, textarea:focus {
   color: #B71C1C;
 }
 
+/* Archive Modal Login Required Prompt */
+.archive-login-state {
+  text-align: center;
+  padding: 42px 20px;
+  background: var(--att-ivory, #FCFAF7);
+  border: 1px dashed var(--att-line-dark, #D1C7BD);
+  border-radius: 4px;
+  margin: 8px 0 16px 0;
+}
+
+.archive-login-state .login-prompt-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: #FFE8EC;
+  color: #E07A5F;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.archive-login-state h4 {
+  font-family: 'Playfair Display', 'Pretendard', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--att-charcoal, #232426);
+  margin-bottom: 8px;
+}
+
+.archive-login-state p {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--att-muted, #7A7269);
+  margin-bottom: 22px;
+}
+
+.archive-kakao-login-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #FEE500;
+  color: #191919;
+  border: 1px solid #E5CE00;
+  padding: 12px 26px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(254, 229, 0, 0.35);
+  transition: all 0.2s ease;
+}
+
+.archive-kakao-login-btn:hover {
+  background: #FADA0A;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 16px rgba(254, 229, 0, 0.45);
+}
+
+.archive-kakao-login-btn i {
+  font-size: 1.1rem;
+}
+
 /* Empty State */
 .archive-empty-state {
   text-align: center;
@@ -2834,12 +2912,13 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
   }
 }
 
-/* --- SMALL MOBILE BREAKPOINT (<= 480px) --- */
-@media (max-width: 480px) {
-  /* NAVBAR */
+/* --- PHONE MOBILE BREAKPOINT (<= 560px) --- */
+@media (max-width: 560px) {
+  /* NAVBAR: Mobile Phone Stacked Layout */
   .global-navbar {
-    padding: 8px 10px;
+    padding: 8px 12px;
     margin-bottom: 12px;
+    align-items: center;
   }
   .nav-brand-text {
     font-size: 1.05rem;
@@ -2848,27 +2927,81 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
     font-size: 1.1rem;
   }
   .nav-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+  }
+  /* 상단: 내 프로필 */
+  .nav-auth-container {
+    order: 1;
+  }
+  /* 하단: 왼쪽 캘린더, 오른쪽 보관함 */
+  .nav-tools-group {
+    order: 2;
+    display: flex;
+    align-items: center;
     gap: 6px;
   }
-  .nav-btn-archive {
-    padding: 6px 8px;
-    font-size: 0.85rem;
-  }
+
+  /* 캘린더, 보관함 텍스트 이름 숨김 (아이콘 및 뱃지만 심플하게 노출) */
+  .nav-btn-calendar .nav-btn-text,
   .nav-btn-archive .nav-btn-text {
-    display: none;
+    display: none !important;
   }
+
+  /* 왼쪽: 캘린더 버튼 */
+  .nav-btn-calendar {
+    order: 1;
+    padding: 5px 8px;
+    font-size: 0.85rem;
+    height: 28px;
+    border-radius: 2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 오른쪽: 보관함 버튼 */
+  .nav-btn-archive {
+    order: 2;
+    padding: 5px 8px;
+    font-size: 0.85rem;
+    height: 28px;
+    border-radius: 2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .badge-count {
+    font-size: 0.68rem;
+    padding: 0 4px;
+    margin-left: 2px;
+  }
+
   .nav-kakao-login-btn {
-    padding: 6px 10px;
+    padding: 5px 10px;
     font-size: 0.78rem;
     gap: 4px;
+    height: 28px;
+  }
+  .nav-user-profile {
+    padding: 3px 8px 3px 5px;
+    height: 28px;
+    gap: 6px;
   }
   .nav-avatar {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
   }
   .nav-nickname {
-    max-width: 55px;
+    max-width: 65px;
+    font-size: 0.78rem;
+  }
+  .nav-logout-btn {
     font-size: 0.75rem;
+    padding: 2px 4px;
   }
 
   /* HERO */

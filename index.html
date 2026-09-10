@@ -109,18 +109,21 @@
       </div>
 
       <div class="nav-actions">
-        <!-- DATE CALENDAR BUTTON (로그인 시에만 노출되도록 hidden 기본 적용) -->
-        <button type="button" id="openCalendarNavBtn" class="nav-btn-calendar hidden" title="데이트 캘린더">
-          <i class="fa-regular fa-calendar-days"></i>
-          <span class="nav-btn-text">캘린더</span>
-        </button>
+        <!-- NAV TOOLS GROUP: CALENDAR (LEFT) & ARCHIVE (RIGHT) -->
+        <div class="nav-tools-group" id="navToolsGroup">
+          <!-- DATE CALENDAR BUTTON (로그인 시에만 노출되도록 hidden 기본 적용) -->
+          <button type="button" id="openCalendarNavBtn" class="nav-btn-calendar hidden" title="데이트 캘린더">
+            <i class="fa-regular fa-calendar-days"></i>
+            <span class="nav-btn-text">캘린더</span>
+          </button>
 
-        <!-- MY ARCHIVE BUTTON -->
-        <button type="button" id="openArchiveBtn" class="nav-btn-archive" title="내 데이트 보관함">
-          <i class="fa-solid fa-box-archive"></i>
-          <span class="nav-btn-text">내 보관함</span>
-          <span id="archiveCountBadge" class="badge-count hidden">0</span>
-        </button>
+          <!-- MY ARCHIVE BUTTON -->
+          <button type="button" id="openArchiveBtn" class="nav-btn-archive" title="내 데이트 보관함">
+            <i class="fa-solid fa-box-archive"></i>
+            <span class="nav-btn-text">내 보관함</span>
+            <span id="archiveCountBadge" class="badge-count hidden">0</span>
+          </button>
+        </div>
 
         <!-- KAKAO AUTH CONTAINER -->
         <div id="authContainer" class="nav-auth-container">
@@ -719,6 +722,19 @@
         </div>
 
         <div class="archive-modal-body">
+          <!-- LOGIN REQUIRED STATE (미로그인 상태일 때 노출) -->
+          <div id="archiveLoginRequiredState" class="archive-login-state hidden">
+            <div class="login-prompt-icon">
+              <i class="fa-solid fa-lock"></i>
+            </div>
+            <h4>카카오 로그인이 필요합니다</h4>
+            <p>로그인하시면 내가 만든 데이트 초대장과 소중한 추억을<br>Supabase 클라우드에서 안전하게 확인하고 관리할 수 있습니다.</p>
+            <button type="button" id="archiveModalKakaoLoginBtn" class="archive-kakao-login-btn">
+              <i class="fa-solid fa-comment"></i>
+              <span>카카오 1초 간편 로그인</span>
+            </button>
+          </div>
+
           <!-- DYNAMIC ARCHIVE CARDS GRID -->
           <div id="archiveCardsGrid" class="archive-cards-grid"></div>
 

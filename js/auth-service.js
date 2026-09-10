@@ -14,10 +14,14 @@ export const AuthService = {
     if (calendarService) this._calendarService = calendarService;
   },
 
-  init() {
+  async init() {
     this.loadSession();
     this.renderUI();
-    this.checkAuthCode();
+    await this.checkAuthCode();
+    if (this.currentUser && this._archiveService) {
+      await this._archiveService.claimGuestCards(this.currentUser.id);
+      await this._archiveService.syncCloud();
+    }
   },
 
   loadSession() {
@@ -31,7 +35,7 @@ export const AuthService = {
     }
   },
 
-  saveSession(user) {
+  async saveSession(user) {
     this.currentUser = user;
     try {
       if (user) {
@@ -45,10 +49,15 @@ export const AuthService = {
     this.renderUI();
 
     if (this._archiveService) {
-      this._archiveService.loadAndRender();
       if (user) {
-        this._archiveService.syncCloud();
+        await this._archiveService.claimGuestCards(user.id);
+        await this._archiveService.syncCloud();
       }
+      this._archiveService.loadAndRender();
+    }
+
+    if (this._calendarService) {
+      this._calendarService.render();
     }
   },
 
@@ -168,10 +177,14 @@ export const AuthService = {
       if (kakaoLoginBtn) kakaoLoginBtn.classList.remove('hidden');
       if (userProfileNav) userProfileNav.classList.add('hidden');
       if (archiveUserStatusText) {
-        archiveUserStatusText.textContent = '💡 카카오 로그인 시 Supabase 클라우드에 안전하게 영구 보관됩니다.';
+        archiveUserStatusText.textContent = '카카오 로그인 후 내 데이트 보관함을 이용하실 수 있습니다.';
       }
       if (openCalendarNavBtn) openCalendarNavBtn.classList.add('hidden');
       if (calendarModal) calendarModal.classList.add('hidden');
+    }
+
+    if (this._archiveService) {
+      this._archiveService.updateCountBadge();
     }
   }
 };

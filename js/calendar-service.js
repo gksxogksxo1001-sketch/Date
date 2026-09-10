@@ -193,7 +193,7 @@ export const CalendarService = {
   },
 
   getEventsMap() {
-    const allArchives = ArchiveService.getAll();
+    const allArchives = ArchiveService.getUserCards();
     const eventsMap = new Map();
 
     const currentUid = AuthService.currentUser ? AuthService.currentUser.id : '';
@@ -210,7 +210,7 @@ export const CalendarService = {
         isSentByMe = true;
       } else if (currentNickname && sName === currentNickname) {
         isSentByMe = true;
-      } else if (!item.userId || item.userId === 'guest') {
+      } else {
         isSentByMe = true;
       }
 

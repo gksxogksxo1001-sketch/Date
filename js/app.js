@@ -75,6 +75,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const archiveModalKakaoLoginBtn = document.getElementById('archiveModalKakaoLoginBtn');
+  if (archiveModalKakaoLoginBtn) {
+    archiveModalKakaoLoginBtn.addEventListener('click', () => {
+      AuthService.login();
+    });
+  }
+
   if (kakaoLogoutBtn) {
     kakaoLogoutBtn.addEventListener('click', () => {
       AuthService.logout();
