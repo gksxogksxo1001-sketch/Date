@@ -192,6 +192,8 @@ body {
   cursor: pointer;
   transition: var(--transition-fast);
   box-shadow: none;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .nav-btn-calendar:hover {
@@ -217,6 +219,8 @@ body {
   transition: var(--transition-fast);
   box-shadow: none;
   position: relative;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .nav-btn-archive:hover {
@@ -3332,8 +3336,70 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
   }
 }
 
-/* --- PHONE MOBILE BREAKPOINT (<= 560px) --- */
-@media (max-width: 560px) {
+/* --- MEDIUM / SPLIT-VIEW / DEVTOOLS BREAKPOINT (521px ~ 880px) --- */
+/* 개발자 도구(콘솔창)를 우측에 열거나 창을 줄였을 때 캘린더/보관함 텍스트가 꽉 차서 답답해지는 현상 방지 */
+@media (min-width: 521px) and (max-width: 880px) {
+  .global-navbar {
+    padding: 10px 16px;
+    margin-bottom: 20px;
+  }
+  .nav-brand {
+    gap: 8px;
+  }
+  .nav-brand-text {
+    font-size: 1.22rem;
+    letter-spacing: 1.5px;
+  }
+  .nav-actions {
+    gap: 6px;
+  }
+  .nav-tools-group {
+    gap: 6px;
+  }
+  /* 캘린더, 보관함의 긴 한글 텍스트를 숨기고 아이콘+뱃지로 간결하게 전환 */
+  .nav-btn-calendar .nav-btn-text,
+  .nav-btn-archive .nav-btn-text {
+    display: none !important;
+  }
+  .nav-btn-calendar,
+  .nav-btn-archive {
+    padding: 7px 10px;
+    font-size: 0.88rem;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .badge-count {
+    font-size: 0.68rem;
+    padding: 1px 5px;
+    margin-left: 3px;
+  }
+  .nav-kakao-login-btn {
+    padding: 7px 12px;
+    font-size: 0.8rem;
+    height: 32px;
+    flex-shrink: 0;
+  }
+  .nav-user-profile {
+    padding: 4px 8px 4px 6px;
+    height: 32px;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .nav-avatar {
+    width: 24px;
+    height: 24px;
+  }
+  .nav-nickname {
+    max-width: 70px;
+    font-size: 0.8rem;
+  }
+}
+
+/* --- PHONE MOBILE BREAKPOINT (<= 520px) --- */
+@media (max-width: 520px) {
   /* NAVBAR: Mobile Phone Stacked Layout */
   .global-navbar {
     padding: 8px 12px;
