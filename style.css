@@ -78,13 +78,18 @@ body.theme-midnight {
 
 body {
   font-family: 'Pretendard', 'Outfit', -apple-system, sans-serif;
-  background: var(--bg-gradient);
+  background-color: #F8F6F2;
+  background-image: 
+    radial-gradient(at 12% 15%, rgba(246, 227, 224, 0.52) 0px, transparent 48%),
+    radial-gradient(at 88% 12%, rgba(234, 240, 237, 0.58) 0px, transparent 48%),
+    radial-gradient(at 50% 85%, rgba(254, 246, 238, 0.68) 0px, transparent 55%);
+  background-attachment: fixed;
   color: var(--text-primary);
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 36px 20px;
+  padding: 32px 20px 60px;
   transition: background 0.3s ease;
 }
 
@@ -92,6 +97,14 @@ body {
   width: 100%;
   max-width: 720px;
   margin: 0 auto;
+  transition: max-width 0.3s ease;
+}
+
+/* On PC Desktop, expand container to balanced wide canvas */
+@media (min-width: 992px) {
+  .app-container {
+    max-width: 1160px;
+  }
 }
 
 /* ==========================================================================
@@ -331,10 +344,10 @@ body {
 .card-container {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  box-shadow: var(--card-shadow);
+  box-shadow: 0 16px 48px -6px rgba(35, 36, 38, 0.06), 0 2px 8px rgba(0, 0, 0, 0.02);
   border-radius: var(--radius-xl);
   padding: 40px 36px;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card-header {
@@ -2784,6 +2797,413 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
   color: var(--text-muted);
   font-size: 0.88rem;
   font-weight: 500;
+}
+
+/* ==========================================================================
+   DESKTOP 2-COLUMN WIDE LAYOUT & LIVE SMARTPHONE PREVIEW
+   ========================================================================== */
+.create-mode-section {
+  width: 100%;
+}
+
+.create-layout-grid {
+  display: block;
+}
+
+.create-preview-column {
+  display: none;
+}
+
+/* On PC Desktop (>= 992px): 2-Column Wide Dashboard Layout */
+@media (min-width: 992px) {
+  .create-layout-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 36px;
+    align-items: flex-start;
+  }
+
+  .create-preview-column {
+    display: block;
+  }
+
+  .sticky-preview-wrapper {
+    position: sticky;
+    top: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Centered Story Viewer on PC */
+  #viewMode.main-card {
+    max-width: 460px;
+    margin: 0 auto;
+    box-shadow: 0 24px 64px -8px rgba(35, 36, 38, 0.16), 0 0 0 1px var(--att-line);
+    border-radius: 20px;
+  }
+}
+
+/* SMARTPHONE PREVIEW MOCKUP STYLING */
+.preview-mockup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 340px;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.preview-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: #FFFFFF;
+  border: 1px solid var(--att-line);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--att-charcoal);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.pulse-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22C55E;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+  animation: pulseGreen 1.8s infinite;
+}
+
+@keyframes pulseGreen {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+.preview-hint {
+  font-size: 0.75rem;
+  color: var(--att-muted);
+  font-weight: 500;
+}
+
+/* SMARTPHONE DEVICE FRAME (Realistic Sleek Hardware) */
+.smartphone-device-frame {
+  width: 340px;
+  border-radius: 46px;
+  padding: 12px 10px;
+  background: #1D1E22;
+  box-shadow: 
+    0 24px 64px -10px rgba(35, 36, 38, 0.22),
+    0 0 0 1px #3E4046,
+    0 0 0 4px #26272B,
+    0 1px 3px rgba(0, 0, 0, 0.4);
+  position: relative;
+  user-select: none;
+  transition: transform 0.3s ease;
+}
+
+.smartphone-device-frame:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 30px 72px -10px rgba(35, 36, 38, 0.26),
+    0 0 0 1px #4A4D54,
+    0 0 0 4px #2A2C30;
+}
+
+/* Top Dynamic Notch */
+.smartphone-notch {
+  width: 98px;
+  height: 20px;
+  background: #0A0A0D;
+  border-radius: 12px;
+  margin: 2px auto 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.notch-speaker {
+  width: 36px;
+  height: 4px;
+  background: #25262B;
+  border-radius: 2px;
+}
+
+.notch-camera {
+  width: 8px;
+  height: 8px;
+  background: #141518;
+  border-radius: 50%;
+  border: 1px solid #2B2D33;
+}
+
+/* Smartphone Screen Content */
+.smartphone-screen-body {
+  background: #FFFFFF;
+  border-radius: 36px;
+  padding: 16px 14px 14px;
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+  transition: background 0.3s ease;
+}
+
+.smartphone-screen-body.theme-cozy {
+  background: #FFFEFA;
+}
+
+.smartphone-screen-body.theme-rose {
+  background: #FFF9FA;
+}
+
+.smartphone-screen-body.theme-midnight {
+  background: #F4F6F9;
+}
+
+/* Mockup Progress Bar */
+.mockup-progress-bar {
+  display: flex;
+  gap: 4px;
+  width: 100%;
+}
+
+.mockup-step-dot {
+  height: 3px;
+  flex: 1;
+  border-radius: 2px;
+  background: rgba(35, 36, 38, 0.1);
+}
+
+.mockup-step-dot.active {
+  background: var(--att-charcoal);
+}
+
+/* Header Badges */
+.mockup-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.mockup-theme-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 2px;
+  background: var(--att-rose-soft);
+  color: var(--att-rosewood);
+  border: 1px solid rgba(139, 98, 95, 0.2);
+}
+
+.mockup-dday-badge {
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 2px;
+  background: var(--att-charcoal);
+  color: #FFFFFF;
+}
+
+/* Recipient & Sender */
+.mockup-title-area {
+  text-align: left;
+  padding: 2px 0;
+}
+
+.mockup-greeting {
+  font-size: 0.68rem;
+  color: var(--att-muted);
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+}
+
+.mockup-recipient-title {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--att-charcoal);
+  letter-spacing: -0.2px;
+  line-height: 1.25;
+}
+
+.mockup-sender-tag {
+  font-size: 0.72rem;
+  color: var(--att-rosewood);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* Meta Card */
+.mockup-meta-card {
+  background: var(--att-linen);
+  border: 1px solid var(--att-line);
+  border-radius: 4px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--att-charcoal);
+}
+
+.mockup-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mockup-meta-item i {
+  color: var(--att-rosewood);
+  font-size: 0.75rem;
+  width: 14px;
+}
+
+/* Course Box Preview */
+.mockup-course-box {
+  background: #FFFFFF;
+  border: 1px solid var(--att-line);
+  border-radius: 6px;
+  padding: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.mockup-course-badge {
+  display: inline-block;
+  width: fit-content;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: #FFF4E5;
+  color: #D97706;
+  border: 1px solid #FCD34D;
+}
+
+.mockup-course-title {
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--att-charcoal);
+  line-height: 1.2;
+}
+
+.mockup-course-time {
+  font-size: 0.68rem;
+  color: var(--att-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mockup-img-preview {
+  width: 100%;
+  height: 92px;
+  border-radius: 4px;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid var(--att-line);
+  transition: background-image 0.3s ease;
+}
+
+.mockup-course-tip {
+  font-size: 0.68rem;
+  color: var(--att-taupe);
+  background: #FAF8F5;
+  padding: 4px 8px;
+  border-radius: 3px;
+  border: 1px dashed var(--att-line-dark);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Message Card */
+.mockup-message-card {
+  background: var(--att-ivory, #FCFAF7);
+  border: 1px solid var(--att-line);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 0.72rem;
+  color: var(--att-charcoal);
+  line-height: 1.45;
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.mockup-message-card .quote-icon {
+  color: var(--att-rosewood);
+  font-size: 0.65rem;
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
+/* Action Buttons Mockup */
+.mockup-actions-preview {
+  display: flex;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.mockup-btn-choice {
+  flex: 1;
+  padding: 7px 6px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.mockup-btn-choice.choice-1 {
+  background: var(--att-rose-soft);
+  color: var(--att-rosewood);
+  border: 1px solid rgba(139, 98, 95, 0.3);
+}
+
+.mockup-btn-choice.choice-2 {
+  background: var(--att-charcoal);
+  color: #FFFFFF;
+}
+
+/* Bottom Home Indicator Bar */
+.smartphone-home-bar {
+  width: 90px;
+  height: 4px;
+  background: #383A40;
+  border-radius: 2px;
+  margin: 10px auto 2px;
+}
+
+.mockup-live-guide {
+  font-size: 0.75rem;
+  color: var(--att-muted);
+  margin-top: 12px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.mockup-live-guide i {
+  color: var(--att-rosewood);
 }
 
 /* ==========================================================================

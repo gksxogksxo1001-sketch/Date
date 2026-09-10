@@ -22,6 +22,7 @@ import {
   getHashParam
 } from './utils.js';
 import { EnvelopeOpening } from './envelope-opening.js';
+import { LivePreview } from './live-preview.js';
 
 let generatedShareUrl = '';
 let isCreatingCard = false;
@@ -52,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCourseForm();
   bindStoryViewerEvents();
   EnvelopeOpening.init();
+  LivePreview.init();
 
   // 4. Global Nav & Auth Event Handlers
   const navBrandBtn = document.getElementById('navBrandBtn');

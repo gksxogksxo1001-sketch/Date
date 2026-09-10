@@ -295,13 +295,16 @@
       <p class="tagline">회원가입 없이 만드는 세련된 데이트 코스 초대장 🌿</p>
     </header>
 
-    <!-- SECTION 1: CREATE COURSE ROOM FORM (방 만들기 모드) -->
-    <section id="createMode" class="card-container main-card hidden">
+    <!-- SECTION 1: CREATE COURSE ROOM FORM (방 만들기 모드: PC 2열 와이드 반응형 레이아웃) -->
+    <section id="createMode" class="create-mode-section hidden">
+      <div class="create-layout-grid">
 
-      <div class="card-header">
-        <h2><i class="fa-solid fa-pen-fancy"></i> 데이트 신청 방 만들기</h2>
-        <p>코스를 작성하시면 상대방에게 <strong>카드뉴스/스토리 스타일</strong>로 멋지게 전달됩니다.</p>
-      </div>
+        <!-- LEFT COLUMN: INVITATION FORM CARD -->
+        <div class="card-container main-card create-form-column">
+          <div class="card-header">
+            <h2><i class="fa-solid fa-pen-fancy"></i> 데이트 신청 방 만들기</h2>
+            <p>코스를 작성하시면 상대방에게 <strong>카드뉴스/스토리 스타일</strong>로 멋지게 전달됩니다.</p>
+          </div>
 
       <form id="invitationForm" onsubmit="event.preventDefault();">
 
@@ -451,7 +454,103 @@
           <i class="fa-solid fa-paper-plane"></i> 스토리형 데이트 코스 방 생성하기
         </button>
       </form>
-    </section>
+    </div>
+    <!-- END LEFT COLUMN -->
+
+    <!-- RIGHT COLUMN: STICKY SMARTPHONE LIVE PREVIEW (PC 전용 실시간 목업) -->
+    <aside class="create-preview-column" id="createPreviewColumn">
+      <div class="sticky-preview-wrapper">
+        <div class="preview-mockup-header">
+          <div class="preview-badge-pill">
+            <span class="pulse-indicator"></span> 실시간 미리보기
+          </div>
+          <span class="preview-hint">스마트폰 뷰</span>
+        </div>
+
+        <!-- SMARTPHONE DEVICE MOCKUP FRAME -->
+        <div class="smartphone-device-frame" id="smartphonePreviewFrame">
+          <!-- Top Dynamic Notch -->
+          <div class="smartphone-notch">
+            <div class="notch-speaker"></div>
+            <div class="notch-camera"></div>
+          </div>
+
+          <!-- Smartphone Screen Content -->
+          <div class="smartphone-screen-body theme-cozy" id="smartphoneScreenBody">
+            <!-- Progress Bar Mockup -->
+            <div class="mockup-progress-bar">
+              <span class="mockup-step-dot active"></span>
+              <span class="mockup-step-dot"></span>
+              <span class="mockup-step-dot"></span>
+            </div>
+
+            <!-- Header Badges -->
+            <div class="mockup-card-header">
+              <span class="mockup-theme-pill" id="mockupThemeBadge">🌿 Warm Cozy</span>
+              <span class="mockup-dday-badge" id="mockupDdayBadge">D-DAY</span>
+            </div>
+
+            <!-- Recipient & Sender -->
+            <div class="mockup-title-area">
+              <p class="mockup-greeting">너를 위한 특별한 초대장</p>
+              <h3 class="mockup-recipient-title">To. <span id="mockupReceiverName">수진이</span></h3>
+              <p class="mockup-sender-tag">From. <span id="mockupSenderName">민우</span></p>
+            </div>
+
+            <!-- Meta Row -->
+            <div class="mockup-meta-card">
+              <div class="mockup-meta-item">
+                <i class="fa-regular fa-calendar-check"></i>
+                <span id="mockupDateText">2026. 09. 11 (금)</span>
+              </div>
+              <div class="mockup-meta-item">
+                <i class="fa-solid fa-location-dot"></i>
+                <span id="mockupAreaText">성수동 / 연남동</span>
+              </div>
+              <div class="mockup-meta-item">
+                <i class="fa-solid fa-wallet"></i>
+                <span id="mockupBudgetText">5~10만원</span>
+              </div>
+            </div>
+
+            <!-- First Course Preview Box -->
+            <div class="mockup-course-box">
+              <div class="mockup-course-badge" id="mockupCourseType">🍽️ 1차 맛집/식사</div>
+              <h4 class="mockup-course-title" id="mockupCourseName">성수동 감성 다이닝</h4>
+              <p class="mockup-course-time"><i class="fa-regular fa-clock"></i> <span id="mockupCourseTime">18:00</span></p>
+              
+              <!-- Thumbnail Image -->
+              <div class="mockup-img-preview" id="mockupImgPreview" style="background-image: url('assets/restaurant.jpg');"></div>
+
+              <p class="mockup-course-tip"><i class="fa-regular fa-lightbulb"></i> <span id="mockupCourseTip">창가 예약석 완료 🌿</span></p>
+            </div>
+
+            <!-- Message Card -->
+            <div class="mockup-message-card">
+              <i class="fa-solid fa-quote-left quote-icon"></i>
+              <p id="mockupMessageText">너와 함께하는 날은 언제나 특별해. 맛있는 밥 먹고 예쁜 카페 가자! 💖</p>
+            </div>
+
+            <!-- Action Buttons Mockup -->
+            <div class="mockup-actions-preview">
+              <div class="mockup-btn-choice choice-1"><i class="fa-solid fa-heart"></i> 갈게! 💖</div>
+              <div class="mockup-btn-choice choice-2"><i class="fa-solid fa-heart-circle-bolt"></i> 당연히 가야지! 🥰</div>
+            </div>
+          </div>
+
+          <!-- Bottom Home Indicator -->
+          <div class="smartphone-home-bar"></div>
+        </div>
+
+        <p class="mockup-live-guide">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> <span>좌측 폼을 작성하면 스마트폰 화면에 실시간 반영됩니다</span>
+        </p>
+      </div>
+    </aside>
+    <!-- END RIGHT COLUMN -->
+
+  </div>
+</section>
 
     <!-- SECTION 2: VIEW STORY CARD SLIDER (상대방 카드뉴스/스토리 뷰) -->
     <section id="viewMode" class="card-container main-card hidden">
