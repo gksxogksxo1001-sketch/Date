@@ -2,7 +2,7 @@
 // LIVE-PREVIEW.JS — PC 와이드 2열 화면 실시간 스마트폰 프리뷰 동기화
 // ====================================================
 import { formatDateString } from './utils.js';
-import { coursePhotosMap } from './course-form.js';
+import { coursePhotosMap, getActiveCourseFormIndex } from './course-form.js';
 
 export const LivePreview = {
   _rafId: null,
@@ -38,22 +38,39 @@ export const LivePreview = {
     const themePicker = document.getElementById('themePicker');
     if (themePicker) {
       themePicker.addEventListener('click', () => {
-        setTimeout(() => this.scheduleUpdate(), 40);
+        setTimeout(() => this.scheduleUpdate(), 10);
       });
     }
 
-    // Course list changes (delegated listener on container)
+    // Budget chips clicks
+    const budgetChips = document.getElementById('budgetChips');
+    if (budgetChips) {
+      budgetChips.addEventListener('click', () => {
+        setTimeout(() => this.scheduleUpdate(), 10);
+      });
+    }
+
+    // Course list changes (delegated listener on container for text inputs & selects)
     const courseList = document.getElementById('courseList');
     if (courseList) {
       courseList.addEventListener('input', () => this.scheduleUpdate());
       courseList.addEventListener('change', () => this.scheduleUpdate());
     }
 
+    // Listen to custom course events
+    window.addEventListener('course-page-change', () => {
+      this.scheduleUpdate();
+    });
+
+    window.addEventListener('course-photo-change', () => {
+      this.scheduleUpdate();
+    });
+
     // Add course button clicks
     const addCourseBtn = document.getElementById('addCourseBtn');
     if (addCourseBtn) {
       addCourseBtn.addEventListener('click', () => {
-        setTimeout(() => this.scheduleUpdate(), 40);
+        setTimeout(() => this.scheduleUpdate(), 20);
       });
     }
   },
@@ -98,24 +115,37 @@ export const LivePreview = {
     const mockupMessageText = document.getElementById('mockupMessageText');
     if (mockupMessageText) mockupMessageText.textContent = message;
 
-    // 5. First Course Preview
+    // 5. Active Course Preview (Synchronized with currently viewed course card in form)
     const courseList = document.getElementById('courseList');
-    const firstCourseCard = courseList ? courseList.querySelector('.course-item-card') : null;
-    
+    const cards = courseList ? Array.from(courseList.querySelectorAll('.course-item-card')) : [];
+    const activeIdx = typeof getActiveCourseFormIndex === 'function' ? getActiveCourseFormIndex() : 0;
+    const targetCard = cards[activeIdx] || cards[0];
+
+    // Update Progress Bar step dots in mockup
+    const progressBar = document.querySelector('.mockup-progress-bar');
+    if (progressBar && cards.length > 0) {
+      progressBar.innerHTML = '';
+      cards.forEach((_, idx) => {
+        const dot = document.createElement('span');
+        dot.className = `mockup-step-dot ${idx === activeIdx ? 'active' : ''}`;
+        progressBar.appendChild(dot);
+      });
+    }
+
     const mockupCourseType = document.getElementById('mockupCourseType');
     const mockupCourseName = document.getElementById('mockupCourseName');
     const mockupCourseTime = document.getElementById('mockupCourseTime');
     const mockupCourseTip = document.getElementById('mockupCourseTip');
     const mockupImgPreview = document.getElementById('mockupImgPreview');
 
-    if (firstCourseCard) {
-      const type = firstCourseCard.querySelector('.course-type')?.value || '🍽️ 맛집/식사';
-      const time = firstCourseCard.querySelector('.course-time')?.value || '18:00';
-      const name = (firstCourseCard.querySelector('.course-name')?.value || '').trim() || '성수동 감성 다이닝';
-      const tip = (firstCourseCard.querySelector('.course-tip')?.value || '').trim() || '창가 예약석 완료 🌿';
-      const photos = coursePhotosMap[0] || [];
+    if (targetCard) {
+      const type = targetCard.querySelector('.course-type')?.value || '🍽️ 맛집/식사';
+      const time = targetCard.querySelector('.course-time')?.value || '18:00';
+      const name = (targetCard.querySelector('.course-name')?.value || '').trim() || `${activeIdx + 1}차 데이트 코스`;
+      const tip = (targetCard.querySelector('.course-tip')?.value || '').trim() || '특별한 데이트 메모 🌿';
+      const photos = coursePhotosMap[activeIdx] || [];
 
-      if (mockupCourseType) mockupCourseType.textContent = type;
+      if (mockupCourseType) mockupCourseType.textContent = `${activeIdx + 1}차 · ${type}`;
       if (mockupCourseName) mockupCourseName.textContent = name;
       if (mockupCourseTime) mockupCourseTime.textContent = time;
       if (mockupCourseTip) mockupCourseTip.textContent = tip;

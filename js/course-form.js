@@ -15,6 +15,67 @@ export const COURSE_TYPE_OPTIONS = [
 ];
 
 export const coursePhotosMap = {}; // index: Array<dataUrl>
+export let activeCourseFormIndex = 0;
+
+export function getActiveCourseFormIndex() {
+  return activeCourseFormIndex;
+}
+
+export function updateCourseFormPager() {
+  const courseList = document.getElementById('courseList');
+  const prevBtn = document.getElementById('coursePrevBtn');
+  const nextBtn = document.getElementById('courseNextBtn');
+  const currentStepNum = document.getElementById('currentStepNum');
+  const totalStepNum = document.getElementById('totalStepNum');
+
+  if (!courseList) return;
+  const cards = Array.from(courseList.querySelectorAll('.course-item-card'));
+  const total = cards.length || 1;
+
+  if (activeCourseFormIndex >= total) {
+    activeCourseFormIndex = total - 1;
+  }
+  if (activeCourseFormIndex < 0) {
+    activeCourseFormIndex = 0;
+  }
+
+  cards.forEach((card, idx) => {
+    if (idx === activeCourseFormIndex) {
+      card.classList.add('active');
+      card.classList.remove('hidden-course-card');
+    } else {
+      card.classList.remove('active');
+      card.classList.add('hidden-course-card');
+    }
+  });
+
+  if (currentStepNum) currentStepNum.textContent = String(activeCourseFormIndex + 1);
+  if (totalStepNum) totalStepNum.textContent = String(total);
+
+  if (prevBtn) {
+    prevBtn.disabled = activeCourseFormIndex <= 0;
+  }
+  if (nextBtn) {
+    nextBtn.disabled = activeCourseFormIndex >= total - 1;
+  }
+
+  // Dispatch custom event for Live Preview and other listeners
+  window.dispatchEvent(new CustomEvent('course-page-change', {
+    detail: { activeIndex: activeCourseFormIndex, totalCourses: total }
+  }));
+}
+
+export function goToCourseFormPage(targetIndex) {
+  const courseList = document.getElementById('courseList');
+  if (!courseList) return;
+  const cards = courseList.querySelectorAll('.course-item-card');
+  const total = cards.length || 1;
+
+  if (targetIndex >= 0 && targetIndex < total) {
+    activeCourseFormIndex = targetIndex;
+    updateCourseFormPager();
+  }
+}
 
 export function getMatchedCourseOption(val) {
   if (!val) return COURSE_TYPE_OPTIONS[0];
@@ -78,7 +139,11 @@ export function initCustomCalendar() {
     calCurrentYear = calSelectedDate.getFullYear();
     calCurrentMonth = calSelectedDate.getMonth();
     
-    if (hiddenDate) hiddenDate.value = toDateString(calSelectedDate);
+    if (hiddenDate) {
+      hiddenDate.value = toDateString(calSelectedDate);
+      hiddenDate.dispatchEvent(new Event('input', { bubbles: true }));
+      hiddenDate.dispatchEvent(new Event('change', { bubbles: true }));
+    }
     if (dateDisplay) {
       dateDisplay.value = toDisplayString(calSelectedDate);
     }
@@ -255,6 +320,8 @@ export function initThemePicker() {
 
     const themeVal = card.getAttribute('data-theme');
     selectedTheme.value = themeVal;
+    selectedTheme.dispatchEvent(new Event('input', { bubbles: true }));
+    selectedTheme.dispatchEvent(new Event('change', { bubbles: true }));
     appBody.className = `theme-${themeVal}`;
   });
 }
@@ -271,6 +338,8 @@ export function initBudgetChips() {
     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
     target.classList.add('active');
     selectedBudget.value = target.getAttribute('data-value');
+    selectedBudget.dispatchEvent(new Event('input', { bubbles: true }));
+    selectedBudget.dispatchEvent(new Event('change', { bubbles: true }));
   });
 }
 
@@ -426,7 +495,7 @@ export function addCourseItem(
 
       ddLabel.textContent = chosenLabel;
       nativeSelect.value = chosenVal;
-      nativeSelect.dispatchEvent(new Event('change'));
+      nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
 
       optionItems.forEach(it => it.classList.remove('selected'));
       item.classList.add('selected');
@@ -442,6 +511,10 @@ export function addCourseItem(
   courseList.appendChild(card);
   renderThumbs(index);
   updateRemoveButtons();
+
+  // Automatically navigate to the newly added course card
+  activeCourseFormIndex = index;
+  updateCourseFormPager();
 }
 
 // 5. Custom Timepicker Binding Function
@@ -491,17 +564,17 @@ export function bindCustomTimePicker(card, initialTimeStr = '18:00') {
     hoursGrid.appendChild(chip);
   }
 
-  // Minute Chips
-  const MINUTE_OPTIONS = ['00', '10', '15', '20', '30', '40', '45', '50'];
+  // Minutes Chips (00, 10, 20, 30, 40, 50)
+  const minutes = ['00', '10', '15', '20', '30', '40', '45', '50'];
   minutesGrid.innerHTML = '';
-  MINUTE_OPTIONS.forEach(minStr => {
+  minutes.forEach(min => {
     const chip = document.createElement('div');
-    chip.className = `tp-minute-chip ${minStr === currentMinute ? 'active' : ''}`;
-    chip.textContent = `${minStr}분`;
-    chip.setAttribute('data-min', minStr);
+    chip.className = `tp-minute-chip ${min === currentMinute ? 'active' : ''}`;
+    chip.textContent = `${min}분`;
+    chip.setAttribute('data-min', min);
     chip.addEventListener('click', (e) => {
       e.stopPropagation();
-      currentMinute = minStr;
+      currentMinute = min;
       minutesGrid.querySelectorAll('.tp-minute-chip').forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
       syncValues();
@@ -511,11 +584,16 @@ export function bindCustomTimePicker(card, initialTimeStr = '18:00') {
 
   // AM/PM Buttons
   ampmBtns.forEach(btn => {
+    if (btn.getAttribute('data-ampm') === currentAmPm) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      currentAmPm = btn.getAttribute('data-ampm');
       ampmBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      currentAmPm = btn.getAttribute('data-ampm');
       syncValues();
     });
   });
@@ -569,6 +647,10 @@ export function bindCustomTimePicker(card, initialTimeStr = '18:00') {
 
     displayInput.value = displayText;
     if (previewText) previewText.textContent = displayText;
+
+    // Dispatch change event to immediately sync with live preview
+    hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
+    hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
   function openPopup() {
@@ -692,6 +774,7 @@ export function reindexCourses() {
   Object.keys(coursePhotosMap).forEach(k => delete coursePhotosMap[k]);
   Object.assign(coursePhotosMap, newPhotosMap);
   updateRemoveButtons();
+  updateCourseFormPager();
 }
 
 export function updateRemoveButtons() {
@@ -720,10 +803,9 @@ window.handleGalleryUpload = function(event, index) {
       if (coursePhotosMap[index].length < maxPhotos) {
         coursePhotosMap[index].push(dataUrl);
         renderThumbs(index);
-        const mockupImgPreview = document.getElementById('mockupImgPreview');
-        if (mockupImgPreview && index === 0) {
-          mockupImgPreview.style.backgroundImage = `url('${dataUrl}')`;
-        }
+        window.dispatchEvent(new CustomEvent('course-photo-change', {
+          detail: { index, dataUrl }
+        }));
       }
     });
   });
@@ -733,15 +815,9 @@ window.deleteThumb = function(courseIdx, photoIdx) {
   if (coursePhotosMap[courseIdx]) {
     coursePhotosMap[courseIdx].splice(photoIdx, 1);
     renderThumbs(courseIdx);
-    const mockupImgPreview = document.getElementById('mockupImgPreview');
-    if (mockupImgPreview && courseIdx === 0) {
-      const remaining = coursePhotosMap[0] || [];
-      if (remaining.length > 0) {
-        mockupImgPreview.style.backgroundImage = `url('${remaining[0]}')`;
-      } else {
-        mockupImgPreview.style.backgroundImage = "url('assets/restaurant.jpg')";
-      }
-    }
+    window.dispatchEvent(new CustomEvent('course-photo-change', {
+      detail: { index: courseIdx }
+    }));
   }
 };
 
@@ -752,6 +828,9 @@ window.removeCourseItem = function(index) {
   if (card) {
     card.remove();
     delete coursePhotosMap[index];
+    if (activeCourseFormIndex >= index && activeCourseFormIndex > 0) {
+      activeCourseFormIndex--;
+    }
     reindexCourses();
   }
 };
@@ -773,6 +852,24 @@ export function initCourseForm() {
     });
   });
 
+  // Pager controls (Prev / Next Arrows)
+  const prevBtn = document.getElementById('coursePrevBtn');
+  const nextBtn = document.getElementById('courseNextBtn');
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      goToCourseFormPage(activeCourseFormIndex - 1);
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      goToCourseFormPage(activeCourseFormIndex + 1);
+    });
+  }
+
   const addCourseBtn = document.getElementById('addCourseBtn');
   if (addCourseBtn) {
     addCourseBtn.addEventListener('click', () => {
@@ -782,6 +879,7 @@ export function initCourseForm() {
 
   // Initial clean empty course (1st course)
   addCourseItem('🍽️ 맛집/식사', '18:00', '', '', '', '', [], '');
+  updateCourseFormPager();
 }
 
 // 8. Extract & Validate Form Data

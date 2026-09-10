@@ -1211,9 +1211,8 @@ input:focus, select:focus, textarea:focus {
 
 /* Course Items */
 .course-list-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  position: relative;
+  width: 100%;
 }
 
 .course-item-card {
@@ -1222,6 +1221,27 @@ input:focus, select:focus, textarea:focus {
   border-radius: 2px;
   padding: 24px;
   box-shadow: 0 2px 10px rgba(44, 45, 48, 0.02);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.course-item-card.hidden-course-card {
+  display: none !important;
+}
+
+.course-item-card.active {
+  display: block;
+  animation: fadeInCourseCard 0.25s ease-out;
+}
+
+@keyframes fadeInCourseCard {
+  from {
+    opacity: 0.6;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .course-item-header {
@@ -1246,6 +1266,112 @@ input:focus, select:focus, textarea:focus {
   color: var(--text-muted);
   cursor: pointer;
   font-size: 1rem;
+}
+
+/* COURSE FORM PAGINATION NAV (화살표 넘기기 & 코스 추가) */
+.course-form-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: var(--att-ivory, #FAF8F5);
+  border: 1px solid var(--att-line);
+  border-radius: 4px;
+  flex-wrap: wrap;
+}
+
+.course-pager-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-course-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #FFFFFF;
+  border: 1px solid var(--att-line-dark);
+  border-radius: 2px;
+  color: var(--att-charcoal);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.btn-course-nav:hover:not(:disabled) {
+  background: var(--att-linen);
+  border-color: var(--att-charcoal);
+  color: #000000;
+}
+
+.btn-course-nav:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: var(--att-line);
+  background: #FAFAFA;
+}
+
+.course-step-indicator {
+  padding: 6px 14px;
+  background: #FFFFFF;
+  border: 1px solid var(--att-line);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--att-charcoal);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.course-step-indicator .active-step-num {
+  color: var(--att-rosewood);
+  font-size: 0.95rem;
+}
+
+.btn-add-course-compact {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--sage-light);
+  color: var(--sage-accent);
+  border: 1px dashed var(--sage-accent);
+  border-radius: 2px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+
+.btn-add-course-compact:hover {
+  background: #E5EDE8;
+  border-color: #4A6E59;
+  color: #355041;
+}
+
+@media (max-width: 540px) {
+  .course-form-nav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .course-pager-controls {
+    justify-content: space-between;
+    width: 100%;
+  }
+  .btn-add-course-compact {
+    width: 100%;
+    margin-left: 0;
+    padding: 10px 14px;
+  }
 }
 
 .btn-add-course {
