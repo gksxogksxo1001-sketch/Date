@@ -16,8 +16,8 @@ export const CONFIG = {
 
   // Service URLs
   BASE_URL: 'https://gksxogksxo1001-sketch.github.io/Date/',
-  DEFAULT_OG_IMAGE: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop',
-  SECONDARY_OG_IMAGE: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=600&auto=format&fit=crop',
+  DEFAULT_OG_IMAGE: 'https://gksxogksxo1001-sketch.github.io/Date/assets/restaurant.jpg',
+  SECONDARY_OG_IMAGE: 'https://gksxogksxo1001-sketch.github.io/Date/assets/cafe.jpg',
 
   // Limits
   MAX_ARCHIVE_SIZE: 50,

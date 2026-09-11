@@ -156,7 +156,7 @@ export const LivePreview = {
         } else if (type.includes('카페')) {
           mockupImgPreview.style.backgroundImage = "url('assets/cafe.jpg')";
         } else if (type.includes('산책') || type.includes('야경')) {
-          mockupImgPreview.style.backgroundImage = "url('assets/walk.jpg')";
+          mockupImgPreview.style.backgroundImage = "url('assets/nightview.jpg')";
         } else {
           mockupImgPreview.style.backgroundImage = "url('assets/restaurant.jpg')";
         }

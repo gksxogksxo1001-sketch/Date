@@ -107,6 +107,7 @@ export const EnvelopeOpening = {
     }
 
     // 3. 플랩 3D 회전 및 편지지 자연스러운 슬라이드업
+    const envelopeWrapper = document.getElementById('envelopeWrapper');
     if (envelopeWrapper) {
       // 살짝 봉투가 열리면서 펼쳐지는 타이밍
       setTimeout(() => {
