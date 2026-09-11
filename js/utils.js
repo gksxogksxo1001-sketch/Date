@@ -215,3 +215,96 @@ export function safeOpenWindow(url) {
     window.open(url, '_blank', 'noopener,noreferrer');
   }
 }
+
+// ====================================================
+// Mobile Back Button (History API) Modal Stack Manager
+// ====================================================
+
+const modalStack = [];
+let isPopstateHandling = false;
+
+/**
+ * 모달을 열 때 히스토리 스택에 등록 (스마트폰 뒤로가기 시 모달만 닫히도록 제어)
+ */
+export function registerModalOpen(modalEl, closeFn) {
+  if (!modalEl) return;
+  
+  // 이미 열려있는 경우 중복 등록 방지
+  const existingIdx = modalStack.findIndex(item => item.el === modalEl);
+  if (existingIdx !== -1) return;
+
+  // 브라우저 히스토리 상태 푸시
+  const stateObj = { modalOpen: modalEl.id || ('modal_' + Date.now()) };
+  window.history.pushState(stateObj, '');
+
+  modalStack.push({
+    el: modalEl,
+    closeFn: closeFn || (() => modalEl.classList.add('hidden'))
+  });
+}
+
+/**
+ * 모달이 사용자의 버튼 클릭/배경 클릭으로 닫힐 때 히스토리 정리
+ */
+export function registerModalClose(modalEl) {
+  if (!modalEl) return;
+  const idx = modalStack.findIndex(item => item.el === modalEl);
+  if (idx !== -1) {
+    modalStack.splice(idx, 1);
+    // popstate 이벤트로 닫힌 게 아닌 경우에만 history.back() 호출하여 pushState 되돌림
+    if (!isPopstateHandling) {
+      window.history.back();
+    }
+  }
+}
+
+// 스마트폰 뒤로가기(스와이프 제스처 / 하단 뒤로가기 버튼) 감지 리스너 등록
+if (typeof window !== 'undefined') {
+  window.addEventListener('popstate', (e) => {
+    if (modalStack.length > 0) {
+      isPopstateHandling = true;
+      const topModal = modalStack.pop();
+      if (topModal && typeof topModal.closeFn === 'function') {
+        topModal.closeFn();
+      }
+      setTimeout(() => {
+        isPopstateHandling = false;
+      }, 50);
+    }
+  });
+}
+
+// ====================================================
+// LocalStorage Safe Quota Manager
+// ====================================================
+
+/**
+ * 용량 초과 방어형 안전 LocalStorage 저장 함수
+ */
+export function safeLocalStorageSet(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (err) {
+    if (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+      console.warn('LocalStorage quota exceeded. Purging older guest cache...');
+      try {
+        const keysToClean = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('card_') && k !== key) {
+            keysToClean.push(k);
+          }
+        }
+        keysToClean.slice(0, Math.ceil(keysToClean.length / 2)).forEach(k => localStorage.removeItem(k));
+        localStorage.setItem(key, value);
+        return true;
+      } catch (retryErr) {
+        console.error('Failed to save to localStorage after cache purge:', retryErr);
+        showToast('저장 공간이 부족하여 로컬에 저장하지 못했습니다.', true);
+        return false;
+      }
+    }
+    return false;
+  }
+}

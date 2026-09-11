@@ -12,7 +12,9 @@ import {
   isAndroid,
   isIOS,
   openExternalBrowser,
-  safeOpenWindow
+  safeOpenWindow,
+  registerModalOpen,
+  registerModalClose
 } from './utils.js';
 import { sendKakaoFeed } from './kakao-share.js';
 import { getSupabaseClient } from './supabase-client.js';
@@ -35,8 +37,12 @@ window.openImageZoom = function(src) {
   if (modal && img) {
     img.src = src;
     modal.classList.remove('hidden');
+    registerModalOpen(modal, () => modal.classList.add('hidden'));
 
-    const closeHandler = () => modal.classList.add('hidden');
+    const closeHandler = () => {
+      registerModalClose(modal);
+      modal.classList.add('hidden');
+    };
     if (closeBtn) closeBtn.onclick = closeHandler;
     modal.onclick = (e) => {
       if (e.target === modal || e.target === closeBtn || e.target.closest('#closeLightboxBtn')) {
@@ -478,6 +484,7 @@ window.openMapRouteSheet = function(courseIndex) {
     };
   }
 
+  registerModalOpen(modal, () => modal.classList.add('hidden'));
   modal.classList.remove('hidden');
 };
 
@@ -1149,7 +1156,13 @@ export function bindStoryViewerEvents() {
       };
     }
 
+    registerModalOpen(externalCalendarModal, () => externalCalendarModal.classList.add('hidden'));
     externalCalendarModal.classList.remove('hidden');
+  };
+
+  const closeExternalCalendarModal = () => {
+    registerModalClose(externalCalendarModal);
+    externalCalendarModal.classList.add('hidden');
   };
 
   if (ddayCalendarBtn) {
@@ -1159,10 +1172,17 @@ export function bindStoryViewerEvents() {
     openExternalCalFromMenuBtn.addEventListener('click', openExternalCalendarModal);
   }
   if (closeExternalCalBtn && externalCalendarModal) {
-    closeExternalCalBtn.addEventListener('click', () => externalCalendarModal.classList.add('hidden'));
+    closeExternalCalBtn.addEventListener('click', closeExternalCalendarModal);
   }
   if (closeExternalCalBottomBtn && externalCalendarModal) {
-    closeExternalCalBottomBtn.addEventListener('click', () => externalCalendarModal.classList.add('hidden'));
+    closeExternalCalBottomBtn.addEventListener('click', closeExternalCalendarModal);
+  }
+  if (externalCalendarModal) {
+    externalCalendarModal.addEventListener('click', (e) => {
+      if (e.target === externalCalendarModal) {
+        closeExternalCalendarModal();
+      }
+    });
   }
 
   // Map Route Bottom Sheet Modal Handling
@@ -1170,16 +1190,21 @@ export function bindStoryViewerEvents() {
   const closeMapRouteBtn = document.getElementById('closeMapRouteBtn');
   const closeMapRouteBottomBtn = document.getElementById('closeMapRouteBottomBtn');
 
+  const closeMapRouteModal = () => {
+    registerModalClose(mapRouteModal);
+    mapRouteModal.classList.add('hidden');
+  };
+
   if (closeMapRouteBtn && mapRouteModal) {
-    closeMapRouteBtn.addEventListener('click', () => mapRouteModal.classList.add('hidden'));
+    closeMapRouteBtn.addEventListener('click', closeMapRouteModal);
   }
   if (closeMapRouteBottomBtn && mapRouteModal) {
-    closeMapRouteBottomBtn.addEventListener('click', () => mapRouteModal.classList.add('hidden'));
+    closeMapRouteBottomBtn.addEventListener('click', closeMapRouteModal);
   }
   if (mapRouteModal) {
     mapRouteModal.addEventListener('click', (e) => {
       if (e.target === mapRouteModal) {
-        mapRouteModal.classList.add('hidden');
+        closeMapRouteModal();
       }
     });
   }

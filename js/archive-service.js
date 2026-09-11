@@ -2,7 +2,7 @@
 // ARCHIVE-SERVICE.JS — 데이트 카드 로컬 스토리지 보관 및 Supabase 클라우드 동기화
 // ====================================================
 import { CONFIG } from './config.js';
-import { showToast, formatDateString, copyToClipboard } from './utils.js';
+import { showToast, formatDateString, copyToClipboard, safeLocalStorageSet } from './utils.js';
 import { sendKakaoFeed } from './kakao-share.js';
 import { getSupabaseClient } from './supabase-client.js';
 import { AuthService } from './auth-service.js';
@@ -53,11 +53,7 @@ export const ArchiveService = {
     });
 
     if (updated) {
-      try {
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(list));
-      } catch (e) {
-        console.warn('LocalStorage save error:', e);
-      }
+      safeLocalStorageSet(this.STORAGE_KEY, JSON.stringify(list));
 
       // Supabase 클라우드에 소유권 이전된 카드 동기화
       const supabaseClient = getSupabaseClient();
@@ -132,7 +128,7 @@ export const ArchiveService = {
       }
 
       if (uniqueList.length !== list.length) {
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(uniqueList));
+        safeLocalStorageSet(this.STORAGE_KEY, JSON.stringify(uniqueList));
         this.updateCountBadge();
       }
     } catch (e) {
@@ -195,11 +191,7 @@ export const ArchiveService = {
       list.length = CONFIG.MAX_ARCHIVE_SIZE || 50;
     }
 
-    try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(list));
-    } catch (e) {
-      console.warn('Archive save error:', e);
-    }
+    safeLocalStorageSet(this.STORAGE_KEY, JSON.stringify(list));
 
     this.updateCountBadge();
 
@@ -281,12 +273,10 @@ export const ArchiveService = {
   async delete(cardId) {
     let list = this.getAll();
     list = list.filter(item => item.id !== cardId);
+    safeLocalStorageSet(this.STORAGE_KEY, JSON.stringify(list));
     try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(list));
       localStorage.removeItem(cardId);
-    } catch (e) {
-      console.warn('Archive delete error:', e);
-    }
+    } catch (e) {}
     this.loadAndRender();
 
     // Cloud delete from Supabase
@@ -309,9 +299,7 @@ export const ArchiveService = {
     if (target) {
       target.isAccepted = true;
       target.acceptedAt = Date.now();
-      try {
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(list));
-      } catch (e) {}
+      safeLocalStorageSet(this.STORAGE_KEY, JSON.stringify(list));
     }
 
     const supabaseClient = getSupabaseClient();

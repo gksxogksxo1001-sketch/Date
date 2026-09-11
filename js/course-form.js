@@ -694,33 +694,59 @@ export function bindCustomTimePicker(card, initialTimeStr = '18:00') {
 
 // 6. Image Compression & Gallery Upload
 export function compressAndReadImage(file, callback) {
+  if (!file || !file.type.startsWith('image/')) {
+    showToast('이미지 파일(JPG, PNG, WebP)만 업로드할 수 있습니다.', true);
+    return;
+  }
+
+  // 15MB 초과 원본 사진 사전 차단
+  if (file.size > 15 * 1024 * 1024) {
+    showToast('사진 용량이 너무 큽니다. 15MB 이하의 사진을 선택해 주세요.', true);
+    return;
+  }
+
   const reader = new FileReader();
+  reader.onerror = () => {
+    showToast('사진 파일을 읽는 중 오류가 발생했습니다.', true);
+  };
+
   reader.onload = (e) => {
     const img = new Image();
+    img.onerror = () => {
+      showToast('지원되지 않는 이미지 포맷이거나 파일이 손상되었습니다.', true);
+    };
+
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const maxDim = CONFIG.IMAGE_MAX_DIM || 420;
-      let width = img.width;
-      let height = img.height;
+      try {
+        const canvas = document.createElement('canvas');
+        const maxDim = CONFIG.IMAGE_MAX_DIM || 640;
+        let width = img.width;
+        let height = img.height;
 
-      if (width > height) {
-        if (width > maxDim) {
-          height = Math.round((height * maxDim) / width);
-          width = maxDim;
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
         }
-      } else {
-        if (height > maxDim) {
-          width = Math.round((width * maxDim) / height);
-          height = maxDim;
-        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // 초경량 JPEG 압축 (품질 0.7) -> 40~70KB로 초경량화
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', CONFIG.IMAGE_QUALITY || 0.7);
+        callback(compressedDataUrl);
+      } catch (err) {
+        console.error('Image compression error:', err);
+        showToast('사진 압축 처리 중 오류가 발생했습니다.', true);
       }
-
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
-      const compressedDataUrl = canvas.toDataURL('image/jpeg', CONFIG.IMAGE_QUALITY || 0.6);
-      callback(compressedDataUrl);
     };
     img.src = e.target.result;
   };

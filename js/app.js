@@ -19,7 +19,10 @@ import {
   showToast,
   copyToClipboard,
   formatDateString,
-  getHashParam
+  getHashParam,
+  registerModalOpen,
+  registerModalClose,
+  safeLocalStorageSet
 } from './utils.js';
 import { EnvelopeOpening } from './envelope-opening.js';
 import { LivePreview } from './live-preview.js';
@@ -90,22 +93,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const closeArchiveModal = () => {
+    if (archiveModal) {
+      registerModalClose(archiveModal);
+      archiveModal.classList.add('hidden');
+    }
+  };
+
   if (openArchiveBtn) {
     openArchiveBtn.addEventListener('click', () => {
       ArchiveService.loadAndRender();
-      if (archiveModal) archiveModal.classList.remove('hidden');
+      if (archiveModal) {
+        registerModalOpen(archiveModal, () => archiveModal.classList.add('hidden'));
+        archiveModal.classList.remove('hidden');
+      }
     });
   }
 
   if (closeArchiveModalBtn) {
-    closeArchiveModalBtn.addEventListener('click', () => {
-      if (archiveModal) archiveModal.classList.add('hidden');
-    });
+    closeArchiveModalBtn.addEventListener('click', closeArchiveModal);
   }
 
   if (closeArchiveBottomBtn) {
-    closeArchiveBottomBtn.addEventListener('click', () => {
-      if (archiveModal) archiveModal.classList.add('hidden');
+    closeArchiveBottomBtn.addEventListener('click', closeArchiveModal);
+  }
+
+  if (archiveModal) {
+    archiveModal.addEventListener('click', (e) => {
+      if (e.target === archiveModal) {
+        closeArchiveModal();
+      }
     });
   }
 
@@ -241,19 +258,26 @@ document.addEventListener('DOMContentLoaded', () => {
       dupPreviewCourses.innerHTML = `<i class="fa-solid fa-route"></i> <span>${summary}</span>`;
     }
 
+    const closeDupModal = () => {
+      registerModalClose(duplicateModal);
+      duplicateModal.classList.add('hidden');
+    };
+
+    registerModalOpen(duplicateModal, () => duplicateModal.classList.add('hidden'));
     duplicateModal.classList.remove('hidden');
 
     if (dupOpenExistingBtn) {
       dupOpenExistingBtn.onclick = () => {
-        duplicateModal.classList.add('hidden');
+        closeDupModal();
         openCardFromShareUrl(card.shareUrl || card.id);
       };
     }
 
     if (dupOpenArchiveBtn) {
       dupOpenArchiveBtn.onclick = () => {
-        duplicateModal.classList.add('hidden');
+        closeDupModal();
         if (archiveModal) {
+          registerModalOpen(archiveModal, () => archiveModal.classList.add('hidden'));
           archiveModal.classList.remove('hidden');
           ArchiveService.loadAndRender();
         }
@@ -261,10 +285,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (closeDupModalBtn) {
-      closeDupModalBtn.onclick = () => {
-        duplicateModal.classList.add('hidden');
-      };
+      closeDupModalBtn.onclick = closeDupModal;
     }
+
+    duplicateModal.onclick = (e) => {
+      if (e.target === duplicateModal) {
+        closeDupModal();
+      }
+    };
   }
 
   // 8. Create Invitation Submit Handler
@@ -321,16 +349,14 @@ document.addEventListener('DOMContentLoaded', () => {
         ts: Date.now()
       };
 
+      safeLocalStorageSet(cardId, JSON.stringify(payload));
       try {
-        localStorage.setItem(cardId, JSON.stringify(payload));
         const myCreated = JSON.parse(localStorage.getItem(CONFIG.STORAGE_CREATED_IDS || 'dateplanner_my_created_ids') || '[]');
         if (!myCreated.includes(cardId)) {
           myCreated.push(cardId);
-          localStorage.setItem(CONFIG.STORAGE_CREATED_IDS || 'dateplanner_my_created_ids', JSON.stringify(myCreated));
+          safeLocalStorageSet(CONFIG.STORAGE_CREATED_IDS || 'dateplanner_my_created_ids', JSON.stringify(myCreated));
         }
-      } catch (e) {
-        console.warn('LocalStorage save warning:', e);
-      }
+      } catch (e) {}
 
       const encodedToken = encodePayload(payload);
       let baseUrl = window.location.origin + window.location.pathname;
@@ -342,7 +368,10 @@ document.addEventListener('DOMContentLoaded', () => {
       ArchiveService.save(payload, generatedShareUrl);
 
       if (shareUrlInput) shareUrlInput.value = generatedShareUrl;
-      if (shareModal) shareModal.classList.remove('hidden');
+      if (shareModal) {
+        registerModalOpen(shareModal, () => shareModal.classList.add('hidden'));
+        shareModal.classList.remove('hidden');
+      }
 
       setTimeout(() => {
         isCreatingCard = false;
@@ -354,6 +383,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 9. Share Modal Handlers
+  const closeShareModal = () => {
+    if (shareModal) {
+      registerModalClose(shareModal);
+      shareModal.classList.add('hidden');
+    }
+  };
+
   if (copyBtn) {
     copyBtn.addEventListener('click', () => {
       if (!generatedShareUrl) return;
@@ -371,14 +407,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (previewBtn) {
     previewBtn.addEventListener('click', () => {
-      if (shareModal) shareModal.classList.add('hidden');
+      closeShareModal();
       openCardFromShareUrl(generatedShareUrl);
     });
   }
 
   if (closeModalBtn) {
-    closeModalBtn.addEventListener('click', () => {
-      if (shareModal) shareModal.classList.add('hidden');
+    closeModalBtn.addEventListener('click', closeShareModal);
+  }
+
+  if (shareModal) {
+    shareModal.addEventListener('click', (e) => {
+      if (e.target === shareModal) {
+        closeShareModal();
+      }
     });
   }
 
