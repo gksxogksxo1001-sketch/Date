@@ -36,7 +36,7 @@
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script defer src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="style.css?v=20260911_06">
+  <link rel="stylesheet" href="style.css?v=20260911_07">
 </head>
 
 <body id="appBody" class="theme-cozy">
@@ -1009,7 +1009,7 @@
 
     <!-- ==================== MODAL: MAP ROUTE BOTTOM SHEET ==================== -->
     <div id="mapRouteModal" class="modal-overlay hidden">
-      <div class="modal-card modal-card-bottom-sheet">
+      <div class="modal-card modal-card-bottom-sheet map-route-sheet-card">
         <div class="modal-header-row">
           <div class="modal-title-group">
             <div class="modal-icon" style="background: rgba(3, 199, 90, 0.15); color: #03C75A;">
@@ -1017,7 +1017,7 @@
             </div>
             <div class="modal-title-text">
               <h3 id="mapModalPlaceTitle">길찾기 & 장소 안내</h3>
-              <p class="modal-subtitle" id="mapModalPlaceSub">어떤 지도 앱으로 길안내를 시작할까요?</p>
+              <p class="modal-subtitle" id="mapModalPlaceSub">원하는 지도 앱을 선택하여 길안내를 시작하세요</p>
             </div>
           </div>
           <button type="button" id="closeMapRouteBtn" class="modal-close-icon-btn" title="닫기">
@@ -1037,74 +1037,94 @@
           </button>
         </div>
 
-        <div class="map-app-options-list margin-top-md">
-          <!-- GPS Current Location Quick Route Card -->
-          <div class="map-gps-banner" id="mapGpsBanner">
-            <div class="map-gps-content">
-              <div class="map-gps-icon-wrap">
-                <i class="fa-solid fa-crosshairs pulse-gps"></i>
+        <!-- Target Destination Header with Copy Button -->
+        <div class="map-destination-card" id="mapDestinationCard">
+          <div class="map-destination-info">
+            <span class="map-dest-label"><i class="fa-solid fa-location-dot"></i> 목적지</span>
+            <strong class="map-dest-name" id="mapDestFullName">장소명</strong>
+          </div>
+          <button type="button" id="btnCopyPlaceName" class="btn-copy-dest" title="목적지 이름 복사">
+            <i class="fa-regular fa-copy"></i> 복사
+          </button>
+        </div>
+
+        <!-- Direct Target Map Link (If user pasted direct map link) -->
+        <a id="btnDirectMapUrl" href="#" target="_blank" rel="noopener noreferrer" class="map-app-card direct-link-card hidden">
+          <div class="map-card-icon direct-icon"><i class="fa-solid fa-star"></i></div>
+          <div class="map-card-body">
+            <div class="map-card-title-row">
+              <strong class="map-card-title" id="directMapUrlTitle">작성자 추천 매장 링크</strong>
+              <span class="map-badge-gold">직접 첨부</span>
+            </div>
+            <p class="map-card-sub">예약 페이지 및 상세 정보로 바로 이동</p>
+          </div>
+          <div class="map-card-action">
+            <span class="btn-map-action-pill direct">바로가기 <i class="fa-solid fa-arrow-up-right-from-square"></i></span>
+          </div>
+        </a>
+
+        <!-- 3 Major Map Hub (No Duplication) -->
+        <div class="map-hub-container">
+          <!-- 1. Naver Map Card -->
+          <div class="map-app-card naver-card">
+            <div class="map-card-icon naver-icon"><strong>N</strong></div>
+            <div class="map-card-body">
+              <div class="map-card-title-row">
+                <strong class="map-card-title">네이버 지도</strong>
+                <span class="map-badge-green">가장 추천</span>
               </div>
-              <div class="map-gps-info">
-                <div class="map-gps-title-row">
-                  <span class="map-gps-title">내 현재 위치에서 찾아가기</span>
-                  <span class="map-gps-badge" id="mapGpsStatusBadge">실시간 GPS</span>
-                </div>
-                <p class="map-gps-desc" id="mapGpsDesc">지금 내 위치에서 이 장소까지 소요 시간 & 경로를 확인합니다</p>
+              <p class="map-card-sub">실시간 대중교통 · 도보 · 자동차 길찾기</p>
+              <div class="map-card-sublinks">
+                <a href="#" id="btnNaverPlace" target="_blank" rel="noopener noreferrer" class="sublink-item">
+                  <i class="fa-solid fa-store"></i> 매장 정보 & 리뷰 보기
+                </a>
               </div>
             </div>
-            <div class="map-gps-actions">
-              <button type="button" class="btn-gps-route naver" id="btnGpsNaver" title="네이버 지도로 내 위치에서 길찾기">
-                <strong>N</strong> 네이버 빠른 길찾기
-              </button>
-              <button type="button" class="btn-gps-route kakao" id="btnGpsKakao" title="카카오맵으로 내 위치에서 길찾기">
-                <i class="fa-solid fa-location-dot"></i> 카카오맵 길찾기
+            <div class="map-card-action">
+              <button type="button" id="btnNaverQuickRoute" class="btn-map-action-pill naver">
+                길찾기 <i class="fa-solid fa-chevron-right"></i>
               </button>
             </div>
           </div>
 
-          <div class="map-section-divider">
-            <span>또는 지도 앱으로 장소 검색 & 상세 보기</span>
+          <!-- 2. Kakao Map Card -->
+          <div class="map-app-card kakao-card">
+            <div class="map-card-icon kakao-icon"><i class="fa-solid fa-location-dot"></i></div>
+            <div class="map-card-body">
+              <div class="map-card-title-row">
+                <strong class="map-card-title">카카오맵</strong>
+                <span class="map-badge-yellow">대중교통</span>
+              </div>
+              <p class="map-card-sub">카카오 대중교통 · 도보 경로 및 로드뷰</p>
+              <div class="map-card-sublinks">
+                <a href="#" id="btnKakaoSearch" target="_blank" rel="noopener noreferrer" class="sublink-item">
+                  <i class="fa-solid fa-magnifying-glass"></i> 카카오맵 상세 검색
+                </a>
+              </div>
+            </div>
+            <div class="map-card-action">
+              <button type="button" id="btnKakaoQuickRoute" class="btn-map-action-pill kakao">
+                길찾기 <i class="fa-solid fa-chevron-right"></i>
+              </button>
+            </div>
           </div>
 
-          <!-- Direct Target Map Link (If user pasted direct map link) -->
-          <a id="btnDirectMapUrl" href="#" target="_blank" rel="noopener noreferrer" class="map-app-option option-direct hidden">
-            <div class="map-opt-icon map-icon-direct"><i class="fa-solid fa-star"></i></div>
-            <div class="map-opt-text">
-              <span class="map-opt-name" id="directMapUrlTitle">작성자가 직접 첨부한 매장 링크</span>
-              <span class="map-opt-desc">상세 정보 및 예약 페이지로 바로 이동</span>
+          <!-- 3. TMAP Navigation Card -->
+          <div class="map-app-card tmap-card">
+            <div class="map-card-icon tmap-icon"><i class="fa-solid fa-car"></i></div>
+            <div class="map-card-body">
+              <div class="map-card-title-row">
+                <strong class="map-card-title">T맵 (TMAP)</strong>
+                <span class="map-badge-blue">자동차 내비</span>
+              </div>
+              <p class="map-card-sub">스마트폰 TMAP 앱으로 실시간 자동차 길안내</p>
             </div>
-            <i class="fa-solid fa-arrow-up-right-from-square map-opt-arrow"></i>
-          </a>
-
-          <!-- Naver Map -->
-          <a id="btnNaverMapRoute" href="#" target="_blank" rel="noopener noreferrer" class="map-app-option option-naver">
-            <div class="map-opt-icon map-icon-naver"><strong>N</strong></div>
-            <div class="map-opt-text">
-              <span class="map-opt-name">네이버 지도 (Naver Map)</span>
-              <span class="map-opt-desc">네이버 지도 앱 및 웹에서 빠른 길찾기</span>
+            <div class="map-card-action">
+              <button type="button" id="btnTmapQuickRoute" class="btn-map-action-pill tmap">
+                내비 시작 <i class="fa-solid fa-chevron-right"></i>
+              </button>
             </div>
-            <i class="fa-solid fa-chevron-right map-opt-arrow"></i>
-          </a>
-
-          <!-- Kakao Map -->
-          <a id="btnKakaoMapRoute" href="#" target="_blank" rel="noopener noreferrer" class="map-app-option option-kakao">
-            <div class="map-opt-icon map-icon-kakao"><i class="fa-solid fa-location-dot"></i></div>
-            <div class="map-opt-text">
-              <span class="map-opt-name">카카오맵 (Kakao Map)</span>
-              <span class="map-opt-desc">카카오맵 앱 및 웹에서 대중교통/도보 길찾기</span>
-            </div>
-            <i class="fa-solid fa-chevron-right map-opt-arrow"></i>
-          </a>
-
-          <!-- T Map -->
-          <a id="btnTmapRoute" href="#" target="_blank" rel="noopener noreferrer" class="map-app-option option-tmap">
-            <div class="map-opt-icon map-icon-tmap"><i class="fa-solid fa-car"></i></div>
-            <div class="map-opt-text">
-              <span class="map-opt-name">T맵 (TMAP 내비)</span>
-              <span class="map-opt-desc">스마트폰 T맵 앱으로 실시간 자동차 길안내</span>
-            </div>
-            <i class="fa-solid fa-chevron-right map-opt-arrow"></i>
-          </a>
+          </div>
         </div>
 
         <div class="modal-actions-row margin-top-md">
@@ -1137,7 +1157,7 @@
     </div>
   </main>
 
-  <script type="module" src="js/app.js?v=20260911_06"></script>
+  <script type="module" src="js/app.js?v=20260911_07"></script>
 </body>
 
 </html>
