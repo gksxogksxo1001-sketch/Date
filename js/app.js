@@ -357,7 +357,15 @@ document.addEventListener('DOMContentLoaded', () => {
   if (copyBtn) {
     copyBtn.addEventListener('click', () => {
       if (!generatedShareUrl) return;
-      copyToClipboard(generatedShareUrl, '스토리 초대장 링크가 복사되었습니다! 🌿');
+      const sender = (document.getElementById('senderName')?.value || '').trim() || '신청자';
+      const receiver = (document.getElementById('receiverName')?.value || '').trim() || '소중한 너';
+      const dateVal = document.getElementById('date')?.value || '';
+      const formattedDate = dateVal ? formatDateString(dateVal) : '';
+      const areaVal = (document.getElementById('mainArea')?.value || '').trim();
+
+      const fullInviteMsg = `[💌 데이트 초대장이 도착했어요]\n\n"${receiver}야! ${formattedDate ? formattedDate + ' ' : ''}${areaVal ? areaVal + '에서 ' : ''}특별한 하루를 함께 보내자 🌿"\n\n👉 스토리 초대장 열어보기:\n${generatedShareUrl}`;
+
+      copyToClipboard(fullInviteMsg, '감성 초대 문구와 링크가 함께 복사되었습니다! 카톡에 붙여넣어 보세요 🌿');
     });
   }
 
@@ -384,10 +392,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const areaVal = (document.getElementById('mainArea')?.value || '').trim() || '데이트 장소';
       const formattedDate = formatDateString(dateVal);
 
+      // 테마별 맞춤 감성 썸네일 이미지 선정
+      const themeVal = document.getElementById('themeSelect')?.value || 'romantic';
+      let dynamicThumbnail = CONFIG.DEFAULT_OG_IMAGE;
+      if (themeVal === 'healing') {
+        dynamicThumbnail = CONFIG.SECONDARY_OG_IMAGE || 'https://gksxogksxo1001-sketch.github.io/Date/assets/cafe.jpg';
+      } else if (themeVal === 'activity') {
+        dynamicThumbnail = 'https://gksxogksxo1001-sketch.github.io/Date/assets/nightview.jpg';
+      }
+
       sendKakaoFeed({
         title: `💌 ${sender}님이 보낸 감성 데이트 초대장 💖`,
         description: `${receiver}야! ${formattedDate}에 ${areaVal}에서 만나자! 🌿`,
-        imageUrl: CONFIG.DEFAULT_OG_IMAGE,
+        imageUrl: dynamicThumbnail,
         webUrl: generatedShareUrl,
         buttonTitle: '스토리 초대장 확인하기 💖',
         fallbackText: `[DateCard 초대장 💌]\n${sender}님이 보낸 데이트 초대장이 도착했습니다! 💖\n아래 링크를 눌러 스토리로 확인해 보세요 🌿\n\n${generatedShareUrl}`,

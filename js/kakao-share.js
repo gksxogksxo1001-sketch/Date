@@ -27,22 +27,26 @@ export function sendKakaoFeed({ title, description, imageUrl, webUrl, buttonTitl
   }
 
   // 카카오 sharer.kakao.com은 URL 길이가 일정 수준(약 2,000자 이상)을 초과하면 500 Internal Server Error를 발생시킵니다.
-  // 이미지나 방대한 코스 데이터가 포함되어 URL이 너무 긴 경우, 짧은 ID 기반 URL 또는 안전한 Base URL로 치환합니다.
   if (finalUrl.length > 1800) {
     let cardIdMatch = finalUrl.match(/card=([^&]+)/);
     let cardId = cardIdMatch ? cardIdMatch[1] : null;
     if (cardId && cardId.startsWith('card_')) {
-      finalUrl = `${CONFIG.BASE_URL}#card=${cardId}`;
+      finalUrl = `${CONFIG.BASE_URL}?card=${cardId}`;
     } else {
-      // payload token인 경우 id를 직접 추출해 보거나 기본 URL로 처리
       try {
         const decoded = decodeURIComponent(finalUrl);
         const idInText = decoded.match(/"id":"(card_[^"]+)"/);
         if (idInText && idInText[1]) {
-          finalUrl = `${CONFIG.BASE_URL}#card=${idInText[1]}`;
+          finalUrl = `${CONFIG.BASE_URL}?card=${idInText[1]}`;
         }
       } catch (e) {}
     }
+  }
+
+  // 카카오톡 인앱 브라우저에서 # 해시 파라미터가 유실되는 현상 방지:
+  // 카카오 피드 링크에는 query string(?card=...) 형식을 전달하여 100% 파라미터 보존
+  if (finalUrl.includes('#card=')) {
+    finalUrl = finalUrl.replace('#card=', '?card=');
   }
 
   // 안전한 텍스트 필터링 (undefined / null 방지)
@@ -59,6 +63,8 @@ export function sendKakaoFeed({ title, description, imageUrl, webUrl, buttonTitl
           title: safeTitle,
           description: safeDescription,
           imageUrl: safeImageUrl,
+          imageWidth: 800,
+          imageHeight: 420,
           link: { mobileWebUrl: finalUrl, webUrl: finalUrl }
         },
         buttons: [

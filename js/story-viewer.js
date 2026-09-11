@@ -284,9 +284,11 @@ export function checkAndLoadCardFromUrl() {
   const cardToken = hashCardToken || queryCardToken;
 
   if (queryCardToken && !hashCardToken) {
-    const cleanBase = window.location.origin + window.location.pathname;
-    window.location.replace(`${cleanBase}#card=${queryCardToken}`);
-    return;
+    // 카카오톡 인앱 브라우저에서 리로드 깜빡임 없이 URL 상태를 동기화
+    try {
+      const cleanBase = window.location.origin + window.location.pathname;
+      window.history.replaceState(null, '', `${cleanBase}#card=${queryCardToken}`);
+    } catch (e) {}
   }
 
   if (cardToken) {
