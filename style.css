@@ -2964,16 +2964,20 @@ canvas#confetti-canvas, canvas[style*="pointer-events: none"] {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 380px;
     gap: 36px;
-    align-items: flex-start;
+    align-items: stretch;
   }
 
   .create-preview-column {
     display: block;
+    height: 100%;
+    position: relative;
   }
 
   .sticky-preview-wrapper {
+    position: -webkit-sticky;
     position: sticky;
-    top: 32px;
+    top: 24px;
+    align-self: flex-start;
     display: flex;
     flex-direction: column;
     align-items: center;
