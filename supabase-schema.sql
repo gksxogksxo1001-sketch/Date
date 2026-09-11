@@ -88,3 +88,18 @@ ON public.date_cards
 FOR DELETE
 TO authenticated
 USING (auth.uid() = user_id);
+
+-- ==============================================================================
+-- 6. Supabase Realtime 활성화 (실시간 수락 감지 웹소켓)
+-- ==============================================================================
+-- 상대방이 수락을 눌렀을 때 신청자 화면에서 즉시 팡파레와 확정 알림이 뜨도록 웹소켓 브로드캐스팅 허용
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'date_cards'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.date_cards;
+  END IF;
+END $$;
+

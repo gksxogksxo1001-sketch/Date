@@ -879,9 +879,10 @@ export function updateViewerActionUI(data) {
 
   updateSaveBtnState();
 
-  // Cloud Verification with Supabase
+  // Cloud Verification with Supabase + Realtime Live Subscription
   const supabaseClient = getSupabaseClient();
   if (supabaseClient && cardId) {
+    // 1) 초기 상태 단발 확인
     supabaseClient
       .from('date_cards')
       .select('is_accepted')
@@ -897,6 +898,66 @@ export function updateViewerActionUI(data) {
         }
       })
       .catch(() => {});
+
+    // 2) 아직 미수락 상태인 경우 실시간 Realtime WebSocket 구독 (비용 0원)
+    if (!isAccepted) {
+      subscribeCardRealtime(cardId, (updatedRow) => {
+        showToast('💖 [실시간 알림] 상대방이 데이트 코스를 수락했습니다! 데이트가 확정되었습니다! 🎉', false);
+        triggerRomanticConfetti();
+        setTimeout(() => triggerRomanticConfetti(), 400);
+
+        ArchiveService.markCardAccepted(cardId);
+
+        if (recipientData) {
+          recipientData.isAccepted = true;
+        }
+        updateViewerActionUI(Object.assign({}, data, { isAccepted: true }));
+      });
+    }
+  }
+}
+
+// Supabase Realtime 채널 관리
+let activeRealtimeChannel = null;
+
+export function subscribeCardRealtime(cardId, onAcceptReceived) {
+  const supabaseClient = getSupabaseClient();
+  if (!supabaseClient || !cardId) return;
+
+  if (activeRealtimeChannel) {
+    try {
+      supabaseClient.removeChannel(activeRealtimeChannel);
+    } catch (e) {}
+    activeRealtimeChannel = null;
+  }
+
+  try {
+    activeRealtimeChannel = supabaseClient
+      .channel(`card-realtime-${cardId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'date_cards',
+          filter: `id=eq.${cardId}`
+        },
+        (payload) => {
+          if (payload && payload.new && payload.new.is_accepted) {
+            console.log('[Supabase Realtime] 상대방의 실시간 데이트 수락 감지!', payload.new);
+            if (typeof onAcceptReceived === 'function') {
+              onAcceptReceived(payload.new);
+            }
+          }
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`[Supabase Realtime] 채널 연결 성공 (${cardId})`);
+        }
+      });
+  } catch (err) {
+    console.warn('[Supabase Realtime] 구독 실패 (무시 가능):', err);
   }
 }
 

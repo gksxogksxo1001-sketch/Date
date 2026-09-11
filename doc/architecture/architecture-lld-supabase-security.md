@@ -126,9 +126,22 @@ USING (auth.uid() = user_id);
 
 ---
 
-## 4. 인프라 적용 가이드 (How to Apply)
+## 4. Supabase Realtime (비용 0원 실시간 수락 감지 웹소켓)
+
+### 4.1 동작 원리
+별도의 Node.js 소켓 서버 없이, Supabase의 PostgreSQL 복제 기능(`supabase_realtime` Publication)을 활용하여 상대방이 [수락하기]를 눌러 `is_accepted`가 `true`로 UPDATE되는 순간 브로드캐스팅 이벤트를 발생시킵니다.
+신청자(작성자) 브라우저의 `subscribeCardRealtime(cardId)` 리스너가 이를 감지하여 즉시 팡파레와 축하 토스트를 띄우고 D-Day 확정 상태로 실시간 전환합니다.
+
+```sql
+ALTER PUBLICATION supabase_realtime ADD TABLE public.date_cards;
+```
+
+---
+
+## 5. 인프라 적용 가이드 (How to Apply)
 
 1. Supabase 대시보드(https://supabase.com/dashboard)에 로그인합니다.
 2. 좌측 메뉴에서 **SQL Editor**를 클릭합니다.
 3. 프로젝트 루트에 제공된 `supabase-schema.sql` 스크립트 내용을 붙여넣고 **Run**을 누릅니다.
-4. 좌측 메뉴 **Table Editor** > `date_cards` 우측에 **RLS Enabled** 뱃지가 켜졌는지 확인합니다.
+4. 좌측 메뉴 **Table Editor** > `date_cards` 우측에 **RLS Enabled** 뱃지와 **Realtime On** 뱃지가 켜졌는지 확인합니다.
+
