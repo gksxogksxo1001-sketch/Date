@@ -36,7 +36,7 @@
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script defer src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="style.css?v=20260911_01">
+  <link rel="stylesheet" href="style.css?v=20260911_02">
 </head>
 
 <body id="appBody" class="theme-cozy">
@@ -1025,6 +1025,18 @@
           </button>
         </div>
 
+        <!-- Kakao In-App Browser Escape Banner (Only visible in KakaoTalk) -->
+        <div id="kakaoInAppNoticeBanner" class="kakao-inapp-banner hidden">
+          <div class="inapp-banner-icon"><i class="fa-solid fa-compass"></i></div>
+          <div class="inapp-banner-text">
+            <strong>카카오톡에서 보고 계신가요?</strong>
+            <span>지도가 안 열리면 기본 브라우저(Safari/Chrome)로 열어보세요</span>
+          </div>
+          <button type="button" id="btnEscapeInApp" class="btn-inapp-escape">
+            기본 브라우저로 열기 <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </button>
+        </div>
+
         <div class="map-app-options-list margin-top-md">
           <!-- GPS Current Location Quick Route Card -->
           <div class="map-gps-banner" id="mapGpsBanner">
@@ -1125,7 +1137,7 @@
     </div>
   </main>
 
-  <script type="module" src="js/app.js?v=20260911_01"></script>
+  <script type="module" src="js/app.js?v=20260911_02"></script>
 </body>
 
 </html>

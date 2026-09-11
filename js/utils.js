@@ -159,3 +159,59 @@ export function downloadCardImage(recipientData) {
     });
   }, 120);
 }
+
+// ====================================================
+// In-App Browser & Deep Link Utilities
+// ====================================================
+
+export function isKakaoTalkBrowser() {
+  return /KAKAOTALK/i.test(navigator.userAgent);
+}
+
+export function isAndroid() {
+  return /Android/i.test(navigator.userAgent);
+}
+
+export function isIOS() {
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+export function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+/**
+ * 카카오톡 인앱 브라우저 탈출 (외부 기본 브라우저인 사파리/크롬으로 열기)
+ */
+export function openExternalBrowser(targetUrl = window.location.href) {
+  if (isKakaoTalkBrowser()) {
+    // 카카오톡 공식 외부 브라우저 호출 스킴
+    window.location.href = `kakaotalk://web/openExternal?url=${encodeURIComponent(targetUrl)}`;
+    return true;
+  }
+  
+  if (isAndroid()) {
+    // 안드로이드 크롬 인텐트 호출
+    const cleanUrl = targetUrl.replace(/^https?:\/\//, '');
+    window.location.href = `intent://${cleanUrl}#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;package=com.android.chrome;end`;
+    return true;
+  }
+
+  // 기본 브라우저에서는 새 창으로 열기
+  window.open(targetUrl, '_blank', 'noopener,noreferrer');
+  return true;
+}
+
+/**
+ * 모바일 인앱 브라우저 안전 링크 이동 헬퍼
+ * - 카카오톡 인앱 브라우저 등에서 window.open 팝업 차단을 우회
+ */
+export function safeOpenWindow(url) {
+  if (!url) return;
+  if (isKakaoTalkBrowser() || isMobileDevice()) {
+    // 인앱 브라우저는 _blank가 차단되거나 깨지므로 현재 탭에서 안전하게 이동
+    window.location.href = url;
+  } else {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+}

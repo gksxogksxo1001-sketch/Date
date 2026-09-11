@@ -1,8 +1,19 @@
 // ====================================================
 // STORY-VIEWER.JS — 감성 데이트 스토리 뷰어 엔진 및 인터랙션
 // ====================================================
-import { CONFIG } from './config.js';
-import { showToast, copyToClipboard, formatDateString, decodePayload, getHashParam, triggerRomanticConfetti } from './utils.js';
+import {
+  showToast,
+  copyToClipboard,
+  formatDateString,
+  decodePayload,
+  getHashParam,
+  triggerRomanticConfetti,
+  isKakaoTalkBrowser,
+  isAndroid,
+  isIOS,
+  openExternalBrowser,
+  safeOpenWindow
+} from './utils.js';
 import { sendKakaoFeed } from './kakao-share.js';
 import { getSupabaseClient } from './supabase-client.js';
 import { ArchiveService } from './archive-service.js';
@@ -311,7 +322,8 @@ export function getMapSearchLinks(courseItem, area) {
     naver: naverUrl,
     kakao: kakaoUrl,
     tmap: tmapUrl,
-    tmapApp: `tmap://search?name=${encodedQuery}`
+    tmapApp: `tmap://search?name=${encodedQuery}`,
+    tmapIntent: `intent://search?name=${encodedQuery}#Intent;scheme=tmap;package=com.skt.tmap.ku;end`
   };
 }
 
@@ -331,6 +343,20 @@ window.openMapRouteSheet = function(courseIndex) {
   const btnKakao = document.getElementById('btnKakaoMapRoute');
   const btnTmap = document.getElementById('btnTmapRoute');
 
+  // 카카오톡 인앱 브라우저 탈출 안내 배너 제어
+  const kakaoBanner = document.getElementById('kakaoInAppNoticeBanner');
+  const btnEscape = document.getElementById('btnEscapeInApp');
+  if (kakaoBanner) {
+    if (isKakaoTalkBrowser()) {
+      kakaoBanner.classList.remove('hidden');
+      if (btnEscape) {
+        btnEscape.onclick = () => openExternalBrowser(window.location.href);
+      }
+    } else {
+      kakaoBanner.classList.add('hidden');
+    }
+  }
+
   const links = getMapSearchLinks(item, recipientData ? recipientData.a : '');
   const displayName = item.pl || item.n || '코스 장소';
 
@@ -345,17 +371,51 @@ window.openMapRouteSheet = function(courseIndex) {
     if (links.directUrl) {
       btnDirect.classList.remove('hidden');
       btnDirect.href = links.directUrl;
+      btnDirect.onclick = (e) => {
+        e.preventDefault();
+        safeOpenWindow(links.directUrl);
+      };
     } else {
       btnDirect.classList.add('hidden');
     }
   }
 
-  if (btnNaver) btnNaver.href = links.naver;
-  if (btnKakao) btnKakao.href = links.kakao;
+  if (btnNaver) {
+    btnNaver.href = links.naver;
+    btnNaver.onclick = (e) => {
+      e.preventDefault();
+      safeOpenWindow(links.naver);
+    };
+  }
+
+  if (btnKakao) {
+    btnKakao.href = links.kakao;
+    btnKakao.onclick = (e) => {
+      e.preventDefault();
+      safeOpenWindow(links.kakao);
+    };
+  }
+
   if (btnTmap) {
     btnTmap.href = links.naver;
-    btnTmap.onclick = () => {
-      window.location.href = links.tmapApp;
+    btnTmap.onclick = (e) => {
+      e.preventDefault();
+      if (isAndroid()) {
+        // 안드로이드: Intent 스킴으로 TMAP 앱 실행 (미설치 시 Play 스토어로 안전 연결)
+        window.location.href = links.tmapIntent;
+      } else if (isIOS()) {
+        // iOS: tmap:// 스킴 시도 후 미설치 시 네이버 지도로 안전 폴백
+        const clickedAt = Date.now();
+        window.location.href = links.tmapApp;
+        setTimeout(() => {
+          if (Date.now() - clickedAt < 2000 && !document.hidden) {
+            safeOpenWindow(links.naver);
+          }
+        }, 1200);
+      } else {
+        // PC / 기타 브라우저: 네이버 지도로 안전하게 검색
+        safeOpenWindow(links.naver);
+      }
     };
   }
 
@@ -374,6 +434,7 @@ window.openMapRouteSheet = function(courseIndex) {
 
   const launchGpsRoute = (platform) => {
     if (gpsDesc) gpsDesc.textContent = '현재 위치(GPS)를 감지하여 지도 앱으로 연결 중... 🛰️';
+    const fallbackUrl = platform === 'naver' ? naverRouteUrl : kakaoRouteUrl;
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -382,27 +443,22 @@ window.openMapRouteSheet = function(courseIndex) {
           const lng = pos.coords.longitude;
           if (gpsDesc) gpsDesc.textContent = '현재 위치 확인 완료! 길안내를 시작합니다.';
 
-          if (platform === 'naver') {
-            // 네이버 지도 내 위치 -> 목적지 길찾기
-            const url = `https://map.naver.com/p/directions/${lng},${lat},내위치,/${encodedDest}/-/transit?c=15.00,0,0,0,dh`;
-            window.open(url, '_blank');
-          } else {
-            // 카카오맵 내 위치 -> 목적지 길찾기
-            const url = `https://map.kakao.com/link/to/${encodedDest}`;
-            window.open(url, '_blank');
-          }
+          const targetUrl = (platform === 'naver')
+            ? `https://map.naver.com/p/directions/${lng},${lat},내위치,/${encodedDest}/-/transit?c=15.00,0,0,0,dh`
+            : `https://map.kakao.com/link/to/${encodedDest}`;
+
+          // 비동기 콜백에서 window.open 팝업 차단을 방지하기 위해 safeOpenWindow 사용
+          safeOpenWindow(targetUrl);
         },
         () => {
           // 위치 권한 거부 또는 실패 시 목적지 기준 길찾기 바로 오픈
           if (gpsDesc) gpsDesc.textContent = '지도 앱에서 바로 내 위치를 출발지로 지정합니다.';
-          const url = platform === 'naver' ? naverRouteUrl : kakaoRouteUrl;
-          window.open(url, '_blank');
+          safeOpenWindow(fallbackUrl);
         },
-        { timeout: 4000, enableHighAccuracy: true }
+        { timeout: 4500, enableHighAccuracy: true }
       );
     } else {
-      const url = platform === 'naver' ? naverRouteUrl : kakaoRouteUrl;
-      window.open(url, '_blank');
+      safeOpenWindow(fallbackUrl);
     }
   };
 
